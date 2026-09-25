@@ -135,7 +135,7 @@ class GameScene extends Phaser.Scene {
         let isMoving = false;
         const onGround = this.player.body.touching.down || this.player.body.blocked.down;
 
-        if (!this.isAttacking && !this.isRolling) {
+        if (!this.isRolling) {
             if (this.cursors.left.isDown || this.keys.a.isDown) {
                 this.player.setVelocityX(-speed);
                 this.player.setFlipX(true);
@@ -148,12 +148,10 @@ class GameScene extends Phaser.Scene {
                 this.player.setVelocityX(0);
             }
 
-            if ((Phaser.Input.Keyboard.JustDown(this.cursors.up) || Phaser.Input.Keyboard.JustDown(this.keys.w) || Phaser.Input.Keyboard.JustDown(this.keys.space)) && onGround) {
+            // Jump is still blocked while attacking
+            if (!this.isAttacking && (Phaser.Input.Keyboard.JustDown(this.cursors.up) || Phaser.Input.Keyboard.JustDown(this.keys.w) || Phaser.Input.Keyboard.JustDown(this.keys.space)) && onGround) {
                 this.player.setVelocityY(-288);
             }
-        } else if (this.isAttacking) {
-            // Stop moving if attacking
-            this.player.setVelocityX(0);
         }
 
         // --- Handle Animations ---

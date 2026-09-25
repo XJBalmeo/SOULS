@@ -111,24 +111,55 @@ class GameScene extends Phaser.Scene {
         
         // Prevent the camera from panning outside the 800x600 game world
         this.cameras.main.setBounds(0, 0, 800, 600);
+
+        // --- Health & Stamina ---
+        this.maxHealth          = 100;
+        this.currentHealth      = 100;
+        this.maxStamina         = 100;
+        this.currentStamina     = 100;
+
+        // Costs & rates (tweak freely)
+        this.STAMINA_ATTACK_COST = 20;   // flat cost per attack
+        this.STAMINA_ROLL_COST   = 25;   // flat cost per roll
+        this.STAMINA_RUN_DRAIN   = 10;   // per second while running on ground
+        this.STAMINA_REGEN_RATE  = 30;   // per second when recovering
+        this.STAMINA_REGEN_DELAY = 1200; // ms of inactivity before regen starts
+        this.lastStaminaUse      = -9999;
+
+        // Push initial values to the shared registry so UIScene can read them
+        this.registry.set('maxHealth',  this.maxHealth);
+        this.registry.set('maxStamina', this.maxStamina);
+        this.registry.set('health',     this.currentHealth);
+        this.registry.set('stamina',    this.currentStamina);
+
+        // Launch the HUD overlay (runs on top, no zoom, no physics)
+        this.scene.launch('UIScene');
     }
 
-    update() {
+    update(time, delta) {
         const speed = 160;
 
         // --- Handle Attack Input ---
         if ((this.keys.attack.isDown || this.input.activePointer.leftButtonDown()) && !this.isAttacking && !this.isRolling) {
-            this.isAttacking = true;
-            this.player.anims.play('attack', true);
+            if (this.currentStamina >= this.STAMINA_ATTACK_COST) {
+                this.isAttacking = true;
+                this.currentStamina -= this.STAMINA_ATTACK_COST;
+                this.lastStaminaUse = time;
+                this.player.anims.play('attack', true);
+            }
         }
 
         // --- Handle Roll Input ---
         const isRollJustDown = Phaser.Input.Keyboard.JustDown(this.keys.roll) || Phaser.Input.Keyboard.JustDown(this.keys.shift);
         if (isRollJustDown && !this.isRolling && !this.isAttacking && this.player.body.touching.down) {
-            this.isRolling = true;
-            this.player.anims.play('roll', true);
-            const rollDirection = this.player.flipX ? -1 : 1;
-            this.player.setVelocityX(rollDirection * 300);
+            if (this.currentStamina >= this.STAMINA_ROLL_COST) {
+                this.isRolling = true;
+                this.currentStamina -= this.STAMINA_ROLL_COST;
+                this.lastStaminaUse = time;
+                this.player.anims.play('roll', true);
+                const rollDirection = this.player.flipX ? -1 : 1;
+                this.player.setVelocityX(rollDirection * 300);
+            }
         }
 
         // --- Handle Movement & Jump Input ---
@@ -188,5 +219,24 @@ class GameScene extends Phaser.Scene {
             this.player.setOrigin(0.5 - originOffset, 0.5);
             this.player.body.setOffset(30 - (originOffset * 100), 20);
         }
+
+        // --- Stamina: drain while running on ground ---
+        if (isMoving && onGround && !this.isAttacking && !this.isRolling) {
+            this.currentStamina -= this.STAMINA_RUN_DRAIN * (delta / 1000);
+            this.lastStaminaUse = time;
+        }
+
+        // --- Stamina: regenerate after cooldown ---
+        if (time - this.lastStaminaUse > this.STAMINA_REGEN_DELAY) {
+            this.currentStamina += this.STAMINA_REGEN_RATE * (delta / 1000);
+        }
+
+        // Clamp both stats
+        this.currentStamina = Phaser.Math.Clamp(this.currentStamina, 0, this.maxStamina);
+        this.currentHealth  = Phaser.Math.Clamp(this.currentHealth,  0, this.maxHealth);
+
+        // --- Sync to UIScene via registry ---
+        this.registry.set('stamina', this.currentStamina);
+        this.registry.set('health',  this.currentHealth);
     }
 }

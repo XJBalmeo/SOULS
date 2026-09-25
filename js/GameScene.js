@@ -304,12 +304,6 @@ class GameScene extends Phaser.Scene {
             this.updateEnemy(this.enemies[i], time);
         }
 
-        // ── STAMINA DRAIN (running on ground) ─────────────────────
-        if (isMoving && onGround && !this.isAttacking && !this.isRolling) {
-            this.currentStamina -= this.STAMINA_RUN_DRAIN * (delta / 1000);
-            this.lastStaminaUse  = time;
-        }
-
         // ── STAMINA REGEN ─────────────────────────────────────────
         if (time - this.lastStaminaUse > this.STAMINA_REGEN_DELAY) {
             this.currentStamina += this.STAMINA_REGEN_RATE * (delta / 1000);

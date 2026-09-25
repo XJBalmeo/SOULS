@@ -13,6 +13,8 @@ class GameScene extends Phaser.Scene {
         
         // Load enemies
         this.load.spritesheet('rat_walk', 'Sprites/ENEMIES/FAMINE/RAT_WALK.png', { frameWidth: 100, frameHeight: 100 });
+        this.load.spritesheet('rat_run', 'Sprites/ENEMIES/FAMINE/RAT_RUN.png', { frameWidth: 100, frameHeight: 100 });
+        this.load.spritesheet('rat_attack', 'Sprites/ENEMIES/FAMINE/RAT_ATTACK.png', { frameWidth: 100, frameHeight: 100 });
     }
 
     create() {
@@ -97,51 +99,102 @@ class GameScene extends Phaser.Scene {
             repeat: -1
         });
         
-        this.rat = this.physics.add.sprite(600, 300, 'rat_walk');
-        this.rat.setScale(1); // Scale the rat down so it's much smaller!
+        this.anims.create({
+            key: 'rat_run',
+            frames: this.anims.generateFrameNumbers('rat_run'),
+            frameRate: 15,
+            repeat: -1
+        });
         
-        this.rat.setData('baseSize', { w: 25, h: 10 }); // FIXED: baseSize must exactly match body.setSize!
+        this.anims.create({
+            key: 'rat_attack',
+            frames: this.anims.generateFrameNumbers('rat_attack'),
+            frameRate: 12,
+            repeat: 0
+        });
+
+        this.ground = ground; // Save reference for spawnRat
+
+        this.spawnRat(600, 300, true); // true = face right
+
+        // --- HTML Button to Spawn Rat ---
+        const btn = document.getElementById('spawnRatBtn');
+        if (btn) {
+            // We use an arrow function so 'this' still refers to the GameScene
+            btn.onclick = () => {
+                if (this.rat) this.rat.destroy();
+                this.spawnRat(600, 300, true);
+            };
+        }
+    }
+
+    spawnRat(x, y, faceRight) {
+        this.rat = this.physics.add.sprite(x, y, 'rat_walk');
+        this.rat.setScale(1);
+        
+        this.rat.setData('baseSize', { w: 25, h: 10 });
         this.rat.setData('baseOffset', { x: 45, y: 90 });
         this.rat.body.setSize(25, 10); 
         this.rat.body.setOffset(45, 90);
         
         this.rat.setCollideWorldBounds(true);
-        this.physics.add.collider(this.rat, ground);
+        this.physics.add.collider(this.rat, this.ground);
         this.rat.anims.play('rat_walk', true);
-        this.rat.setVelocityX(-50); // Rat moves left initially
-        this.rat.setFlipX(true);    // The sprite faces right by default, so we flip it to face left
-        this.rat.setData('hp', 1);
+        
+        if (faceRight) {
+            this.rat.setVelocityX(50);
+            this.rat.setFlipX(false);
+        } else {
+            this.rat.setVelocityX(-50);
+            this.rat.setFlipX(true);
+        }
 
-        // --- Combat Collisions ---
-        // Player attacking Rat
+        this.rat.setData('hp', 1);
+        
+        // --- Rat AI State ---
+        this.rat.setData('state', 'patrol');
+        this.rat.setData('visionRange', 300);
+        this.rat.setData('attackRange', 50);
+        this.rat.setData('attackCooldown', 2000);
+        this.rat.setData('lastAttackTime', 0);
+        
+        this.rat.on('animationcomplete', (anim) => {
+            if (anim.key === 'rat_attack' && this.rat.getData('hp') > 0) {
+                this.rat.setData('state', 'pursue');
+                this.rat.setData('lastAttackTime', this.time.now);
+            }
+        });
+
+        // --- Combat Collisions for this specific Rat ---
         this.physics.add.overlap(this.attackHitbox, this.rat, (hitbox, rat) => {
             if (rat.getData('hp') > 0) {
                 rat.setData('hp', 0);
-                rat.setTint(0xff0000); // Flash red
-                rat.setVelocityX(0); // Stop moving
+                rat.setTint(0xff0000);
+                rat.setVelocityX(0);
                 this.time.delayedCall(200, () => {
-                    rat.destroy(); // Kill the rat
+                    rat.destroy();
                 });
             }
         });
 
-        // Rat touching Player
         this.physics.add.overlap(this.player, this.rat, (player, rat) => {
             if (rat.getData('hp') > 0 && !player.getData('isInvulnerable')) {
-                // Player takes damage (flash red and knockback)
                 player.setTint(0xff0000);
                 player.setData('isInvulnerable', true);
                 
                 const knockbackDirection = player.x < rat.x ? -1 : 1;
                 player.setVelocity(knockbackDirection * 200, -200);
+                
+                rat.setData('ignorePlayerUntil', this.time.now + 1000);
 
-                // Recover after 500ms
-                this.time.delayedCall(500, () => {
+                this.time.delayedCall(1000, () => {
                     player.clearTint();
                     player.setData('isInvulnerable', false);
                 });
             }
         });
+
+
 
         // --- Input Setup ---
         this.cursors = this.input.keyboard.createCursorKeys();
@@ -268,22 +321,73 @@ class GameScene extends Phaser.Scene {
             }
         }
 
-        // --- Rat Patrol & Hitbox Flipping ---
+        // --- Rat AI & Hitbox Flipping ---
         if (this.rat && this.rat.active && this.rat.getData('hp') > 0) {
-            // Turn around if hitting a wall
-            if (this.rat.body.blocked.left) {
-                this.rat.setVelocityX(50);
-                this.rat.setFlipX(false); // Face right
-            } else if (this.rat.body.blocked.right) {
-                this.rat.setVelocityX(-50);
-                this.rat.setFlipX(true); // Face left
+            const state = this.rat.getData('state');
+            const vision = this.rat.getData('visionRange');
+            const attackRange = this.rat.getData('attackRange');
+            const attackCooldown = this.rat.getData('attackCooldown');
+            const lastAttack = this.rat.getData('lastAttackTime');
+            const now = this.time.now;
+            
+            const distToPlayer = Phaser.Math.Distance.Between(this.rat.x, this.rat.y, this.player.x, this.player.y);
+            const playerInFront = this.rat.flipX ? (this.player.x < this.rat.x) : (this.player.x > this.rat.x);
+
+            if (state === 'patrol') {
+                // The rat spots you if you are in its front cone of vision,
+                // OR if you physically bump into its back (distToPlayer <= 20)!
+                if ((distToPlayer <= vision && playerInFront) || distToPlayer <= 20) {
+                    this.rat.setData('state', 'pursue');
+                } else {
+                    if (this.rat.body.blocked.left) {
+                        this.rat.setVelocityX(50);
+                        this.rat.setFlipX(false);
+                    } else if (this.rat.body.blocked.right) {
+                        this.rat.setVelocityX(-50);
+                        this.rat.setFlipX(true);
+                    }
+                    if (this.rat.anims.currentAnim?.key !== 'rat_walk') this.rat.anims.play('rat_walk', true);
+                }
+            } else if (state === 'pursue') {
+                const ignoreUntil = this.rat.getData('ignorePlayerUntil') || 0;
+                const isIgnoring = now < ignoreUntil;
+
+                if (!isIgnoring && distToPlayer <= attackRange && now - lastAttack >= attackCooldown) {
+                    // --- START ATTACK ---
+                    this.rat.setVelocityX(0); // Stop just for a frame to reset momentum
+                    this.rat.setData('state', 'attack');
+                    this.rat.setData('lastAttackTime', now);
+                    this.rat.anims.play('rat_attack', true);
+                    
+                    // Apply the lunge physics ONCE here!
+                    const dir = this.player.x < this.rat.x ? -1 : 1;
+                    this.rat.setVelocity(dir * 250, -200); // Leap forward and UP into the air!
+                } else {
+                    // Relentlessly pursue!
+                    if (!isIgnoring && distToPlayer <= 15) {
+                        // We are in the tiny deadzone (practically inside the player).
+                        // Do NOTHING to the velocity or direction! This lets the rat coast 
+                        // through smoothly for 1 frame before the physics engine registers 
+                        // the hit and triggers the ignore state, eliminating the 1-frame stop!
+                    } else {
+                        // If ignoring, keep running in the current direction. Otherwise, steer towards player.
+                        const dir = isIgnoring ? (this.rat.flipX ? -1 : 1) : (this.player.x < this.rat.x ? -1 : 1);
+                        this.rat.setFlipX(dir === -1);
+                        this.rat.setVelocityX(dir * 120);
+                    }
+                    
+                    if (this.rat.anims.currentAnim?.key !== 'rat_run') this.rat.anims.play('rat_run', true);
+                }
+            } else if (state === 'attack') {
+                // We let gravity and momentum carry the leap!
             }
+
+            this.rat.setOrigin(0.5, 0.5); // Reset back to normal
 
             // Flip rat hitbox dynamically
             const rBase = this.rat.getData('baseOffset');
             const rSize = this.rat.getData('baseSize');
             if (this.rat.flipX) {
-                // Flipped offset = TextureWidth - (originalOffset + bodyWidth)
                 this.rat.body.setOffset(100 - (rBase.x + rSize.w), rBase.y);
             } else {
                 this.rat.body.setOffset(rBase.x, rBase.y);

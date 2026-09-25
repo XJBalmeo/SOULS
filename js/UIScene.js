@@ -4,64 +4,80 @@ class UIScene extends Phaser.Scene {
     }
 
     create() {
-        // ---- Layout constants (screen pixels, no zoom) ----
-        const X       = 16;
-        const Y       = 16;
-        const W       = 160;  // bar width
-        const H       = 13;   // bar height
-        const ROW_GAP = 28;   // vertical spacing between HP and ST rows
+        // ── Dark panel backdrop ─────────────────────────────────────
+        this.add.rectangle(8, 8, 188, 90, 0x000000, 0.65).setOrigin(0, 0);
 
-        this.BAR_W = W;
-        this.BAR_H = H;
+        // ── Graphics object redrawn every frame for the bars ────────
+        this.barGfx = this.add.graphics();
 
-        // ---- Shared text style ----
+        // ── Static text labels ──────────────────────────────────────
         const labelStyle = {
-            fontSize: '11px',
+            fontSize: '10px',
             fontFamily: 'monospace',
-            color: '#ffffff',
+            color: '#cccccc',
             stroke: '#000000',
             strokeThickness: 3
         };
+        this.add.text(16, 14, 'HP', labelStyle);
+        this.add.text(16, 42, 'ST', labelStyle);
+        this.flaskText = this.add.text(16, 70, 'FLASK ×3  [E]', {
+            ...labelStyle, color: '#88dd88'
+        });
 
-        // ---- Dark panel backdrop ----
-        this.add.rectangle(X - 8, Y - 6, W + 16, ROW_GAP + H + 10, 0x000000, 0.55).setOrigin(0, 0);
-
-        // ========== HP Bar ==========
-        this.add.text(X, Y, 'HP', labelStyle);
-
-        // Background track
-        this.add.rectangle(X, Y + 14, W, H, 0x3b0000).setOrigin(0, 0);
-
-        // Animated fill
-        this.healthFill = this.add.rectangle(X, Y + 14, W, H, 0xdd2211).setOrigin(0, 0);
-
-        // Subtle highlight line at top of bar
-        this.add.rectangle(X, Y + 14, W, 2, 0xff6655, 0.5).setOrigin(0, 0);
-
-        // ========== ST Bar ==========
-        this.add.text(X, Y + ROW_GAP, 'ST', labelStyle);
-
-        // Background track
-        this.add.rectangle(X, Y + ROW_GAP + 14, W, H, 0x2b1a00).setOrigin(0, 0);
-
-        // Animated fill
-        this.staminaFill = this.add.rectangle(X, Y + ROW_GAP + 14, W, H, 0xddaa00).setOrigin(0, 0);
-
-        // Subtle highlight line at top of bar
-        this.add.rectangle(X, Y + ROW_GAP + 14, W, 2, 0xffee88, 0.5).setOrigin(0, 0);
-
-        // ---- Listen to registry changes pushed by GameScene ----
-        this.registry.events.on('changedata', this.onRegistryChange, this);
+        // ── "YOU DIED" full-screen overlay ─────────────────────────
+        this.youDiedText = this.add
+            .text(400, 275, 'YOU DIED', {
+                fontSize: '56px',
+                fontFamily: 'serif',
+                color: '#cc1111',
+                stroke: '#000000',
+                strokeThickness: 8
+            })
+            .setOrigin(0.5)
+            .setDepth(100)
+            .setVisible(false);
     }
 
-    onRegistryChange(parent, key, value) {
-        if (key === 'health') {
-            const pct = Phaser.Math.Clamp(value / (this.registry.get('maxHealth') || 100), 0, 1);
-            this.healthFill.setSize(Math.max(0, this.BAR_W * pct), this.BAR_H);
+    update() {
+        // Poll registry every frame — simple and reliable
+        const hp     = this.registry.get('health')    ?? 100;
+        const maxHp  = this.registry.get('maxHealth') ?? 100;
+        const st     = this.registry.get('stamina')   ?? 100;
+        const maxSt  = this.registry.get('maxStamina')?? 100;
+        const flasks = this.registry.get('healFlasks') ?? 0;
+        const dead   = this.registry.get('playerDead') ?? false;
+
+        const hPct = Phaser.Math.Clamp(hp / maxHp, 0, 1);
+        const sPct = Phaser.Math.Clamp(st / maxSt, 0, 1);
+
+        const g = this.barGfx;
+        const X = 16, W = 158, H = 11;
+        g.clear();
+
+        // ── HP bar ──────────────────────────────────────────────────
+        g.fillStyle(0x3a0000, 1);
+        g.fillRect(X, 26, W, H);
+        if (hPct > 0) {
+            g.fillStyle(0xdd2211, 1);
+            g.fillRect(X, 26, W * hPct, H);
+            g.fillStyle(0xff6644, 0.4);
+            g.fillRect(X, 26, W * hPct, 3); // highlight shimmer
         }
-        if (key === 'stamina') {
-            const pct = Phaser.Math.Clamp(value / (this.registry.get('maxStamina') || 100), 0, 1);
-            this.staminaFill.setSize(Math.max(0, this.BAR_W * pct), this.BAR_H);
+
+        // ── ST bar ──────────────────────────────────────────────────
+        g.fillStyle(0x2b1a00, 1);
+        g.fillRect(X, 54, W, H);
+        if (sPct > 0) {
+            g.fillStyle(0xddaa00, 1);
+            g.fillRect(X, 54, W * sPct, H);
+            g.fillStyle(0xffee44, 0.4);
+            g.fillRect(X, 54, W * sPct, 3); // highlight shimmer
         }
+
+        // ── Flask counter ───────────────────────────────────────────
+        this.flaskText.setText(`FLASK ×${flasks}  [E]`);
+
+        // ── YOU DIED overlay ────────────────────────────────────────
+        this.youDiedText.setVisible(dead);
     }
 }

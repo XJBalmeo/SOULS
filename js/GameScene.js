@@ -53,11 +53,11 @@ class GameScene extends Phaser.Scene {
         // ═══════════════════════════════════════════════════════════
         const platformDefs = [
             [400, 578, 800, 44,  0x2d5a1e],  // ground floor (full width)
-            [130, 462, 200, 18,  0x3a6e2a],  // left  low
-            [670, 462, 200, 18,  0x3a6e2a],  // right low
-            [400, 372, 220, 18,  0x4a7e3a],  // center mid  ← player spawns here
-            [185, 278, 170, 18,  0x5a8e4a],  // left  high
-            [615, 278, 170, 18,  0x5a8e4a],  // right high
+            [130, 470, 200, 18,  0x3a6e2a],  // left  low   (gap: ~85px above ground)
+            [670, 470, 200, 18,  0x3a6e2a],  // right low
+            [400, 380, 220, 18,  0x4a7e3a],  // center mid  (gap: ~81px above low)
+            [185, 310, 170, 18,  0x5a8e4a],  // left  high  (gap: ~61px above mid)
+            [615, 310, 170, 18,  0x5a8e4a],  // right high
         ];
 
         // StaticGroup so we get a single collider call for all platforms
@@ -263,7 +263,7 @@ class GameScene extends Phaser.Scene {
                 (Phaser.Input.Keyboard.JustDown(this.cursors.up) ||
                  Phaser.Input.Keyboard.JustDown(this.keys.w)     ||
                  Phaser.Input.Keyboard.JustDown(this.keys.space)) && onGround) {
-                this.player.setVelocityY(-288);
+                this.player.setVelocityY(-400);
             }
         }
 

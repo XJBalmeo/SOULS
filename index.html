@@ -4,16 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SOULS - Roguelike</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=58">
     <!-- Load Phaser 3 -->
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
 </head>
 <body>
+    <div id="fullscreen-overlay">
+        <img src="sprites/pause.png" style="width: 100%; height: 100%; object-fit: fill; pointer-events: none;" alt="Game Paused">
+    </div>
 
     <div id="game-container"></div>
     
     <!-- Load Game Scripts -->
-    <script src="js/GameScene.js?v=54"></script>
-    <script src="js/main.js?v=54"></script>
+    <script src="js/GameScene.js?v=58"></script>
+    <script src="js/main.js?v=58"></script>
 </body>
 </html>

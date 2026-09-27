@@ -278,6 +278,11 @@ class GameScene extends Phaser.Scene {
         this.physics.world.setBounds(0, 0, level.pxWid, level.pxHei);
         
         this.player.setCollideWorldBounds(true); // Don't let player walk off screen
+        
+        // Start the scene paused if not in fullscreen!
+        if (!document.fullscreenElement) {
+            this.scene.pause();
+        }
     }
 
     spawnRat(x, y, faceRight) {

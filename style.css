@@ -1,7 +1,7 @@
 body {
     margin: 0;
     padding: 0;
-    background-color: #ADD8E6;
+    background-color: #000000;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -14,4 +14,17 @@ body {
 #game-container {
     width: 100vw;
     height: 100vh;
+}
+
+#fullscreen-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    cursor: pointer;
 }

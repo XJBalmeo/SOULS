@@ -19,7 +19,7 @@ class GameScene extends Phaser.Scene {
         // Load LDtk Level
         this.load.json('famine_ldtk', 'levels/famine/FAMINE.ldtk?v=' + Date.now());
         this.load.spritesheet('famine_tiles', 'levels/famine/TILES_LEVEL1.png?v=' + Date.now(), { frameWidth: 32, frameHeight: 32 });
-        this.load.image('famine_far_bg', 'levels/famine/FARBACKGROUND_LEVEL1.jpg?v=' + Date.now());
+        this.load.image('famine_far_bg', 'levels/famine/FARBACKGROUND_LEVEL1.png?v=' + Date.now());
     }
 
     create() {
@@ -85,9 +85,10 @@ class GameScene extends Phaser.Scene {
         this.farBg.setScrollFactor(0); 
         this.farBg.setDepth(-10); // Ensure it's rendered behind everything
         
-        // Zoom out the texture by 50% so it feels further away!
-        this.farBg.tileScaleX = 0.5;
-        this.farBg.tileScaleY = 0.5;
+        // Reverted to 1.0 because zooming out (0.5) caused the image to become too short 
+        // vertically, resulting in the ugly "vertical repetition" seam on larger monitors!
+        this.farBg.tileScaleX = 1.0;
+        this.farBg.tileScaleY = 1.0;
 
         // 1. Collisions (With Edge Filtering to prevent ghost collisions / stuttering)
         const cWidth = collisionLayer.__cWid;
@@ -355,7 +356,7 @@ class GameScene extends Phaser.Scene {
             
             // Apply a vertical offset to visually "lower" the background on the screen.
             // Negative values push the texture down.
-            const verticalOffset = -50; 
+            const verticalOffset = -110; 
             this.farBg.tilePositionY = (this.cameras.main.scrollY * 0.2) + verticalOffset;
         }
 

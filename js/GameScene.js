@@ -20,6 +20,12 @@ class GameScene extends Phaser.Scene {
         this.load.json('famine_ldtk', 'levels/famine/FAMINE.ldtk?v=' + Date.now());
         this.load.spritesheet('famine_tiles', 'levels/famine/TILES_LEVEL1.png?v=' + Date.now(), { frameWidth: 32, frameHeight: 32 });
         this.load.image('famine_far_bg', 'levels/famine/FARBACKGROUND_LEVEL1.png?v=' + Date.now());
+
+        // Load HUD
+        this.load.image('hud_bar', 'sprites/HERO/HEALTH_BAR.png?v=' + Date.now());
+        this.load.image('hud_hp', 'sprites/HERO/HEALTH.png?v=' + Date.now());
+        this.load.image('hud_delay', 'sprites/HERO/DELAY.png?v=' + Date.now());
+        this.load.image('hud_stamina', 'sprites/HERO/STAMINA.png?v=' + Date.now());
     }
 
     create() {
@@ -266,6 +272,46 @@ class GameScene extends Phaser.Scene {
             }
         });
 
+        // --- HUD Setup ---
+        // Because the camera is zoomed 2.5x on a 1280x720 canvas, the true visible top-left corner 
+        // is pushed inwards to X:384, Y:216. We add 10px of padding so it sits perfectly in the top-left!
+        const HUD_X = 384 + 10;
+        const HUD_Y = 216 + 10;
+        
+        // These control the exact pixel offset of the inner bars relative to the HUD frame!
+        // Adjust these to visually align them perfectly with your frame's transparent window.
+        const HP_OFFSET_X = 30;
+        const HP_OFFSET_Y = 9;
+        const STAM_OFFSET_X = 30;
+        const STAM_OFFSET_Y = 17;
+
+        // Draw background frame first
+        this.hudBar = this.add.image(HUD_X, HUD_Y, 'hud_bar').setOrigin(0, 0).setScrollFactor(0).setDepth(1000);
+        
+        // Draw the delay bars BEHIND the HP/Stamina bars (depth 1001)
+        this.hudDelay = this.add.image(HUD_X + HP_OFFSET_X, HUD_Y + HP_OFFSET_Y, 'hud_delay').setOrigin(0, 0).setScrollFactor(0).setDepth(1001);
+        this.hudStamDelay = this.add.image(HUD_X + STAM_OFFSET_X, HUD_Y + STAM_OFFSET_Y, 'hud_delay').setOrigin(0, 0).setScrollFactor(0).setDepth(1001);
+
+        // Draw the inner bars on top (depth 1002). Origin 0,0 means they scale/stretch from the left edge towards the right.
+        this.hudHp = this.add.image(HUD_X + HP_OFFSET_X, HUD_Y + HP_OFFSET_Y, 'hud_hp').setOrigin(0, 0).setScrollFactor(0).setDepth(1002);
+        this.hudStamina = this.add.image(HUD_X + STAM_OFFSET_X, HUD_Y + STAM_OFFSET_Y, 'hud_stamina').setOrigin(0, 0).setScrollFactor(0).setDepth(1002);
+
+        // Define Player Stats for the HUD
+        this.player.setData('maxHp', 100);
+        this.player.setData('hp', 100);
+        this.player.setData('maxStamina', 100);
+        this.player.setData('stamina', 100);
+
+        // --- Gameplay Constants ---
+        this.STAMINA_COST_ATTACK = 15;
+        this.STAMINA_COST_ROLL = 25;
+        this.STAMINA_REGEN = 20; // Stamina recovered per second
+        this.HUD_MAX_WIDTH = 124; // Keeping the user's tweaked width accessible class-wide
+        
+        // Initialize delay bar display widths
+        this.hudDelay.displayWidth = this.HUD_MAX_WIDTH;
+        this.hudStamDelay.displayWidth = this.HUD_MAX_WIDTH;
+
         // --- Camera Setup ---
         // Zoom in by 2.5x
         this.cameras.main.setZoom(2.5); 
@@ -336,6 +382,9 @@ class GameScene extends Phaser.Scene {
 
         this.physics.add.overlap(this.player, this.rat, (player, rat) => {
             if (rat.getData('hp') > 0 && !player.getData('isInvulnerable')) {
+                
+                this.takeDamage(20); // Deal 20 damage to player
+                
                 player.setTint(0xff0000);
                 player.setData('isInvulnerable', true);
                 
@@ -352,8 +401,72 @@ class GameScene extends Phaser.Scene {
         });
     }
 
-    update() {
+    takeDamage(amount) {
+        if (this.player.getData('hp') <= 0) return;
+        
+        const currentHp = this.player.getData('hp');
+        const newHp = Math.max(0, currentHp - amount);
+        this.player.setData('hp', newHp);
+        
+        // Kill existing delay tween if player is hit again during the delay
+        if (this.hpDelayTween) {
+            this.hpDelayTween.stop();
+        }
+        
+        // Instantly snap the delay bar to what the HP WAS before taking damage
+        this.hudDelay.displayWidth = (currentHp / this.player.getData('maxHp')) * this.HUD_MAX_WIDTH;
+
+        // Tween the delay bar down to match the new HP after 0.5s wait
+        const targetWidth = (newHp / this.player.getData('maxHp')) * this.HUD_MAX_WIDTH;
+        this.hpDelayTween = this.tweens.add({
+            targets: this.hudDelay,
+            displayWidth: targetWidth,
+            delay: 500, // 0.5 seconds wait
+            duration: 300, // 0.3 seconds shrink time
+            ease: 'Sine.easeInOut'
+        });
+    }
+
+    consumeStamina(amount) {
+        const currentStam = this.player.getData('stamina');
+        const newStam = Math.max(0, currentStam - amount);
+        this.player.setData('stamina', newStam);
+        this.player.setData('staminaRegenDelayUntil', this.time.now + 800);
+        
+        // Kill existing delay tween if stamina is consumed again during the delay
+        if (this.stamDelayTween) {
+            this.stamDelayTween.stop();
+        }
+        
+        // Instantly snap the delay bar to what the Stamina WAS before consuming
+        this.hudStamDelay.displayWidth = (currentStam / this.player.getData('maxStamina')) * this.HUD_MAX_WIDTH;
+        
+        // Tween the delay bar down to match the new Stamina after 0.5s wait
+        const targetWidth = (newStam / this.player.getData('maxStamina')) * this.HUD_MAX_WIDTH;
+        this.stamDelayTween = this.tweens.add({
+            targets: this.hudStamDelay,
+            displayWidth: targetWidth,
+            delay: 500, // 0.5 seconds wait
+            duration: 300, // 0.3 seconds shrink time
+            ease: 'Sine.easeInOut'
+        });
+    }
+
+    update(time, delta) {
         const speed = 160;
+
+        // --- Update HUD Bars ---
+        if (this.hudHp && this.hudStamina) {
+            // Edit this max width (in pixels) so the filled bar exactly fits your UI frame
+            const MAX_BAR_WIDTH = 124; 
+            
+            const hpRatio = this.player.getData('hp') / this.player.getData('maxHp');
+            const stamRatio = this.player.getData('stamina') / this.player.getData('maxStamina');
+            
+            // displayWidth physically stretches the 4x1 image to match the desired width
+            this.hudHp.displayWidth = Math.max(0, hpRatio * MAX_BAR_WIDTH);
+            this.hudStamina.displayWidth = Math.max(0, stamRatio * MAX_BAR_WIDTH);
+        }
 
         // --- Parallax Background ---
         if (this.farBg) {
@@ -367,18 +480,36 @@ class GameScene extends Phaser.Scene {
 
         // --- Handle Attack Input ---
         if ((this.keys.attack.isDown || this.input.activePointer.leftButtonDown()) && !this.isAttacking && !this.isRolling) {
-            this.isAttacking = true;
-            this.player.anims.play('attack', true);
+            if (this.player.getData('stamina') >= this.STAMINA_COST_ATTACK) {
+                this.isAttacking = true;
+                this.consumeStamina(this.STAMINA_COST_ATTACK);
+                this.player.anims.play('attack', true);
+            }
         }
 
         // --- Handle Roll Input ---
         const isRollJustDown = Phaser.Input.Keyboard.JustDown(this.keys.roll) || Phaser.Input.Keyboard.JustDown(this.keys.shift);
         if (isRollJustDown && !this.isRolling && !this.isAttacking && this.player.body.touching.down) {
-            this.isRolling = true;
-            this.player.setData('isInvulnerable', true); // Start roll iframes!
-            this.player.anims.play('roll', true);
-            const rollDirection = this.player.flipX ? -1 : 1;
-            this.player.setVelocityX(rollDirection * 300);
+            if (this.player.getData('stamina') >= this.STAMINA_COST_ROLL) {
+                this.isRolling = true;
+                this.consumeStamina(this.STAMINA_COST_ROLL);
+                this.player.setData('isInvulnerable', true); // Start roll iframes!
+                this.player.anims.play('roll', true);
+                const rollDirection = this.player.flipX ? -1 : 1;
+                this.player.setVelocityX(rollDirection * 300);
+            }
+        }
+        
+        // --- Handle Stamina Regeneration ---
+        const regenDelayUntil = this.player.getData('staminaRegenDelayUntil') || 0;
+        if (!this.isAttacking && !this.isRolling && time >= regenDelayUntil) {
+            const currentStam = this.player.getData('stamina');
+            const maxStam = this.player.getData('maxStamina');
+            if (currentStam < maxStam) {
+                // Regenerate based on time passed to ensure smooth framerate-independent recovery
+                const newStam = Math.min(maxStam, currentStam + (this.STAMINA_REGEN * (delta / 1000)));
+                this.player.setData('stamina', newStam);
+            }
         }
 
         // --- Handle Movement & Jump Input ---

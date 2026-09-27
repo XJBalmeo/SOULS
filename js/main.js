@@ -1,9 +1,12 @@
 const config = {
     type: Phaser.AUTO,
-    width: 800,
-    height: 600,
+    scale: {
+        mode: Phaser.Scale.RESIZE,
+        parent: 'game-container',
+        width: '100%',
+        height: '100%'
+    },
     backgroundColor: '#ADD8E6',
-    parent: 'game-container',
     pixelArt: true, // Crucial for pixel art games to prevent blurring
     physics: {
         default: 'arcade',

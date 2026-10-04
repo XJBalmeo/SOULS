@@ -315,17 +315,27 @@ class GameScene extends Phaser.Scene {
       console.warn("No 'right' door found in Level_0!");
     } else {
       const intermediateLevels = ldtkData.levels.filter((l) =>
-        ["Level_1", "Level_2", "Level_3"].includes(l.identifier),
+        [
+          "Level_1", "Level_2", "Level_3",
+          "Level_5", "Level_6", "Level_7",
+          "Level_8", "Level_9", "Level_10",
+        ].includes(l.identifier),
       );
+      // Shuffle the pool so each level is unique per run (Fisher-Yates)
+      const shuffledLevels = [...intermediateLevels];
+      for (let s = shuffledLevels.length - 1; s > 0; s--) {
+        const j = Phaser.Math.RND.integerInRange(0, s);
+        [shuffledLevels[s], shuffledLevels[j]] = [shuffledLevels[j], shuffledLevels[s]];
+      }
       const endLevel = ldtkData.levels.find((l) => l.identifier === "Level_4");
-      const numIntermediateRooms = 3;
+      const numIntermediateRooms = Math.min(5, shuffledLevels.length);
       for (let i = 0; i <= numIntermediateRooms; i++) {
         if (!currentRightDoor) break;
         let selectedLevel;
         if (i === numIntermediateRooms && endLevel) {
           selectedLevel = endLevel;
         } else {
-          selectedLevel = Phaser.Math.RND.pick(intermediateLevels);
+          selectedLevel = shuffledLevels[i];
         }
         if (!selectedLevel) {
           console.warn("Could not find a valid level to attach");

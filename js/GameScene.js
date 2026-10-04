@@ -154,16 +154,16 @@ class GameScene extends Phaser.Scene {
     );
     this.player.setDepth(10);
     this.player.setData("hitboxes", {
-      idle: { w: 10, h: 50, x: 50, y: 50 },
-      run: { w: 30, h: 40, x: 30, y: 60 },
-      jump: { w: 10, h: 50, x: 50, y: 50 },
-      roll: { w: 30, h: 40, x: 30, y: 60 },
-      attack: { w: 30, h: 40, x: 35, y: 60 },
-      climb: { w: 10, h: 50, x: 50, y: 50 },
-      crouch: { w: 10, h: 30, x: 50, y: 70 },
+      idle: { w: 14, h: 50, x: 43, y: 50 },
+      run: { w: 14, h: 40, x: 43, y: 60 },
+      jump: { w: 14, h: 50, x: 43, y: 50 },
+      roll: { w: 14, h: 40, x: 43, y: 60 },
+      attack: { w: 14, h: 50, x: 43, y: 50 },
+      climb: { w: 14, h: 50, x: 43, y: 50 },
+      crouch: { w: 14, h: 30, x: 43, y: 70 },
     });
-    this.player.body.setSize(10, 50);
-    this.player.body.setOffset(50, 50);
+    this.player.body.setSize(14, 50);
+    this.player.body.setOffset(43, 50);
     this.physics.add.collider(
       this.player,
       this.ground,
@@ -402,42 +402,56 @@ class GameScene extends Phaser.Scene {
     const doors = [];
     if (collisionLayer) {
       const cWidth = collisionLayer.__cWid;
+      const cHeight = Math.floor(collisionLayer.intGridCsv.length / cWidth);
       const gridData = collisionLayer.intGridCsv;
-      for (let i = 0; i < gridData.length; i++) {
-        const val = gridData[i];
-        if (val === 1 || val === 2 || val === 3) {
-          const isPlatform = val === 2;
-          const isRope = val === 3;
-          let w = gridSize;
-          let h = gridSize;
-          let bx = (i % cWidth) * gridSize;
-          let by = Math.floor(i / cWidth) * gridSize;
-          const cx = offsetX + bx + w / 2;
-          const cy = offsetY + by + h / 2;
-          const block = this.add.rectangle(cx, cy, w, h, 0x000000, 0);
-          this.physics.add.existing(block, true);
-          if (isRope) {
-            block.body.checkCollision.none = true;
-            block.isRope = true;
-          } else if (isPlatform) {
-            block.body.checkCollision.up = true;
-            block.body.checkCollision.down = false;
-            block.body.checkCollision.left = false;
-            block.body.checkCollision.right = false;
-            block.isPlatform = true;
-          } else {
-            const hasTop = i - cWidth >= 0 && gridData[i - cWidth] === 1;
-            const hasBottom =
-              i + cWidth < gridData.length && gridData[i + cWidth] === 1;
-            const hasLeft = i % cWidth > 0 && gridData[i - 1] === 1;
-            const hasRight = i % cWidth < cWidth - 1 && gridData[i + 1] === 1;
-            block.body.checkCollision.up = !hasTop;
-            block.body.checkCollision.down = !hasBottom;
-            block.body.checkCollision.left = !hasLeft;
-            block.body.checkCollision.right = !hasRight;
+      
+      for (let row = 0; row < cHeight; row++) {
+        let col = 0;
+        while (col < cWidth) {
+          const i = row * cWidth + col;
+          const val = gridData[i];
+          
+          if (val === 1) {
+            let runEnd = col + 1;
+            while (runEnd < cWidth && gridData[row * cWidth + runEnd] === 1) {
+              runEnd++;
+            }
+            const runLen = runEnd - col;
+            const w = gridSize * runLen;
+            const h = gridSize;
+            const cx = offsetX + col * gridSize + w / 2;
+            const cy = offsetY + row * gridSize + h / 2;
+            const block = this.add.rectangle(cx, cy, w, h, 0x000000, 0);
+            this.physics.add.existing(block, true);
             block.isPlatform = false;
+            this.ground.add(block);
+            col = runEnd;
+          } else if (val === 2 || val === 3) {
+            const isPlatform = val === 2;
+            const isRope = val === 3;
+            let w = gridSize;
+            let h = gridSize;
+            let bx = col * gridSize;
+            let by = row * gridSize;
+            const cx = offsetX + bx + w / 2;
+            const cy = offsetY + by + h / 2;
+            const block = this.add.rectangle(cx, cy, w, h, 0x000000, 0);
+            this.physics.add.existing(block, true);
+            if (isRope) {
+              block.body.checkCollision.none = true;
+              block.isRope = true;
+            } else if (isPlatform) {
+              block.body.checkCollision.up = true;
+              block.body.checkCollision.down = false;
+              block.body.checkCollision.left = false;
+              block.body.checkCollision.right = false;
+              block.isPlatform = true;
+            }
+            this.ground.add(block);
+            col++;
+          } else {
+            col++;
           }
-          this.ground.add(block);
         }
       }
     }

@@ -404,13 +404,13 @@ class GameScene extends Phaser.Scene {
       const cWidth = collisionLayer.__cWid;
       const cHeight = Math.floor(collisionLayer.intGridCsv.length / cWidth);
       const gridData = collisionLayer.intGridCsv;
-      
+
       for (let row = 0; row < cHeight; row++) {
         let col = 0;
         while (col < cWidth) {
           const i = row * cWidth + col;
           const val = gridData[i];
-          
+
           if (val === 1) {
             let runEnd = col + 1;
             while (runEnd < cWidth && gridData[row * cWidth + runEnd] === 1) {
@@ -468,9 +468,9 @@ class GameScene extends Phaser.Scene {
             tile.t,
           );
           if (layer.__identifier === "Tiles") {
-              img.setDepth(20);
+            img.setDepth(20);
           } else {
-              img.setDepth(5);
+            img.setDepth(5);
           }
           if (tile.f === 1 || tile.f === 3) img.setFlipX(true);
           if (tile.f === 2 || tile.f === 3) img.setFlipY(true);
@@ -665,30 +665,30 @@ class GameScene extends Phaser.Scene {
     let touchingRope = false;
     let ropeX = null;
     let ropeTop = null;
-    
+
     const ROPE_ATTACH_RANGE_X = 8; // Adjustable horizontal attach range
     const ROPE_ATTACH_RANGE_Y = 0; // Removed fake extension, we use a real vault now
     const ROPE_VISUAL_OFFSET_RIGHT = -5; // Adjustable visual sprite shift when facing right on rope
     const ROPE_VISUAL_OFFSET_LEFT = 5;   // Adjustable visual sprite shift when facing left on rope
     const VAULT_THRESHOLD = 32;           // Adjustable pixels early to trigger top platform swoosh
     const VAULT_HEIGHT = 16;             // Vault height (1 tile)
-    
+
     const pBody = this.player.body;
     let isVaulting = this.player.getData("isVaulting") || false;
-    
+
     this.ground.getChildren().forEach((block) => {
       if (block.isRope) {
         const bBody = block.body;
         const inX = pBody.right > bBody.center.x - ROPE_ATTACH_RANGE_X && pBody.left < bBody.center.x + ROPE_ATTACH_RANGE_X;
         const inY = pBody.bottom > bBody.top - ROPE_ATTACH_RANGE_Y && pBody.top < bBody.bottom;
-        
+
         if (inX && inY) {
-            touchingRope = true;
-            ropeX = block.x;
-            const adjustedTop = bBody.top - ROPE_ATTACH_RANGE_Y;
-            if (ropeTop === null || adjustedTop < ropeTop) {
-                ropeTop = adjustedTop;
-            }
+          touchingRope = true;
+          ropeX = block.x;
+          const adjustedTop = bBody.top - ROPE_ATTACH_RANGE_Y;
+          if (ropeTop === null || adjustedTop < ropeTop) {
+            ropeTop = adjustedTop;
+          }
         }
       }
     });
@@ -700,34 +700,34 @@ class GameScene extends Phaser.Scene {
       isClimbing = false;
     } else if ((isUp || (isDown && !onGround)) && !this.isAttacking && !this.isRolling && !isVaulting) {
       if (isUp && pBody.bottom <= ropeTop + 2) {
-          // Standing exactly at the very top of the rope, do not grab
+        // Standing exactly at the very top of the rope, do not grab
       } else {
-          isClimbing = true;
+        isClimbing = true;
       }
     }
 
     if (isClimbing && isUp && ropeTop !== null && !isVaulting) {
-        // Vault earlier based on VAULT_THRESHOLD
-        if (pBody.bottom <= ropeTop + VAULT_THRESHOLD) {
-            isClimbing = false;
-            this.player.setData("isVaulting", true);
-            this.player.body.allowGravity = false;
-            this.player.setVelocity(0, 0);
-            
-            // Calculate exact target Y so feet land perfectly on the platform (ropeTop - VAULT_HEIGHT)
-            const targetY = this.player.y - (pBody.bottom - (ropeTop - VAULT_HEIGHT));
-            
-            this.tweens.add({
-                targets: this.player,
-                y: targetY,
-                duration: 100, // Faster swoosh
-                ease: 'Sine.easeOut',
-                onComplete: () => {
-                    this.player.setData("isVaulting", false);
-                    this.player.body.allowGravity = true;
-                }
-            });
-        }
+      // Vault earlier based on VAULT_THRESHOLD
+      if (pBody.bottom <= ropeTop + VAULT_THRESHOLD) {
+        isClimbing = false;
+        this.player.setData("isVaulting", true);
+        this.player.body.allowGravity = false;
+        this.player.setVelocity(0, 0);
+
+        // Calculate exact target Y so feet land perfectly on the platform (ropeTop - VAULT_HEIGHT)
+        const targetY = this.player.y - (pBody.bottom - (ropeTop - VAULT_HEIGHT));
+
+        this.tweens.add({
+          targets: this.player,
+          y: targetY,
+          duration: 100, // Faster swoosh
+          ease: 'Sine.easeOut',
+          onComplete: () => {
+            this.player.setData("isVaulting", false);
+            this.player.body.allowGravity = true;
+          }
+        });
+      }
     }
 
     this.player.setData("isClimbing", isClimbing);
@@ -740,19 +740,19 @@ class GameScene extends Phaser.Scene {
     if (isClimbing) {
       this.player.body.allowGravity = false;
       this.player.setVelocityX(0);
-      
+
       // Allow sprite flipping while climbing
       if (this.cursors.left.isDown || this.keys.a.isDown) {
-          this.player.setFlipX(true);
+        this.player.setFlipX(true);
       } else if (this.cursors.right.isDown || this.keys.d.isDown) {
-          this.player.setFlipX(false);
+        this.player.setFlipX(false);
       }
-      
+
       // Keep strictly snapped to rope center + visual offset
       if (ropeX !== null) {
-          this.player.x = ropeX + (this.player.flipX ? ROPE_VISUAL_OFFSET_LEFT : ROPE_VISUAL_OFFSET_RIGHT);
+        this.player.x = ropeX + (this.player.flipX ? ROPE_VISUAL_OFFSET_LEFT : ROPE_VISUAL_OFFSET_RIGHT);
       }
-      
+
       if (isUp) {
         this.player.setVelocityY(-100);
       } else if (isDown && !onGround) {
@@ -829,7 +829,7 @@ class GameScene extends Phaser.Scene {
     if (!this.isAttacking && !this.isRolling) {
       if (isVaulting) {
         if (this.player.anims.currentAnim?.key !== "idle") {
-            this.player.anims.play("idle", true);
+          this.player.anims.play("idle", true);
         }
       } else if (isClimbing) {
         this.player.anims.play("climb", true);
@@ -844,7 +844,7 @@ class GameScene extends Phaser.Scene {
           this.player.anims.play("jump", true);
         } else if (isCrouching) {
           if (this.player.anims.currentAnim?.key !== "crouch") {
-              this.player.anims.play("crouch", true);
+            this.player.anims.play("crouch", true);
           }
         } else {
           if (isMoving) {

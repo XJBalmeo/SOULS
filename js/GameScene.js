@@ -3,31 +3,31 @@ class GameScene extends Phaser.Scene {
     super("GameScene");
   }
   preload() {
-    this.load.spritesheet("hero_idle", "Sprites/HERO/HERO_IDLE.png", {
+    this.load.spritesheet("hero_idle", "sprites/HERO/NEW_IDLE.png?v=" + Date.now(), {
       frameWidth: 100,
       frameHeight: 100,
     });
-    this.load.spritesheet("hero_run", "Sprites/HERO/HERO_RUN.png", {
+    this.load.spritesheet("hero_run", "sprites/HERO/NEW_RUN.png?v=" + Date.now(), {
       frameWidth: 100,
       frameHeight: 100,
     });
-    this.load.spritesheet("hero_jump", "Sprites/HERO/HERO_JUMP.png", {
+    this.load.spritesheet("hero_jump", "sprites/HERO/NEW_JUMP.png?v=" + Date.now(), {
       frameWidth: 100,
       frameHeight: 100,
     });
-    this.load.spritesheet("hero_roll", "Sprites/HERO/HERO_ROLL.png", {
+    this.load.spritesheet("hero_roll", "sprites/HERO/NEW_ROLL.png?v=" + Date.now(), {
       frameWidth: 100,
       frameHeight: 100,
     });
-    this.load.spritesheet("hero_attack", "sprites/HERO/HERO_ATTACK.png", {
+    this.load.spritesheet("hero_attack", "sprites/HERO/NEW_ATTACK.png?v=" + Date.now(), {
       frameWidth: 100,
       frameHeight: 100,
     });
-    this.load.spritesheet("hero_climb", "sprites/HERO/HERO_CLIMB.png", {
+    this.load.spritesheet("hero_climb", "sprites/HERO/NEW_CLIMB.png?v=" + Date.now(), {
       frameWidth: 100,
       frameHeight: 100,
     });
-    this.load.spritesheet("hero_crouch", "sprites/HERO/HERO_CROUCH.png", {
+    this.load.spritesheet("hero_crouch", "sprites/HERO/NEW_CROUCH.png?v=" + Date.now(), {
       frameWidth: 100,
       frameHeight: 100,
     });
@@ -70,6 +70,74 @@ class GameScene extends Phaser.Scene {
     this.load.image("hud_stamina", "sprites/HERO/STAMINA.png?v=" + Date.now());
   }
   create() {
+    window.gameScene = this;
+    // =========================================================================
+    // HERO CONFIGURATION: HITBOXES, SPRITE PLACEMENTS & TUNING
+    // Grouped for easy adjustment if any sprite alignment or hitbox feels off.
+    // =========================================================================
+    this.heroConfig = {
+      // Body collision hitboxes per animation/state (inside 100x100 frame)
+      // w = width, h = height, x = offset X, y = offset Y
+      // Note: y + h = 100 ensures the hero's feet stay flush with the floor.
+      hitboxes: {
+        idle:   { w: 10, h: 50, x: 50, y: 50 },
+        run:    { w: 30, h: 40, x: 30, y: 60 },
+        jump:   { w: 10, h: 50, x: 50, y: 50 },
+        roll:   { w: 30, h: 40, x: 30, y: 60 },
+        attack: { w: 30, h: 40, x: 35, y: 60 },
+        climb:  { w: 10, h: 50, x: 50, y: 50 },
+        crouch: { w: 10, h: 30, x: 50, y: 70 },
+      },
+
+      // Visual Sprite Origin / Placement shifts per animation
+      // (0.1 = 10px shift forward. Positive moves visual sprite forward)
+      spriteOffsets: {
+        idle:   0,
+        run:    0,
+        jump:   0,
+        roll:   0,
+        attack: 0.19,
+        climb:  0,
+        crouch: 0,
+      },
+
+      // Weapon / Damage Hitbox (the red attack rectangle)
+      attackHitbox: {
+        width: 70,
+        height: 50,
+        offsetX: 30, // Distance in front of player (auto-flipped when facing left)
+        offsetY: 25, // Height offset from player center
+      },
+
+      // Roll Animation & Frame Skip Settings (Adjustable!)
+      // Note: Sprite sheet frames are 0-indexed (0 to 7):
+      // - Frame 0: duck startup
+      // - Frames 1-3: rolling tuck
+      // - Frame 4: crouch landing touchdown
+      // - Frames 5-6: sprint push / stride (only played when holding horizontal keys: A / D / Left / Right)
+      // - Frame 7: standing recovery posture
+      roll: {
+        frameRate: 15,            // Animation playback speed for roll
+        skipFrames: [5, 6],       // Frames to skip when NOT holding horizontal keys (A / D / Left / Right)
+        skipToFrame: 7,           // Frame of 'roll' to jump directly to (0-indexed: 7 is standing recovery)
+        stopVelocityOnSkip: true, // Stop horizontal slide when skipping to recovery frame
+      },
+
+      // Rope Alignment, Vaulting & Climbing Animation
+      rope: {
+        attachRangeX: 8,          // Horizontal distance to attach to rope
+        visualOffsetRight: 0,     // Visual sprite shift when facing right on rope (User tuned)
+        visualOffsetLeft: 0,      // Visual sprite shift when facing left on rope (User tuned)
+        vaultThreshold: 45,       // Pixels from rope top to trigger automatic ledge swoosh up (User tuned)
+        vaultHeight: 20,          // Height of vault onto the platform (vault up) (User tuned)
+        vaultDownHeight: 64,      // Height of vault down from platform onto rope (User tuned)
+        climbDownThreshold: 20,   // Max distance between player feet and rope top to trigger vault down
+        climbFrameRate: 10,       // Base climbing animation speed (frames per sec)
+        evenFrameMultiplier: 1.5, // 2nd & 4th frames are 1.5x longer than 1st & 3rd (Adjustable!)
+        detachBottomOffset: 4,    // Pixels before/at rope bottom to detach when climbing down (Adjustable!)
+      },
+    };
+
     this.anims.create({
       key: "idle",
       frames: this.anims.generateFrameNumbers("hero_idle"),
@@ -91,7 +159,7 @@ class GameScene extends Phaser.Scene {
     this.anims.create({
       key: "roll",
       frames: this.anims.generateFrameNumbers("hero_roll"),
-      frameRate: 15,
+      frameRate: (this.heroConfig.roll && this.heroConfig.roll.frameRate) || 15,
       repeat: 0,
     });
     this.anims.create({
@@ -101,16 +169,23 @@ class GameScene extends Phaser.Scene {
       repeat: 0,
     });
 
+    const climbFps = this.heroConfig.rope.climbFrameRate || 10;
+    const baseClimbMs = Math.round(1000 / climbFps);
+    const evenClimbMult = this.heroConfig.rope.evenFrameMultiplier || 1.5;
     this.anims.create({
       key: "climb",
-      frames: this.anims.generateFrameNumbers("hero_climb"),
-      frameRate: 10,
+      frames: [
+        { key: "hero_climb", frame: 0, duration: baseClimbMs },
+        { key: "hero_climb", frame: 1, duration: Math.round(baseClimbMs * evenClimbMult) },
+        { key: "hero_climb", frame: 2, duration: baseClimbMs },
+        { key: "hero_climb", frame: 3, duration: Math.round(baseClimbMs * evenClimbMult) },
+      ],
       repeat: -1,
     });
 
     this.anims.create({
       key: "crouch",
-      frames: this.anims.generateFrameNumbers("hero_crouch", { start: 0, end: 1 }),
+      frames: this.anims.generateFrameNumbers("hero_crouch"),
       frameRate: 10,
       repeat: 0,
     });
@@ -153,30 +228,40 @@ class GameScene extends Phaser.Scene {
       "hero_idle",
     );
     this.player.setDepth(10);
-    this.player.setData("hitboxes", {
-      idle: { w: 10, h: 50, x: 50, y: 50 },
-      run: { w: 30, h: 40, x: 30, y: 60 },
-      jump: { w: 10, h: 50, x: 50, y: 50 },
-      roll: { w: 30, h: 40, x: 30, y: 60 },
-      attack: { w: 30, h: 40, x: 35, y: 60 },
-      climb: { w: 10, h: 50, x: 50, y: 50 },
-      crouch: { w: 10, h: 30, x: 50, y: 70 },
-    });
-    this.player.body.setSize(10, 50);
-    this.player.body.setOffset(50, 50);
+    this.player.setData("hitboxes", this.heroConfig.hitboxes);
+    this.player.body.setSize(
+      this.heroConfig.hitboxes.idle.w,
+      this.heroConfig.hitboxes.idle.h,
+    );
+    this.player.body.setOffset(
+      this.heroConfig.hitboxes.idle.x,
+      this.heroConfig.hitboxes.idle.y,
+    );
     this.physics.add.collider(
       this.player,
       this.ground,
       null,
       (player, block) => {
-        if (block.isPlatform && player.getData("isDroppingDown")) {
+        if (
+          block.isPlatform &&
+          (player.getData("isDroppingDown") ||
+            player.getData("isVaulting") ||
+            player.getData("isClimbing"))
+        ) {
           return false;
         }
         return true;
       },
       this,
     );
-    this.attackHitbox = this.add.rectangle(0, 0, 70, 50, 0xff0000, 0.5);
+    this.attackHitbox = this.add.rectangle(
+      0,
+      0,
+      this.heroConfig.attackHitbox.width,
+      this.heroConfig.attackHitbox.height,
+      0xff0000,
+      0.5,
+    );
     this.physics.add.existing(this.attackHitbox);
     this.attackHitbox.body.allowGravity = false;
     this.attackHitbox.body.enable = false;
@@ -604,19 +689,66 @@ class GameScene extends Phaser.Scene {
     const isRollJustDown =
       Phaser.Input.Keyboard.JustDown(this.keys.roll) ||
       Phaser.Input.Keyboard.JustDown(this.keys.shift);
+    const isClimbingNow = this.player.getData("isClimbing") || false;
     if (
       isRollJustDown &&
       !this.isRolling &&
       !this.isAttacking &&
-      this.player.body.touching.down
+      (this.player.body.touching.down || isClimbingNow)
     ) {
       if (this.player.getData("stamina") >= this.STAMINA_COST_ROLL) {
         this.isRolling = true;
         this.consumeStamina(this.STAMINA_COST_ROLL);
         this.player.setData("isInvulnerable", true);
+        this.player.setData("isClimbing", false);
+        this.player.body.allowGravity = true;
         this.player.anims.play("roll", true);
         const rollDirection = this.player.flipX ? -1 : 1;
         this.player.setVelocityX(rollDirection * 300);
+      }
+    }
+
+    if (this.isRolling) {
+      const rollCfg = this.heroConfig.roll;
+      const isHoldingHorizontal =
+        this.keys.a.isDown ||
+        this.keys.d.isDown ||
+        this.cursors.left.isDown ||
+        this.cursors.right.isDown;
+      const currentAnim = this.player.anims.currentAnim;
+      const currentFrame = this.player.anims.currentFrame;
+
+      if (currentAnim && currentAnim.key === "roll" && currentFrame && rollCfg) {
+        if (!isHoldingHorizontal) {
+          const skipList = rollCfg.skipFrames || [5, 6];
+          const skipTarget = rollCfg.skipToFrame;
+          if (
+            skipList.includes(currentFrame.textureFrame) &&
+            currentFrame.textureFrame !== skipTarget
+          ) {
+            if (skipTarget !== null && skipTarget !== undefined) {
+              const targetFrame = currentAnim.frames.find(
+                (f) => f.textureFrame === skipTarget,
+              );
+              if (targetFrame) {
+                this.player.anims.setCurrentFrame(targetFrame);
+                this.player.anims.accumulator = 0;
+                this.player.anims.nextTick =
+                  targetFrame.duration || this.player.anims.msPerFrame;
+                if (rollCfg.stopVelocityOnSkip) {
+                  this.player.setVelocityX(0);
+                }
+              }
+            } else {
+              this.isRolling = false;
+              this.player.setData("isInvulnerable", false);
+              this.player.anims.play("idle", true);
+              if (rollCfg.stopVelocityOnSkip) {
+                this.player.setVelocityX(0);
+              }
+            }
+          }
+        }
       }
     }
     const regenDelayUntil = this.player.getData("staminaRegenDelayUntil") || 0;
@@ -641,100 +773,215 @@ class GameScene extends Phaser.Scene {
     let touchingRope = false;
     let ropeX = null;
     let ropeTop = null;
+    let ropeBottom = null;
+    let ropeBelow = null;
+    let minRopeBelowDist = Infinity;
     
-    const ROPE_ATTACH_RANGE_X = 8; // Adjustable horizontal attach range
-    const ROPE_ATTACH_RANGE_Y = 0; // Removed fake extension, we use a real vault now
-    const ROPE_VISUAL_OFFSET_RIGHT = -5; // Adjustable visual sprite shift when facing right on rope
-    const ROPE_VISUAL_OFFSET_LEFT = 5;   // Adjustable visual sprite shift when facing left on rope
-    const VAULT_THRESHOLD = 32;           // Adjustable pixels early to trigger top platform swoosh
-    const VAULT_HEIGHT = 16;             // Vault height (1 tile)
+    const ropeCfg = this.heroConfig.rope;
+    const ROPE_ATTACH_RANGE_X = ropeCfg.attachRangeX;
+    const ROPE_ATTACH_RANGE_Y = 0;
+    const ROPE_VISUAL_OFFSET_RIGHT = ropeCfg.visualOffsetRight;
+    const ROPE_VISUAL_OFFSET_LEFT = ropeCfg.visualOffsetLeft;
+    const VAULT_THRESHOLD = ropeCfg.vaultThreshold;
+    const VAULT_HEIGHT = ropeCfg.vaultHeight;
+    const VAULT_DOWN_HEIGHT = ropeCfg.vaultDownHeight || 16;
+    const CLIMB_DOWN_THRESHOLD = ropeCfg.climbDownThreshold || 20;
+    const DETACH_BOTTOM_OFFSET = ropeCfg.detachBottomOffset !== undefined ? ropeCfg.detachBottomOffset : 4;
     
     const pBody = this.player.body;
     let isVaulting = this.player.getData("isVaulting") || false;
     
+    const columnRopes = [];
+    const touchingBlocks = [];
+
     this.ground.getChildren().forEach((block) => {
       if (block.isRope) {
         const bBody = block.body;
         const inX = pBody.right > bBody.center.x - ROPE_ATTACH_RANGE_X && pBody.left < bBody.center.x + ROPE_ATTACH_RANGE_X;
         const inY = pBody.bottom > bBody.top - ROPE_ATTACH_RANGE_Y && pBody.top < bBody.bottom;
         
-        if (inX && inY) {
+        if (inX) {
+          columnRopes.push(block);
+          if (inY) {
             touchingRope = true;
             ropeX = block.x;
-            const adjustedTop = bBody.top - ROPE_ATTACH_RANGE_Y;
-            if (ropeTop === null || adjustedTop < ropeTop) {
-                ropeTop = adjustedTop;
+            touchingBlocks.push(block);
+          }
+          const distBelow = bBody.top - pBody.bottom;
+          if (distBelow >= -6 && distBelow <= CLIMB_DOWN_THRESHOLD) {
+            if (distBelow < minRopeBelowDist) {
+              minRopeBelowDist = distBelow;
+              ropeBelow = block;
             }
+          }
         }
       }
     });
 
+    if (columnRopes.length > 0) {
+      columnRopes.sort((a, b) => a.body.top - b.body.top);
+      const refBlock = touchingBlocks.length > 0 ? touchingBlocks[0] : (ropeBelow || columnRopes[0]);
+      if (refBlock) {
+        ropeTop = refBlock.body.top;
+        ropeBottom = refBlock.body.bottom;
+        const refIdx = columnRopes.indexOf(refBlock);
+        for (let i = refIdx - 1; i >= 0; i--) {
+          if (Math.abs(columnRopes[i].body.bottom - ropeTop) <= 2) {
+            ropeTop = columnRopes[i].body.top;
+          } else {
+            break;
+          }
+        }
+        for (let i = refIdx + 1; i < columnRopes.length; i++) {
+          if (Math.abs(columnRopes[i].body.top - ropeBottom) <= 2) {
+            ropeBottom = columnRopes[i].body.bottom;
+          } else {
+            break;
+          }
+        }
+      }
+    }
+
     let wasClimbing = this.player.getData("isClimbing") || false;
     let isClimbing = wasClimbing;
 
-    if (!touchingRope || this.isAttacking || this.isRolling) {
+    const isNearRopeBottom = ropeBottom !== null && pBody.bottom >= ropeBottom - 24;
+    const atRopeEndGoingDown =
+      isDown &&
+      ((onGround && isNearRopeBottom) || (ropeBottom !== null && pBody.bottom >= ropeBottom - DETACH_BOTTOM_OFFSET));
+
+    if (this.isAttacking || this.isRolling) {
       isClimbing = false;
-    } else if ((isUp || (isDown && !onGround)) && !this.isAttacking && !this.isRolling && !isVaulting) {
+      this.player.setData("isVaulting", false);
+    } else if (isClimbing && atRopeEndGoingDown && !isVaulting) {
+      // Automatically detach from rope when going down at the end of the rope
+      isClimbing = false;
+      this.player.setData("isClimbing", false);
+      this.player.body.allowGravity = true;
+    } else if (!touchingRope && !isVaulting) {
+      isClimbing = false;
+    }
+
+    const canVaultDown =
+      isDown &&
+      onGround &&
+      !this.isAttacking &&
+      !this.isRolling &&
+      !isVaulting &&
+      !wasClimbing;
+
+    if (canVaultDown && ropeBelow) {
+      isVaulting = true;
+      isClimbing = true;
+      this.player.setData("isVaulting", true);
+      this.player.setData("isVaultingDown", true);
+      this.player.setData("isClimbing", true);
+      this.player.body.allowGravity = false;
+      this.player.setVelocity(0, 0);
+
+      this.player.x =
+        ropeBelow.x +
+        (this.player.flipX
+          ? ROPE_VISUAL_OFFSET_LEFT
+          : ROPE_VISUAL_OFFSET_RIGHT);
+      this.player.anims.play("climb", true);
+
+      const targetY = this.player.y + VAULT_DOWN_HEIGHT;
+
+      this.tweens.add({
+        targets: this.player,
+        y: targetY,
+        duration: 100,
+        ease: "Sine.easeOut",
+        onComplete: () => {
+          this.player.setData("isVaulting", false);
+          this.player.setData("isVaultingDown", false);
+          this.player.setData("isClimbing", true);
+          this.player.body.allowGravity = false;
+        },
+      });
+    } else if (
+      (isUp || (isDown && !onGround && !atRopeEndGoingDown)) &&
+      touchingRope &&
+      !this.isAttacking &&
+      !this.isRolling &&
+      !isVaulting
+    ) {
       if (isUp && pBody.bottom <= ropeTop + 2) {
-          // Standing exactly at the very top of the rope, do not grab
+        // Standing exactly at the very top of the rope, do not grab
       } else {
-          isClimbing = true;
+        isClimbing = true;
       }
     }
 
     if (isClimbing && isUp && ropeTop !== null && !isVaulting) {
-        // Vault earlier based on VAULT_THRESHOLD
-        if (pBody.bottom <= ropeTop + VAULT_THRESHOLD) {
-            isClimbing = false;
-            this.player.setData("isVaulting", true);
-            this.player.body.allowGravity = false;
-            this.player.setVelocity(0, 0);
-            
-            // Calculate exact target Y so feet land perfectly on the platform (ropeTop - VAULT_HEIGHT)
-            const targetY = this.player.y - (pBody.bottom - (ropeTop - VAULT_HEIGHT));
-            
-            this.tweens.add({
-                targets: this.player,
-                y: targetY,
-                duration: 100, // Faster swoosh
-                ease: 'Sine.easeOut',
-                onComplete: () => {
-                    this.player.setData("isVaulting", false);
-                    this.player.body.allowGravity = true;
-                }
-            });
-        }
+      if (pBody.bottom <= ropeTop + VAULT_THRESHOLD) {
+        isClimbing = false;
+        this.player.setData("isVaulting", true);
+        this.player.setData("isVaultingDown", false);
+        this.player.body.allowGravity = false;
+        this.player.setVelocity(0, 0);
+
+        const targetY =
+          this.player.y - (pBody.bottom - (ropeTop - VAULT_HEIGHT));
+
+        this.tweens.add({
+          targets: this.player,
+          y: targetY,
+          duration: 100,
+          ease: "Sine.easeOut",
+          onComplete: () => {
+            this.player.setData("isVaulting", false);
+            this.player.body.allowGravity = true;
+          },
+        });
+      }
     }
 
     this.player.setData("isClimbing", isClimbing);
 
     let isCrouching = false;
-    if (isDown && onGround && !isClimbing && !this.isAttacking && !this.isRolling && !isVaulting) {
+    if (
+      isDown &&
+      onGround &&
+      !isClimbing &&
+      !this.isAttacking &&
+      !this.isRolling &&
+      !isVaulting
+    ) {
       isCrouching = true;
     }
 
     if (isClimbing) {
       this.player.body.allowGravity = false;
       this.player.setVelocityX(0);
-      
+
       // Allow sprite flipping while climbing
       if (this.cursors.left.isDown || this.keys.a.isDown) {
-          this.player.setFlipX(true);
+        this.player.setFlipX(true);
       } else if (this.cursors.right.isDown || this.keys.d.isDown) {
-          this.player.setFlipX(false);
+        this.player.setFlipX(false);
       }
-      
+
       // Keep strictly snapped to rope center + visual offset
-      if (ropeX !== null) {
-          this.player.x = ropeX + (this.player.flipX ? ROPE_VISUAL_OFFSET_LEFT : ROPE_VISUAL_OFFSET_RIGHT);
+      const activeRopeX =
+        ropeX !== null ? ropeX : ropeBelow ? ropeBelow.x : null;
+      if (activeRopeX !== null) {
+        this.player.x =
+          activeRopeX +
+          (this.player.flipX
+            ? ROPE_VISUAL_OFFSET_LEFT
+            : ROPE_VISUAL_OFFSET_RIGHT);
       }
-      
-      if (isUp) {
-        this.player.setVelocityY(-100);
-      } else if (isDown && !onGround) {
-        this.player.setVelocityY(100);
-      } else {
-        this.player.setVelocityY(0);
+
+      if (!isVaulting) {
+        if (isUp) {
+          this.player.setVelocityY(-100);
+        } else if (isDown && !onGround) {
+          this.player.setVelocityY(100);
+        } else {
+          this.player.setVelocityY(0);
+        }
       }
     } else if (!isVaulting) {
       this.player.body.allowGravity = true;
@@ -790,12 +1037,13 @@ class GameScene extends Phaser.Scene {
 
     if (this.isAttacking) {
       this.attackHitbox.body.enable = true;
+      const atkCfg = this.heroConfig.attackHitbox;
       if (this.player.flipX) {
-        this.attackHitbox.x = this.player.x - 30;
+        this.attackHitbox.x = this.player.x - atkCfg.offsetX;
       } else {
-        this.attackHitbox.x = this.player.x + 30;
+        this.attackHitbox.x = this.player.x + atkCfg.offsetX;
       }
-      this.attackHitbox.y = this.player.y + 25;
+      this.attackHitbox.y = this.player.y + atkCfg.offsetY;
     } else {
       this.attackHitbox.body.enable = false;
       this.attackHitbox.x = -1000;
@@ -804,23 +1052,37 @@ class GameScene extends Phaser.Scene {
 
     if (!this.isAttacking && !this.isRolling) {
       if (isVaulting) {
-        if (this.player.anims.currentAnim?.key !== "idle") {
+        if (this.player.getData("isVaultingDown")) {
+          if (this.player.anims.currentAnim?.key !== "climb") {
+            this.player.anims.play("climb", true);
+          }
+        } else {
+          if (this.player.anims.currentAnim?.key !== "idle") {
             this.player.anims.play("idle", true);
+          }
         }
       } else if (isClimbing) {
-        this.player.anims.play("climb", true);
+        if (this.player.anims.currentAnim?.key !== "climb") {
+          this.player.anims.play("climb", true);
+        }
         if (this.player.body.velocity.y === 0) {
-          this.player.anims.pause();
+          if (!this.player.anims.isPaused) {
+            this.player.anims.pause();
+          }
         } else {
-          this.player.anims.resume();
+          if (this.player.anims.isPaused) {
+            this.player.anims.resume();
+          }
         }
       } else {
-        this.player.anims.resume();
+        if (this.player.anims.isPaused) {
+          this.player.anims.resume();
+        }
         if (!onGround) {
           this.player.anims.play("jump", true);
         } else if (isCrouching) {
           if (this.player.anims.currentAnim?.key !== "crouch") {
-              this.player.anims.play("crouch", true);
+            this.player.anims.play("crouch", true);
           }
         } else {
           if (isMoving) {
@@ -970,15 +1232,9 @@ class GameScene extends Phaser.Scene {
       });
     }
     const currentAnim = this.player.anims.currentAnim?.key;
-    let originOffset = 0;
-    const attackShiftAmount = 0.19;
-    const jumpShiftAmount = 0.06;
-    if (currentAnim === "attack") {
-      originOffset = attackShiftAmount;
-    } else if (currentAnim === "jump") {
-      originOffset = jumpShiftAmount;
-    }
-    const hitboxes = this.player.getData("hitboxes");
+    const originOffset =
+      (this.heroConfig.spriteOffsets && this.heroConfig.spriteOffsets[currentAnim]) || 0;
+    const hitboxes = this.heroConfig.hitboxes;
     let targetHitboxKey = currentAnim || "idle";
     let currentHitboxKey = this.player.getData("currentHitboxKey") || "idle";
     const hitboxTransitionDelay = 100;
@@ -1007,7 +1263,7 @@ class GameScene extends Phaser.Scene {
       this.player.setData("hitboxTimer", 0);
     }
     const pBox = hitboxes[currentHitboxKey] || hitboxes["idle"];
-    const currentStateHash = `${currentHitboxKey}_${this.player.flipX}_${originOffset}`;
+    const currentStateHash = `${currentHitboxKey}_${this.player.flipX}_${originOffset}_${pBox.x}_${pBox.y}_${pBox.w}_${pBox.h}`;
     const previousStateHash = this.player.getData("lastHitboxState");
     if (currentStateHash !== previousStateHash) {
       this.player.setData("lastHitboxState", currentStateHash);

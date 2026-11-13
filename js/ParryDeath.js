@@ -7,7 +7,7 @@ const PARRY_DEATH_CONFIG = {
   enabled: true,
   parryKeyCodes: ["KeyC"],
   parryKeyLabel: "C",
-  downedMs: 700,         // hurt (7 frames) + collapse to the ground before Death appears
+  downedMs: 900,         // hurt (7 frames) + collapse to the ground before Death appears
   approachMs: 1200,
   delayMinMs: 600,       // random hover before the warning
   delayMaxMs: 2000,

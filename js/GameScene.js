@@ -798,7 +798,7 @@ class GameScene extends Phaser.Scene {
       return;
     }
     this.cameras.main.shake(200, 0.004);
-    this.playCollapse(() => this.scene.launch("DeathScene"));
+    this.playCollapse(() => this.time.delayedCall(DEATH_CONFIG.downHoldMs, () => this.scene.launch("DeathScene")));
   }
   // Hurt then down; onDown runs once the knight lies on the ground (held on
   // the last down frame). Shared with the Parry Death encounter.

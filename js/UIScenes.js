@@ -16,11 +16,12 @@ const HURT_CONFIG = {
   knockbackX: 90, // sideways push on a hit, px/s (was 200)
   knockbackUp: 90, // upward hop on a hit, px/s (was 200)
   hurtFrameRate: 14, // NEW_HURT: 7 frames -> 0.5 s
-  downFrameRate: 10, // NEW_DOWN: 2 frames, ends holding the ground frame
+  downFrameRate: 5, // NEW_DOWN: 2 frames (0.2 s each), ends holding the ground frame
 };
 
 // YOU DIED screen (sprites/HERO/YOU DIED.png: 15 frames of 512x288, scaled to fill the screen).
 const DEATH_CONFIG = {
+  downHoldMs: 1000, // knight lies on the ground (NEW_DOWN frame 2) this long before YOU DIED
   frameRate: 10, // 15 frames -> 1.5 s
   holdMs: 1500, // last frame stays up this long before respawning at the checkpoint
   backgroundColor: 0x000000, // behind the transparent parts of the sheet

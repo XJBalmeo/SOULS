@@ -31,17 +31,17 @@ class GameScene extends Phaser.Scene {
       frameWidth: 100,
       frameHeight: 100,
     });
-    this.load.spritesheet("rat_walk", "Sprites/ENEMIES/FAMINE/RAT_WALK.png", {
+    this.load.spritesheet("rat_walk", "sprites/ENEMIES/FAMINE/RAT_WALK.png", {
       frameWidth: 100,
       frameHeight: 100,
     });
-    this.load.spritesheet("rat_run", "Sprites/ENEMIES/FAMINE/RAT_RUN.png", {
+    this.load.spritesheet("rat_run", "sprites/ENEMIES/FAMINE/RAT_RUN.png", {
       frameWidth: 100,
       frameHeight: 100,
     });
     this.load.spritesheet(
       "rat_attack",
-      "Sprites/ENEMIES/FAMINE/RAT_ATTACK.png",
+      "sprites/ENEMIES/FAMINE/RAT_ATTACK.png",
       { frameWidth: 100, frameHeight: 100 },
     );
     this.load.json("famine_ldtk", "levels/famine/FAMINE.ldtk?v=" + Date.now());
@@ -71,6 +71,12 @@ class GameScene extends Phaser.Scene {
   }
   create() {
     window.gameScene = this;
+    // The scene instance is reused when a new game starts from the menu, so
+    // clear per-run objects that are created lazily or read before assignment.
+    this.rats = null;
+    this.vaultTween = null;
+    this.hpDelayTween = null;
+    this.stamDelayTween = null;
     // =========================================================================
     // HERO CONFIGURATION: HITBOXES, SPRITE PLACEMENTS & TUNING
     // Grouped for easy adjustment if any sprite alignment or hitbox feels off.
@@ -138,31 +144,31 @@ class GameScene extends Phaser.Scene {
       },
     };
 
-    this.anims.create({
+    this.createAnimOnce({
       key: "idle",
       frames: this.anims.generateFrameNumbers("hero_idle"),
       frameRate: 1000 / 500,
       repeat: -1,
     });
-    this.anims.create({
+    this.createAnimOnce({
       key: "run",
       frames: this.anims.generateFrameNumbers("hero_run"),
       frameRate: 12,
       repeat: -1,
     });
-    this.anims.create({
+    this.createAnimOnce({
       key: "jump",
       frames: this.anims.generateFrameNumbers("hero_jump"),
       frameRate: 10,
       repeat: 0,
     });
-    this.anims.create({
+    this.createAnimOnce({
       key: "roll",
       frames: this.anims.generateFrameNumbers("hero_roll"),
       frameRate: (this.heroConfig.roll && this.heroConfig.roll.frameRate) || 15,
       repeat: 0,
     });
-    this.anims.create({
+    this.createAnimOnce({
       key: "attack",
       frames: this.anims.generateFrameNumbers("hero_attack"),
       frameRate: 15,
@@ -172,7 +178,7 @@ class GameScene extends Phaser.Scene {
     const climbFps = this.heroConfig.rope.climbFrameRate || 10;
     const baseClimbMs = Math.round(1000 / climbFps);
     const evenClimbMult = this.heroConfig.rope.evenFrameMultiplier || 1.5;
-    this.anims.create({
+    this.createAnimOnce({
       key: "climb",
       frames: [
         { key: "hero_climb", frame: 0, duration: baseClimbMs },
@@ -183,7 +189,7 @@ class GameScene extends Phaser.Scene {
       repeat: -1,
     });
 
-    this.anims.create({
+    this.createAnimOnce({
       key: "crouch",
       frames: this.anims.generateFrameNumbers("hero_crouch"),
       frameRate: 10,
@@ -265,19 +271,19 @@ class GameScene extends Phaser.Scene {
     this.physics.add.existing(this.attackHitbox);
     this.attackHitbox.body.allowGravity = false;
     this.attackHitbox.body.enable = false;
-    this.anims.create({
+    this.createAnimOnce({
       key: "rat_walk",
       frames: this.anims.generateFrameNumbers("rat_walk"),
       frameRate: 10,
       repeat: -1,
     });
-    this.anims.create({
+    this.createAnimOnce({
       key: "rat_run",
       frames: this.anims.generateFrameNumbers("rat_run"),
       frameRate: 15,
       repeat: -1,
     });
-    this.anims.create({
+    this.createAnimOnce({
       key: "rat_attack",
       frames: this.anims.generateFrameNumbers("rat_attack"),
       frameRate: 12,
@@ -290,20 +296,32 @@ class GameScene extends Phaser.Scene {
     } else {
       this.spawnRat(600, 300, true);
     }
-    this.physics.world.drawDebug = false;
-    this.physics.world.debugGraphic.clear();
-    if (this.attackHitbox) this.attackHitbox.setVisible(false);
+    this.setHitboxDebug(SoulsSettings.load().showHitboxes);
     this.input.keyboard.on("keydown-TAB", (event) => {
       event.preventDefault();
-      if (this.physics.world.drawDebug) {
-        this.physics.world.drawDebug = false;
-        this.physics.world.debugGraphic.clear();
-        if (this.attackHitbox) this.attackHitbox.setVisible(false);
-      } else {
-        this.physics.world.drawDebug = true;
-        if (this.attackHitbox) this.attackHitbox.setVisible(true);
-      }
+      this.setHitboxDebug(!this.physics.world.drawDebug);
     });
+    const openPause = (event) => {
+      // scene.pause() is queued, so isActive() stays true for the rest of
+      // this frame; the flag stops a second key (Esc+P) launching twice.
+      if (event.repeat || this.pauseRequested) return;
+      this.pauseRequested = true;
+      this.scene.launch("PauseScene");
+      this.scene.pause();
+    };
+    this.input.keyboard.on("keydown-ESC", openPause);
+    this.input.keyboard.on("keydown-P", openPause);
+    // Keys held when the game was paused never see their keyup; clear them.
+    // A mouse button held while clicking a menu must not swing the sword.
+    this.ignorePointerUntilUp = true;
+    this.pauseRequested = false;
+    const onResume = () => {
+      this.pauseRequested = false;
+      this.input.keyboard.resetKeys();
+      this.ignorePointerUntilUp = true;
+    };
+    this.events.on("resume", onResume);
+    this.events.once("shutdown", () => this.events.off("resume", onResume));
     this.cursors = this.input.keyboard.createCursorKeys();
     this.keys = this.input.keyboard.addKeys({
       w: Phaser.Input.Keyboard.KeyCodes.W,
@@ -658,6 +676,15 @@ class GameScene extends Phaser.Scene {
     });
     this.rats.add(rat);
   }
+  // Animations live in the game-wide manager and survive scene restarts.
+  createAnimOnce(config) {
+    if (!this.anims.exists(config.key)) this.anims.create(config);
+  }
+  setHitboxDebug(on) {
+    this.physics.world.drawDebug = on;
+    if (!on) this.physics.world.debugGraphic.clear();
+    if (this.attackHitbox) this.attackHitbox.setVisible(on);
+  }
   takeDamage(amount) {
     if (this.player.getData("hp") <= 0) return;
     const currentHp = this.player.getData("hp");
@@ -777,8 +804,10 @@ class GameScene extends Phaser.Scene {
     if (this.farBg) {
       this.farBg.tilePositionX = this.cameras.main.scrollX * 0.2;
     }
+    const mouseAttack = this.input.activePointer.leftButtonDown();
+    if (!mouseAttack) this.ignorePointerUntilUp = false;
     if (
-      (this.keys.attack.isDown || this.input.activePointer.leftButtonDown()) &&
+      (this.keys.attack.isDown || (mouseAttack && !this.ignorePointerUntilUp)) &&
       !this.isAttacking &&
       !this.isRolling
     ) {

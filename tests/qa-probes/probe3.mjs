@@ -1,0 +1,37 @@
+import puppeteer from "puppeteer";
+import { startServer } from "../serve.mjs";
+const server = await startServer(0);
+const url = "http://127.0.0.1:" + server.address().port + "/";
+const browser = await puppeteer.launch({ headless: true, args: ["--autoplay-policy=no-user-gesture-required"] });
+const page = await browser.newPage();
+await page.setViewport({ width: 1280, height: 720 });
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+const ev = (f, a) => page.evaluate(f, a);
+const st = () => ev(() => Object.fromEntries(["MenuScene","GameScene","PauseScene","SettingsScene","CreditsScene"].map((k) => [k, game.scene.isActive(k) ? "A" : game.scene.isPaused(k) ? "P" : game.scene.isSleeping(k) ? "S" : "-"])));
+const out = (n, v) => console.log("## " + n + ": " + JSON.stringify(v));
+const box = () => ev(() => { const b = document.querySelector("canvas").getBoundingClientRect(); return { l: b.left, t: b.top, s: b.width / 1280 }; });
+const click = async (x, y) => { const r = await box(); await page.mouse.click(r.l + x * r.s, r.t + y * r.s); await wait(100); };
+await page.goto(url, { waitUntil: "load" });
+await ev(() => localStorage.clear());
+await page.reload({ waitUntil: "load" });
+await wait(1200);
+await page.click("#fullscreen-overlay"); await wait(400);
+// Race 1: New Game then Credits (y=516) within fade
+await click(640, 360); await click(640, 516); await wait(1500);
+out("R1 scenes after NewGame+Credits", await st());
+out("R1 menu.starting", await ev(() => game.scene.getScene("MenuScene").starting));
+await page.keyboard.press("Escape"); await wait(600);
+out("R1 back at menu", await st());
+await click(640, 360); await wait(1800);
+out("R1 New Game after return (expect GameScene A)", await st());
+// Race 2: reload fresh, New Game then Settings (y=464)
+await page.reload({ waitUntil: "load" }); await wait(1200);
+await page.click("#fullscreen-overlay"); await wait(400);
+await click(640, 360); await click(640, 464); await wait(1500);
+out("R2 scenes after NewGame+Settings", await st());
+out("R2 menu.starting", await ev(() => game.scene.getScene("MenuScene").starting));
+await page.keyboard.press("Escape"); await wait(600);
+out("R2 after Esc", await st());
+await click(640, 360); await wait(1800);
+out("R2 New Game after return", await st());
+await browser.close(); server.close();

@@ -1,6 +1,6 @@
 # Development status
 
-Current milestone: M1 — Famine. Current build: **v0.2 Combat & Survival — REVIEW** (2026-11-13; v0.1 Foundation DONE, owner approved 2026-11-13). Owner build approval for v0.2: PENDING. Review packet: `docs/builds/v0.2/BUILD_REVIEW.md`. Branch `famine/v0.2-combat-survival`. Branch: `famine/v0.1-foundation` (not merged). Review packet: `docs/builds/v0.1/BUILD_REVIEW.md`. Next tasks after approval: v0.2 — M1.3 combat/death, M1.4 checkpoint/save, save-dependent M1.2 (Continue, retry, New Game confirmation).
+Current milestone: M1 — Famine. Current build: **v0.3 Parry Death & Enemies — IN PROGRESS** (v0.2 approved 2026-11-13). Previously: **v0.2 Combat & Survival — REVIEW** (2026-11-13; v0.1 Foundation DONE, owner approved 2026-11-13). Owner build approval for v0.2: PENDING. Review packet: `docs/builds/v0.2/BUILD_REVIEW.md`. Branch `famine/v0.2-combat-survival`. Branch: `famine/v0.1-foundation` (not merged). Review packet: `docs/builds/v0.1/BUILD_REVIEW.md`. Next tasks after approval: v0.2 — M1.3 combat/death, M1.4 checkpoint/save, save-dependent M1.2 (Continue, retry, New Game confirmation).
 
 ## Existing implementation (static inspection)
 Browser Phaser game, hero movement/sword/stamina, rat enemy, Famine artwork, modular randomized rooms, parallax, fullscreen overlay. See ARCHITECTURE.md. No live playtest or automated baseline executed for this kit.
@@ -106,3 +106,12 @@ All four were implemented by the Lead directly (T1, small). `npm run test:smoke`
   - Chapter-transition save is untested until v0.5.
   - Human playtest pending.
 - Next: owner review of v0.2. Then v0.3 starts with a souls-architect design for the Parry Death state machine, plus owner approval of the two new enemy concepts.
+
+## Owner decision — 2026-11-13 — v0.2 APPROVED
+The owner said "lets proceed with the full plan in v0.3" after the menu/fullscreen changes (8088ded) and the Hollow Archer demo (2233fec).
+- v0.2 is DONE.
+- v0.3 is IN PROGRESS on branch `famine/v0.3-parry-death-enemies`, created from the archer demo branch.
+- These owner questions are still open and use the Lead's proposed defaults until answered:
+  - The sword cannot cut arrows.
+  - Hits do not interrupt the Starved's wind-up.
+  - Parry Death input and timing.

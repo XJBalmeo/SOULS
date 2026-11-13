@@ -82,15 +82,18 @@ try {
 
   check("Phaser 3.80.1 loaded", (await state(() => Phaser.VERSION)) === "3.80.1");
   check("boots into MenuScene", await waitFor(() => game.scene.isActive("MenuScene")));
-  check("click-to-start overlay shown", await state(() => document.getElementById("fullscreen-overlay").style.display !== "none"));
-  await shot("01-overlay");
-
-  await press("Enter");
-  check("menu ignores keys behind overlay", (await sceneStatus()).GameScene === "off");
-
-  await page.click("#fullscreen-overlay");
   await wait(400);
-  check("overlay dismissed by click", await state(() => document.getElementById("fullscreen-overlay").style.display === "none"));
+  const overlayAtBoot = await state(() => getComputedStyle(document.getElementById("fullscreen-overlay")).display);
+  check("no paused overlay at boot, only the menu", overlayAtBoot === "none", overlayAtBoot);
+  check("not fullscreen on the menu", await state(() => !document.fullscreenElement));
+  const titleFrames = new Set();
+  for (let i = 0; i < 12; i++) {
+    titleFrames.add(await state(() => game.scene.getScene("MenuScene").title.frame.name));
+    await wait(60);
+  }
+  check("title loops frames 1-3 only", [...titleFrames].every((f) => f <= 2) && titleFrames.size >= 2, [...titleFrames].join(","));
+  check("menu text is white", await state(() =>
+    game.scene.getScene("MenuScene").children.list.find((c) => c.text === "Settings").style.color === "#ffffff"));
   await shot("02-main-menu");
 
   const continueColor = await state(() =>
@@ -128,8 +131,21 @@ try {
   check("Credits back to menu", await waitFor(() => game.scene.isActive("MenuScene")));
 
   await wait(300);
+  const delayMs = await state(() => TITLE_CONFIG.startDelayMs);
+  const pressedAt = Date.now();
   await press("Enter"); // menu restarted, New Game selected
+  await wait(250);
+  const titleAfterPress = await state(() => {
+    const t = game.scene.getScene("MenuScene").title;
+    return { anim: t.anims.currentAnim.key, frame: t.frame.name, game: game.scene.isActive("GameScene") };
+  });
+  check("New Game plays title frames 4-5 and holds 5", titleAfterPress.anim === "title_start" && titleAfterPress.frame === 4 && !titleAfterPress.game,
+    JSON.stringify(titleAfterPress));
+  await shot("05b-title-start");
+  check("New Game enters fullscreen", await state(() => !!document.fullscreenElement));
   check("New Game starts GameScene", await waitFor(() => game.scene.isActive("GameScene") && !!game.scene.getScene("GameScene").player));
+  const elapsed = Date.now() - pressedAt;
+  check("menu-to-game delay matches TITLE_CONFIG.startDelayMs", elapsed >= delayMs - 100, `${elapsed} ms (config ${delayMs})`);
   await wait(1500); // settle onto the floor
   let p = await player();
   check("hero spawned with full HP/stamina", p.hp === 100 && p.stamina === 100, JSON.stringify(p));
@@ -178,7 +194,9 @@ try {
   await press("ArrowDown"); // Settings
   await press("Enter");
   check("Settings opens from pause", await waitFor(() => game.scene.isActive("SettingsScene")));
-  for (let i = 0; i < 4; i++) await press("ArrowDown"); // Show Hitboxes
+  check("no fullscreen option in settings", await state(() =>
+    !game.scene.getScene("SettingsScene").children.list.some((c) => c.text && c.text.includes("Fullscreen"))));
+  for (let i = 0; i < 3; i++) await press("ArrowDown"); // Show Hitboxes
   await press("Enter");
   check("hitbox toggle applies to running game", await state(() => game.scene.getScene("GameScene").physics.world.drawDebug === true));
   await shot("09-settings-over-pause");
@@ -193,11 +211,24 @@ try {
   await press("KeyD", 400);
   check("controls work after resume", (await player()).x > resumeX + 10);
 
+  await state(() => document.exitFullscreen());
+  check("leaving fullscreen mid-run shows paused overlay", await waitFor(() =>
+    getComputedStyle(document.getElementById("fullscreen-overlay")).display === "flex" && game.scene.isPaused("GameScene")));
+  await shot("09b-fullscreen-exit-overlay");
+  await page.click("#fullscreen-overlay");
+  check("clicking overlay resumes in fullscreen", await waitFor(() =>
+    game.scene.isActive("GameScene") && !!document.fullscreenElement &&
+    getComputedStyle(document.getElementById("fullscreen-overlay")).display === "none"));
+
   await press("KeyP");
   await waitFor(() => game.scene.isActive("PauseScene"));
   for (let i = 0; i < 3; i++) await press("ArrowDown"); // Quit
   await press("Enter");
   check("Quit returns to main menu", await waitFor(() => game.scene.isActive("MenuScene") && !game.scene.isActive("GameScene")));
+  await state(() => document.fullscreenElement && document.exitFullscreen());
+  await wait(300);
+  check("leaving fullscreen on the menu shows no overlay", await state(() =>
+    getComputedStyle(document.getElementById("fullscreen-overlay")).display === "none"));
 
   await wait(300);
   await press("Enter");
@@ -218,7 +249,7 @@ try {
     localStorage.setItem("souls.settings.v1", "{not json");
     return SoulsSettings.load();
   });
-  check("corrupt settings fall back to defaults", corrupt.masterVolume === 0.8 && corrupt.fullscreen === true);
+  check("corrupt settings fall back to defaults", corrupt.masterVolume === 0.8 && corrupt.showHitboxes === false);
   await state(() => localStorage.removeItem("souls.settings.v1"));
 } catch (e) {
   check("test run completed without exception", false, e.stack);

@@ -1,6 +1,6 @@
 {
-  "date": "2026-11-13T10:33:51.302Z",
-  "passed": 40,
+  "date": "2026-11-13T11:16:54.230Z",
+  "passed": 48,
   "failed": 0,
   "results": [
     {
@@ -14,17 +14,22 @@
       "detail": ""
     },
     {
-      "name": "click-to-start overlay shown",
+      "name": "no paused overlay at boot, only the menu",
+      "ok": true,
+      "detail": "none"
+    },
+    {
+      "name": "not fullscreen on the menu",
       "ok": true,
       "detail": ""
     },
     {
-      "name": "menu ignores keys behind overlay",
+      "name": "title loops frames 1-3 only",
       "ok": true,
-      "detail": ""
+      "detail": "2,0,1"
     },
     {
-      "name": "overlay dismissed by click",
+      "name": "menu text is white",
       "ok": true,
       "detail": ""
     },
@@ -56,7 +61,7 @@
     {
       "name": "master volume change persisted",
       "ok": true,
-      "detail": "{\"masterVolume\":0.9,\"musicVolume\":0.8,\"sfxVolume\":0.8,\"fullscreen\":true,\"showHitboxes\":false}"
+      "detail": "{\"masterVolume\":0.9,\"musicVolume\":0.8,\"sfxVolume\":0.8,\"showHitboxes\":false}"
     },
     {
       "name": "master volume applied to sound manager",
@@ -79,9 +84,24 @@
       "detail": ""
     },
     {
+      "name": "New Game plays title frames 4-5 and holds 5",
+      "ok": true,
+      "detail": "{\"anim\":\"title_start\",\"frame\":4,\"game\":false}"
+    },
+    {
+      "name": "New Game enters fullscreen",
+      "ok": true,
+      "detail": ""
+    },
+    {
       "name": "New Game starts GameScene",
       "ok": true,
       "detail": ""
+    },
+    {
+      "name": "menu-to-game delay matches TITLE_CONFIG.startDelayMs",
+      "ok": true,
+      "detail": "1853 ms (config 1500)"
     },
     {
       "name": "hero spawned with full HP/stamina",
@@ -96,7 +116,7 @@
     {
       "name": "move right (D)",
       "ok": true,
-      "detail": "dx=98.7"
+      "detail": "dx=101.3"
     },
     {
       "name": "move left (←)",
@@ -106,7 +126,7 @@
     {
       "name": "jump (Space)",
       "ok": true,
-      "detail": "dy=-29.9 vy=-120"
+      "detail": "dy=-27.9 vy=-133"
     },
     {
       "name": "sword attack (Z) uses stamina",
@@ -139,6 +159,11 @@
       "detail": ""
     },
     {
+      "name": "no fullscreen option in settings",
+      "ok": true,
+      "detail": ""
+    },
+    {
       "name": "hitbox toggle applies to running game",
       "ok": true,
       "detail": ""
@@ -164,7 +189,22 @@
       "detail": ""
     },
     {
+      "name": "leaving fullscreen mid-run shows paused overlay",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "clicking overlay resumes in fullscreen",
+      "ok": true,
+      "detail": ""
+    },
+    {
       "name": "Quit returns to main menu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "leaving fullscreen on the menu shows no overlay",
       "ok": true,
       "detail": ""
     },
@@ -186,7 +226,7 @@
     {
       "name": "settings survive reload",
       "ok": true,
-      "detail": "{\"masterVolume\":0.9,\"musicVolume\":0.8,\"sfxVolume\":0.8,\"fullscreen\":true,\"showHitboxes\":true}"
+      "detail": "{\"masterVolume\":0.9,\"musicVolume\":0.8,\"sfxVolume\":0.8,\"showHitboxes\":true}"
     },
     {
       "name": "corrupt settings fall back to defaults",

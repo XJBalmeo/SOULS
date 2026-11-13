@@ -22,9 +22,10 @@ body {
     left: 0;
     width: 100vw;
     height: 100vh;
-    display: flex;
     justify-content: center;
     align-items: center;
     z-index: 10000;
     cursor: pointer;
+    /* Hidden until fullscreen is left mid-run (see js/main.js). */
+    display: none;
 }

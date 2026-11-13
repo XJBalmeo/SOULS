@@ -63,3 +63,12 @@ Native configuration and model-routing policy added; no gameplay progress change
   - All probes were re-run after the fixes with 0 console warnings.
 - Not tested: real browser fullscreen and Esc, audio (none exists), human feel playtest.
 - Next: owner review of v0.1. On approval, v0.2 = M1.3 + M1.4. A souls-architect review of the save contract is recommended (T3).
+
+## 2026-11-13 — v0.1 owner changes round 1 — REVIEW
+The owner requested four changes:
+- Fullscreen is mandatory, so the setting was removed.
+- The game boots to the menu only, with no overlay. New Game enters fullscreen, and the paused overlay appears only when fullscreen is left mid-run.
+- The title is now the animated `sprites/title.png`, configured through `TITLE_CONFIG` in js/UIScenes.js.
+- Menu text is white.
+
+All four were implemented by the Lead directly (T1, small). `npm run test:smoke` gives 48/48 PASS, exit 0. Gate stays REVIEW, and owner approval is pending.

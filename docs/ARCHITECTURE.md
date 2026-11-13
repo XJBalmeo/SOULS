@@ -7,8 +7,9 @@ Verified by static inspection plus a live headless-Chrome run (`npm run test:smo
 - **Launch:** any static server from the repo root. `npm start` → `tests/serve.mjs` (zero-dependency, exact-case paths like a Linux host) on http://localhost:8000. `file://` does not work (the LDtk JSON is fetched).
 - **Scripts (classic, load order):** `phaser.min.js` → `GameScene.js` → `UIScenes.js` → `main.js`. No bundler or modules; globals `GameScene`, `MenuScene`, `PauseScene`, `SettingsScene`, `CreditsScene`, `SoulsSettings`, `UI`, `game`, `window.gameScene`.
 - **Scenes** (array order = render order): `MenuScene` (boot) → `GameScene`; `PauseScene` and `SettingsScene` overlay a paused `GameScene`; `CreditsScene`.
-- **DOM overlay** `#fullscreen-overlay` (`sprites/pause.png`): click-to-start gate (user gesture, also unlocks audio) and shown when fullscreen is left (if the Fullscreen setting is on). Dismissing it resumes `GameScene` unless the pause menu holds it.
-- **Settings:** `localStorage["souls.settings.v1"]` `{masterVolume, musicVolume, sfxVolume, fullscreen, showHitboxes}`, type-checked and clamped on load; corrupt or unavailable storage falls back to defaults with a console warning. Independent from future campaign saves (v0.2).
+- **Fullscreen is mandatory during play** (owner decision 2026-11-13). The game boots straight to the menu, windowed, with no overlay. New Game requests fullscreen. The DOM overlay `#fullscreen-overlay` (`sprites/pause.png`, hidden by CSS) appears only when fullscreen is left mid-run, and pauses `GameScene`. Clicking it re-enters fullscreen and resumes, unless the pause menu holds the game.
+- **Title:** `sprites/title.png`, 5 frames of 177x39. Frames 1-3 loop on the menu. New Game plays frames 4-5 and holds frame 5, then the game starts. Timings and scale are in `TITLE_CONFIG` at the top of `js/UIScenes.js`.
+- **Settings:** `localStorage["souls.settings.v1"]` `{masterVolume, musicVolume, sfxVolume, showHitboxes}`, type-checked and clamped on load; corrupt or unavailable storage falls back to defaults with a console warning. Independent from future campaign saves (v0.2).
 
 ## Controls (verified)
 | Input | Action |

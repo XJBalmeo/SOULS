@@ -3,7 +3,7 @@
 - **Active milestone:** M1 — Famine
 - **Build / status:** v0.1 Foundation — **REVIEW**
 - **Branch / commit / PR:** `famine/v0.1-foundation` (from `main` 47885db). Owner WIP snapshot 83be920. Build commit is the branch head. No PR opened and nothing merged.
-- **Launch:** `npm start`, then open http://localhost:8000 and click the start screen. Any static server from the repo root also works, e.g. `python -m http.server 8000`. `file://` does not work.
+- **Launch:** `npm start`, then open http://localhost:8000. The main menu appears directly, and New Game goes fullscreen. Any static server from the repo root also works, e.g. `python -m http.server 8000`. `file://` does not work.
 - **Tasks:** M1.1 baseline (Lead + explorer), M1.2 v0.1 UI subset (Lead as programmer/UI), M1.5 initial standards (Lead as art/animation), QA (souls-qa).
 - **Affected files:**
   - `js/UIScenes.js` (new)
@@ -28,7 +28,7 @@
 | M1.5 initial standards | PASS (docs) | `docs/ANIMATION_STANDARD.md` measured contract |
 
 ## Automated tests
-- `npm run test:smoke` gives **40/40 PASS**, exit 0, across several runs. Results are in `docs/builds/v0.1/smoke-results.json`.
+- `npm run test:smoke` gives **48/48 PASS**, exit 0, after the owner's round-1 changes (40/40 before them). Results are in `docs/builds/v0.1/smoke-results.json`.
 - souls-qa exploratory probes are in `tests/qa-probes/probe1-4.mjs`. Run each with `node tests/qa-probes/probeN.mjs`. After the fixes they log zero console warnings.
 
 ## Human playtest
@@ -52,7 +52,7 @@ No new image or audio assets. The menu background reuses `levels/famine/FARBACKG
 These are reversible:
 - Pause opens with **Esc or P**.
 - Settings live under `localStorage` `souls.settings.v1`, separate from the future save.
-- Fullscreen stays the default, and can now be turned off.
+- Fullscreen is mandatory and is not a setting (owner).
 - The owner's uncommitted work was committed first on the build branch to preserve it.
 - `package.json` pins Puppeteer to the installed 25.12.0.
 - The `.claude` and `.agents` workflow kit is committed. The original zip and the duplicate master-prompt copy are left untracked.
@@ -72,3 +72,16 @@ v0.2 Combat & Survival:
 ## Owner decision
 - **Decision:** PENDING
 - **Review date / reference:**
+
+## Owner change requests — round 1 (2026-11-13) — done, back in REVIEW
+1. Removed the Fullscreen option from Settings, because fullscreen is mandatory.
+2. The game boots to the main menu only, with no paused overlay. New Game enters fullscreen, and the paused overlay appears only when fullscreen is left during gameplay.
+3. The title is now `sprites/title.png`, animated:
+   - Frames 1-3 loop on the menu.
+   - New Game plays frames 4-5 and holds frame 5, then the game starts.
+   - All timings are adjustable in `TITLE_CONFIG` at the top of `js/UIScenes.js`: `idleFrameMs` 200, `startFrameMs` 80, `startDelayMs` 1500, `fadeMs` 250, `scale` 4.
+4. Menu text is white (`UI.COLORS.bone`). Green stays as the selection highlight.
+
+Smoke tests were added for each change. Screenshots: `02-main-menu.png`, `05b-title-start.png`, `09b-fullscreen-exit-overlay.png`.
+
+`tests/qa-probes/probe1.mjs` section G toggles the removed Fullscreen setting and is now obsolete.

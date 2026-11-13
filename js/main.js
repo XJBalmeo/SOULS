@@ -21,27 +21,24 @@ const config = {
 };
 const game = new Phaser.Game(config);
 
-// The overlay is the click-to-start gate (it also unlocks browser audio) and
-// the screen shown when fullscreen is left. Dismissing it resumes the game
-// unless the pause menu (or settings opened from it) is holding it paused.
+// Fullscreen is mandatory during play: New Game enters it (MenuScene), and
+// leaving it mid-run shows the "game paused" overlay. Clicking the overlay
+// re-enters fullscreen and resumes, unless the pause menu holds the game.
 document.addEventListener("DOMContentLoaded", () => {
   const overlay = document.getElementById("fullscreen-overlay");
+  const inRun = () => game.scene.isActive("GameScene") || game.scene.isPaused("GameScene");
 
   overlay.addEventListener("click", () => {
     overlay.style.display = "none";
+    UI.enterFullscreen();
     const pauseMenuOpen = game.scene.isActive("PauseScene") || game.scene.isSleeping("PauseScene");
     if (game.scene.isPaused("GameScene") && !pauseMenuOpen) {
       game.scene.resume("GameScene");
     }
-    if (SoulsSettings.load().fullscreen && !document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch((e) => {
-        console.warn("Could not enter fullscreen, playing windowed instead:", e);
-      });
-    }
   });
 
   document.addEventListener("fullscreenchange", () => {
-    if (document.fullscreenElement || !SoulsSettings.load().fullscreen) return;
+    if (document.fullscreenElement || !inRun()) return;
     overlay.style.display = "flex";
     if (game.scene.isActive("GameScene")) game.scene.pause("GameScene");
   });

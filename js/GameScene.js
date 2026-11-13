@@ -393,10 +393,7 @@ class GameScene extends Phaser.Scene {
     this.cameras.main.setZoom(2.5);
     this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
     this.player.setCollideWorldBounds(true);
-    const overlay = document.getElementById("fullscreen-overlay");
-    if (overlay && overlay.style.display !== "none") {
-      this.scene.pause();
-    }
+    if (UI.overlayVisible()) this.scene.pause();
   }
   generateWorld(ldtkData) {
     let playerSpawn = { x: 400, y: 300 };

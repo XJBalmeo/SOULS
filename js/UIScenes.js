@@ -1,13 +1,23 @@
 // Menu, pause, settings and credits scenes for SOULS (Famine v0.1 Foundation).
 
+// Animated title logo: sprites/title.png, 5 frames of 177x39.
+// Frames 1-3 loop on the menu; New Game plays frames 4-5 once and holds 5.
+const TITLE_CONFIG = {
+  idleFrameMs: 200, // duration of each looping frame 1-3
+  startFrameMs: 80, // duration of frames 4 and 5 after New Game
+  startDelayMs: 1500, // time from pressing New Game until the game starts
+  fadeMs: 250, // fade to black at the end of that delay
+  scale: 4, // on-screen size multiplier (177x39 -> 708x156)
+};
+
 // Player settings, persisted independently of any future campaign save.
+// Fullscreen is mandatory, so it is not a setting.
 const SoulsSettings = {
   KEY: "souls.settings.v1",
   DEFAULTS: {
     masterVolume: 0.8,
     musicVolume: 0.8,
     sfxVolume: 0.8,
-    fullscreen: true,
     showHitboxes: false,
   },
   load() {
@@ -40,7 +50,7 @@ const SoulsSettings = {
 const UI = {
   FONT: '"Georgia", "Times New Roman", serif',
   COLORS: {
-    bone: "#d9d3b8",
+    bone: "#ffffff",
     accent: "#a8d672",
     dim: "#7d8a6c",
     disabled: "#46503f",
@@ -49,7 +59,14 @@ const UI = {
 
   overlayVisible() {
     const overlay = document.getElementById("fullscreen-overlay");
-    return !!overlay && overlay.style.display !== "none";
+    return !!overlay && overlay.style.display === "flex";
+  },
+
+  enterFullscreen() {
+    if (document.fullscreenElement) return;
+    document.documentElement.requestFullscreen().catch((e) => {
+      console.warn("Could not enter fullscreen:", e);
+    });
   },
 
   text(scene, x, y, content, size, color = UI.COLORS.bone) {
@@ -162,6 +179,7 @@ class MenuScene extends Phaser.Scene {
   }
   preload() {
     this.load.image("menu_bg", "levels/famine/FARBACKGROUND_LEVEL1.png");
+    this.load.spritesheet("title", "sprites/title.png", { frameWidth: 177, frameHeight: 39 });
   }
   create() {
     const { width, height } = this.scale;
@@ -177,8 +195,20 @@ class MenuScene extends Phaser.Scene {
       .setScale(bgScale);
     this.add.rectangle(0, 0, width, height, 0x0a100c, 0.55).setOrigin(0);
 
-    UI.text(this, width / 2, 170, "SOULS", 120).setStroke(UI.COLORS.shadow, 14);
-    UI.text(this, width / 2, 255, "CHAPTER I  ·  FAMINE", 24, UI.COLORS.accent);
+    if (!this.anims.exists("title_idle")) {
+      this.anims.create({
+        key: "title_idle",
+        frames: [0, 1, 2].map((frame) => ({ key: "title", frame, duration: TITLE_CONFIG.idleFrameMs })),
+        repeat: -1,
+      });
+      this.anims.create({
+        key: "title_start",
+        frames: [3, 4].map((frame) => ({ key: "title", frame, duration: TITLE_CONFIG.startFrameMs })),
+        repeat: 0, // holds on frame 5 when finished
+      });
+    }
+    this.title = this.add.sprite(width / 2, 170, "title").setScale(TITLE_CONFIG.scale).play("title_idle");
+    UI.text(this, width / 2, 270, "CHAPTER I  ·  FAMINE", 24, UI.COLORS.accent);
 
     // A save system does not exist until Famine v0.2, so Continue is unavailable.
     this.menu = UI.menu(this, width / 2, 360, [
@@ -201,11 +231,15 @@ class MenuScene extends Phaser.Scene {
     this.bg.tilePositionX += delta * 0.006;
   }
   startNewGame() {
-    // Lock the menu during the fade so no other item can be chosen mid-transition.
+    // Lock the menu so no other item can be chosen mid-transition.
     this.input.enabled = false;
     this.input.keyboard.enabled = false;
-    this.cameras.main.fadeOut(300, 0, 0, 0);
-    this.cameras.main.once("camerafadeoutcomplete", () => this.scene.start("GameScene"));
+    // Requested now, while the key press/click still counts as a user gesture.
+    UI.enterFullscreen();
+    this.title.play("title_start");
+    const { startDelayMs, fadeMs } = TITLE_CONFIG;
+    this.time.delayedCall(Math.max(0, startDelayMs - fadeMs), () => this.cameras.main.fadeOut(fadeMs, 0, 0, 0));
+    this.time.delayedCall(startDelayMs, () => this.scene.start("GameScene"));
   }
 }
 
@@ -282,7 +316,6 @@ class SettingsScene extends Phaser.Scene {
         volume("masterVolume", "Master Volume", "← → to adjust."),
         volume("musicVolume", "Music Volume", "Saved now; music is added in a later build."),
         volume("sfxVolume", "Effects Volume", "Saved now; sound effects are added in a later build."),
-        toggle("fullscreen", "Fullscreen", "Play in fullscreen. Leaving fullscreen pauses the game."),
         toggle("showHitboxes", "Show Hitboxes", "Debug view of collision and sword hitboxes (Tab in game)."),
         { label: "Back", onSelect: () => this.back() },
       ],
@@ -293,13 +326,6 @@ class SettingsScene extends Phaser.Scene {
     this.settings[key] = typeof value === "number" ? Math.round(value * 10) / 10 : value;
     SoulsSettings.save(this.settings);
     if (key === "masterVolume") this.sound.volume = this.settings.masterVolume;
-    if (key === "fullscreen") {
-      if (value && !document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch((e) => console.warn("Fullscreen unavailable:", e));
-      } else if (!value && document.fullscreenElement) {
-        document.exitFullscreen();
-      }
-    }
     if (key === "showHitboxes" && (this.scene.isActive("GameScene") || this.scene.isPaused("GameScene"))) {
       this.scene.get("GameScene").setHitboxDebug(value);
     }

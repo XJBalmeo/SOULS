@@ -1,1 +1,3 @@
 node_modules/
+# Personal-use-only font; kept locally, never pushed (docs/ASSET_LICENSES.md)
+sprites/FONTS/KnightWarrior.otf

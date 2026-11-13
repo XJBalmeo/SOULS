@@ -8,6 +8,7 @@ const TITLE_CONFIG = {
   startDelayMs: 1500, // time from pressing New Game until the game starts
   fadeMs: 250, // fade to black at the end of that delay
   scale: 4, // on-screen size multiplier (177x39 -> 708x156)
+  backgroundDim: 0.5892, // black over the menu background: 0 = no dim, 1 = full black
 };
 
 // Player settings, persisted independently of any future campaign save.
@@ -193,7 +194,7 @@ class MenuScene extends Phaser.Scene {
       .tileSprite(0, 0, width / bgScale, bgTexture.height, "menu_bg")
       .setOrigin(0)
       .setScale(bgScale);
-    this.add.rectangle(0, 0, width, height, 0x0a100c, 0.55).setOrigin(0);
+    this.add.rectangle(0, 0, width, height, 0x000000, TITLE_CONFIG.backgroundDim).setOrigin(0);
 
     if (!this.anims.exists("title_idle")) {
       this.anims.create({

@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-13T11:16:54.230Z",
+  "date": "2026-11-13T11:24:14.244Z",
   "passed": 48,
   "failed": 0,
   "results": [
@@ -101,17 +101,17 @@
     {
       "name": "menu-to-game delay matches TITLE_CONFIG.startDelayMs",
       "ok": true,
-      "detail": "1853 ms (config 1500)"
+      "detail": "2067 ms (config 1500)"
     },
     {
       "name": "hero spawned with full HP/stamina",
       "ok": true,
-      "detail": "{\"x\":160,\"y\":366,\"vy\":0,\"onFloor\":true,\"hp\":100,\"stamina\":100,\"attacking\":false,\"rolling\":false,\"rats\":7,\"ratsAlive\":7}"
+      "detail": "{\"x\":160,\"y\":366,\"vy\":0,\"onFloor\":true,\"hp\":100,\"stamina\":100,\"attacking\":false,\"rolling\":false,\"rats\":8,\"ratsAlive\":8}"
     },
     {
       "name": "rats spawned",
       "ok": true,
-      "detail": "rats=7"
+      "detail": "rats=8"
     },
     {
       "name": "move right (D)",
@@ -216,7 +216,7 @@
     {
       "name": "re-entry: fresh hero and rats",
       "ok": true,
-      "detail": "{\"x\":160,\"y\":366,\"vy\":0,\"onFloor\":true,\"hp\":100,\"stamina\":100,\"attacking\":false,\"rolling\":false,\"rats\":7,\"ratsAlive\":7}"
+      "detail": "{\"x\":160,\"y\":366,\"vy\":0,\"onFloor\":true,\"hp\":100,\"stamina\":100,\"attacking\":false,\"rolling\":false,\"rats\":6,\"ratsAlive\":6}"
     },
     {
       "name": "re-entry: movement works",

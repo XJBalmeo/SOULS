@@ -1,6 +1,6 @@
 {
-  "date": "2026-11-13T12:02:57.735Z",
-  "passed": 48,
+  "date": "2026-11-13T13:38:29.504Z",
+  "passed": 50,
   "failed": 0,
   "results": [
     {
@@ -101,17 +101,17 @@
     {
       "name": "menu-to-game delay matches TITLE_CONFIG.startDelayMs",
       "ok": true,
-      "detail": "1946 ms (config 1500)"
+      "detail": "1641 ms (config 1500)"
     },
     {
       "name": "hero spawned with full HP/stamina",
       "ok": true,
-      "detail": "{\"x\":160,\"y\":366,\"vy\":0,\"onFloor\":true,\"hp\":100,\"stamina\":100,\"attacking\":false,\"rolling\":false,\"rats\":9,\"ratsAlive\":9}"
+      "detail": "{\"x\":160,\"y\":366,\"vy\":0,\"onFloor\":true,\"hp\":100,\"stamina\":100,\"attacking\":false,\"rolling\":false,\"rats\":7,\"ratsAlive\":7}"
     },
     {
       "name": "rats spawned",
       "ok": true,
-      "detail": "rats=9"
+      "detail": "rats=7"
     },
     {
       "name": "move right (D)",
@@ -121,7 +121,7 @@
     {
       "name": "move left (←)",
       "ok": true,
-      "detail": "dx=-69.3"
+      "detail": "dx=-64.0"
     },
     {
       "name": "jump (Space)",
@@ -145,6 +145,11 @@
     },
     {
       "name": "gameplay paused under menu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "pause menu leaves fullscreen",
       "ok": true,
       "detail": ""
     },
@@ -174,7 +179,7 @@
       "detail": ""
     },
     {
-      "name": "Esc resumes game",
+      "name": "Resume returns to the game in fullscreen",
       "ok": true,
       "detail": ""
     },
@@ -184,7 +189,12 @@
       "detail": ""
     },
     {
-      "name": "leaving fullscreen mid-run shows paused overlay",
+      "name": "leaving fullscreen mid-run opens the pause menu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Esc in the pause menu falls back to the click-to-continue overlay when fullscreen is refused",
       "ok": true,
       "detail": ""
     },
@@ -211,12 +221,12 @@
     {
       "name": "re-entry: fresh hero and rats",
       "ok": true,
-      "detail": "{\"x\":160,\"y\":366,\"vy\":0,\"onFloor\":true,\"hp\":100,\"stamina\":100,\"attacking\":false,\"rolling\":false,\"rats\":9,\"ratsAlive\":9}"
+      "detail": "{\"x\":160,\"y\":366,\"vy\":0,\"onFloor\":true,\"hp\":100,\"stamina\":100,\"attacking\":false,\"rolling\":false,\"rats\":7,\"ratsAlive\":7}"
     },
     {
       "name": "Continue rebuilds the saved layout",
       "ok": true,
-      "detail": "Level_0,Level_1,Level_1,Level_1,Level_4"
+      "detail": "Level_0,Level_3,Level_1,Level_3,Level_4"
     },
     {
       "name": "re-entry: movement works",
@@ -245,6 +255,7 @@
     }
   ],
   "warnings": [
+    "Could not enter fullscreen: Error: simulated refusal",
     "Settings unreadable, using defaults: SyntaxError: Expected property name or '}' in JSON at position 1 (line 1 column 2)"
   ]
 }

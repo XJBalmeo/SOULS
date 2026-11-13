@@ -90,11 +90,26 @@ const UI = {
     return !!overlay && overlay.style.display === "flex";
   },
 
+  // Resolves true once fullscreen, false if the browser refused (for example
+  // when the request did not come from a click or a non-Esc key press).
   enterFullscreen() {
-    if (document.fullscreenElement) return;
-    document.documentElement.requestFullscreen().catch((e) => {
-      console.warn("Could not enter fullscreen:", e);
-    });
+    if (document.fullscreenElement) return Promise.resolve(true);
+    return document.documentElement.requestFullscreen().then(
+      () => true,
+      (e) => {
+        console.warn("Could not enter fullscreen:", e);
+        return false;
+      },
+    );
+  },
+
+  exitFullscreen() {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  },
+
+  showFullscreenOverlay() {
+    const overlay = document.getElementById("fullscreen-overlay");
+    if (overlay) overlay.style.display = "flex";
   },
 
   text(scene, x, y, content, size, color = UI.COLORS.bone) {
@@ -261,8 +276,6 @@ class MenuScene extends Phaser.Scene {
       { label: "Credits", onSelect: () => this.scene.start("CreditsScene") },
     ]);
 
-    UI.text(this, width / 2, height - 40,
-      "↑ ↓ choose   |   Enter / Z confirm   |   Esc / P pause in game", 16, UI.COLORS.dim);
     UI.text(this, width - 90, height - 18, "build v0.2", 14, UI.COLORS.disabled);
     this.cameras.main.fadeIn(250, 0, 0, 0);
   }
@@ -361,6 +374,8 @@ class PauseScene extends Phaser.Scene {
   }
   create() {
     const { width, height } = this.scale;
+    // The pause menu is played windowed; Resume and Retry return to fullscreen.
+    UI.exitFullscreen();
     this.add.rectangle(0, 0, width, height, 0x050805, 0.72).setOrigin(0);
     UI.text(this, width / 2, 200, "PAUSED", 64);
     this.menu = UI.menu(
@@ -373,7 +388,10 @@ class PauseScene extends Phaser.Scene {
         {
           label: "Retry from Checkpoint",
           hint: "Back to the last checkpoint with full health. Enemies return.",
-          onSelect: () => this.scene.get("GameScene").restartFromCheckpoint(),
+          onSelect: () => {
+            UI.enterFullscreen();
+            this.scene.get("GameScene").restartFromCheckpoint();
+          },
         },
         { label: "Quit to Main Menu", onSelect: () => this.quitToMenu() },
       ],
@@ -381,8 +399,15 @@ class PauseScene extends Phaser.Scene {
     );
   }
   resumeGame() {
-    this.scene.resume("GameScene");
+    // The game resumes once fullscreen is back. If the browser refuses (Esc
+    // does not count as a user gesture), it waits behind the click-to-continue
+    // overlay, whose click re-enters fullscreen and resumes.
     this.scene.stop();
+    UI.enterFullscreen().then((ok) => {
+      if (!game.scene.isPaused("GameScene")) return;
+      if (ok) game.scene.resume("GameScene");
+      else UI.showFullscreenOverlay();
+    });
   }
   quitToMenu() {
     this.scene.stop("GameScene");

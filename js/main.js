@@ -21,9 +21,11 @@ const config = {
 };
 const game = new Phaser.Game(config);
 
-// Fullscreen is mandatory during play: New Game enters it (MenuScene), and
-// leaving it mid-run shows the "game paused" overlay. Clicking the overlay
-// re-enters fullscreen and resumes, unless the pause menu holds the game.
+// Fullscreen is mandatory during play: New Game and Continue enter it, the
+// pause menu (P / Esc) leaves it, and Resume enters it again. Leaving
+// fullscreen any other way mid-run opens the pause menu; if that is not
+// possible (the death screen), the "game paused" overlay is shown instead.
+// Clicking the overlay re-enters fullscreen and resumes.
 document.addEventListener("DOMContentLoaded", () => {
   const overlay = document.getElementById("fullscreen-overlay");
   const inRun = () => game.scene.isActive("GameScene") || game.scene.isPaused("GameScene");
@@ -39,6 +41,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.addEventListener("fullscreenchange", () => {
     if (document.fullscreenElement || !inRun()) return;
+    const pauseMenuOpen = game.scene.isActive("PauseScene") || game.scene.isSleeping("PauseScene");
+    if (pauseMenuOpen) return;
+    const gameScene = game.scene.getScene("GameScene");
+    if (game.scene.isActive("GameScene") && gameScene.requestPause()) return;
     overlay.style.display = "flex";
     if (game.scene.isActive("GameScene")) game.scene.pause("GameScene");
   });

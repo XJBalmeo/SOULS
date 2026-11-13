@@ -306,12 +306,7 @@ class GameScene extends Phaser.Scene {
       this.setHitboxDebug(!this.physics.world.drawDebug);
     });
     const openPause = (event) => {
-      // scene.pause() is queued, so isActive() stays true for the rest of
-      // this frame; the flag stops a second key (Esc+P) launching twice.
-      if (event.repeat || this.pauseRequested || this.isDead) return;
-      this.pauseRequested = true;
-      this.scene.launch("PauseScene");
-      this.scene.pause();
+      if (!event.repeat) this.requestPause();
     };
     this.input.keyboard.on("keydown-ESC", openPause);
     this.input.keyboard.on("keydown-P", openPause);
@@ -731,6 +726,16 @@ class GameScene extends Phaser.Scene {
       ease: "Quad.easeIn",
     });
     this.time.delayedCall(DEATH_CONFIG.fallMs, () => this.scene.launch("DeathScene"));
+  }
+  // Opens the pause menu (which also leaves fullscreen). scene.pause() is
+  // queued, so isActive() stays true for the rest of this frame; the flag
+  // stops a second request (Esc+P, or a fullscreen exit) launching twice.
+  requestPause() {
+    if (this.pauseRequested || this.isDead) return false;
+    this.pauseRequested = true;
+    this.scene.launch("PauseScene");
+    this.scene.pause();
+    return true;
   }
   // Checkpoint restore: rebuilds the saved map with full HP/stamina and all
   // regular enemies reset. Used by death and by Retry from Checkpoint.

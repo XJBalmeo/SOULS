@@ -43,14 +43,28 @@ await wait(150);
 const k = await dimInfo();
 check("failed parry: dim heading to black, not YOU DIED yet", k.dim > 0.8 && !(await state(() => game.scene.isActive("DeathScene"))), JSON.stringify(k));
 check("failed parry: YOU DIED after the 1 s fade to black", await waitFor(() => game.scene.isActive("DeathScene"), 1500));
+await wait(100);
+const nk = await state(() => game.scene.getScene("DeathScene").children.list.find((c) => c.type === "Sprite").texture.key);
+check("facing right uses the normal YOU DIED", nk === "you_died", nk);
 await wait(700);
 await shot("hurt-02-you-died-mid");
 await wait(1200);
 await shot("hurt-03-you-died-end");
 check("respawns after YOU DIED", await waitFor(() => !game.scene.isActive("DeathScene") && game.scene.isActive("GameScene"), 6000));
 
-// Normal death (Parry Death already spent).
+// Mouse cursor hidden in play, back for the pause menu.
+const cursor = () => state(() => game.canvas.style.cursor);
+check("no mouse cursor during play", (await cursor()) === "none", await cursor());
+await state(() => game.scene.getScene("GameScene").requestPause());
+await wait(300);
+check("cursor shows in the pause menu", (await cursor()) === "default", await cursor());
+await state(() => { game.scene.stop("PauseScene"); game.scene.resume("GameScene"); game.scene.getScene("GameScene").pauseRequested = false; });
+await wait(300);
+check("cursor hidden again after resuming", (await cursor()) === "none", await cursor());
+
+// Normal death (Parry Death already spent), knight facing left -> mirrored YOU DIED.
 await wait(1500);
+await state(() => game.scene.getScene("GameScene").player.setFlipX(true));
 await state(() => game.scene.getScene("GameScene").takeDamage(999));
 await wait(100);
 const f = await anim();
@@ -60,6 +74,10 @@ const h = await anim();
 check("the knight lies on the down frame before YOU DIED", h.key === "down" && h.frame === 2 && !(await state(() => game.scene.isActive("DeathScene"))), JSON.stringify(h));
 await shot("hurt-04-down-before-you-died");
 check("YOU DIED follows the collapse", await waitFor(() => game.scene.isActive("DeathScene"), 2500));
+await wait(200);
+const mk = await state(() => game.scene.getScene("DeathScene").children.list.find((c) => c.type === "Sprite").texture.key);
+check("facing left uses YOU DIED MIRROR", mk === "you_died_mirror", mk);
+await shot("hurt-05-you-died-mirror");
 check("and respawns", await waitFor(() => !game.scene.isActive("DeathScene"), 6000));
 // Successful parry: the dim fades away and the knight returns to normal depth.
 await newCampaign();

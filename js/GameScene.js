@@ -44,6 +44,11 @@ class GameScene extends Phaser.Scene {
       frameWidth: 512,
       frameHeight: 288,
     });
+    // Same animation for a knight who went down facing left.
+    this.load.spritesheet("you_died_mirror", "sprites/HERO/YOU%20DIED%20MIRROR.png?v=" + Date.now(), {
+      frameWidth: 512,
+      frameHeight: 288,
+    });
     this.load.spritesheet("rat_walk", "sprites/ENEMIES/FAMINE/RAT_WALK.png", {
       frameWidth: 100,
       frameHeight: 100,
@@ -236,14 +241,14 @@ class GameScene extends Phaser.Scene {
       frameRate: HURT_CONFIG.downFrameRate,
       repeat: 0,
     });
-    this.createAnimOnce({
-      key: "you_died",
-      frames: this.anims.generateFrameNumbers("you_died").map((f, i) => ({
+    ["you_died", "you_died_mirror"].forEach((key) => this.createAnimOnce({
+      key,
+      frames: this.anims.generateFrameNumbers(key).map((f, i) => ({
         ...f,
         duration: i < DEATH_CONFIG.firstFramesCount ? DEATH_CONFIG.firstFramesMs : Math.round(1000 / DEATH_CONFIG.frameRate),
       })),
       repeat: 0,
-    });
+    }));
     const ldtkData = this.cache.json.get("famine_ldtk");
     const zoom = 2.5;
     const screenW = this.sys.game.config.width;
@@ -365,6 +370,17 @@ class GameScene extends Phaser.Scene {
     this.input.keyboard.on("keydown-P", openPause);
     // Keys held when the game was paused never see their keyup; clear them.
     this.input.mouse.disableContextMenu(); // right click is the Death parry
+    // No mouse cursor during play; it comes back for the pause menu and when leaving the game.
+    const showCursor = () => this.input.setDefaultCursor("default");
+    const hideCursor = () => this.input.setDefaultCursor("none");
+    hideCursor();
+    this.events.on("pause", showCursor);
+    this.events.on("resume", hideCursor);
+    this.events.once("shutdown", () => {
+      showCursor();
+      this.events.off("pause", showCursor);
+      this.events.off("resume", hideCursor);
+    });
     // A mouse button held while clicking a menu must not swing the sword.
     this.ignorePointerUntilUp = true;
     this.pauseRequested = false;
@@ -797,7 +813,8 @@ class GameScene extends Phaser.Scene {
     p.clearTint();
     p.setAngle(0);
     p.setAlpha(1);
-    const toYouDied = () => this.fadeDimToBlack(() => this.scene.launch("DeathScene"));
+    const toYouDied = () => this.fadeDimToBlack(() =>
+      this.scene.launch("DeathScene", { facingLeft: this.player.flipX }));
     if (knightDown) {
       toYouDied();
       return;

@@ -377,12 +377,14 @@ class DeathScene extends Phaser.Scene {
   constructor() {
     super("DeathScene");
   }
-  create() {
+  // data.facingLeft: the knight went down facing left -> YOU DIED MIRROR.png.
+  create(data = {}) {
     const { width, height } = this.scale;
+    const key = data.facingLeft ? "you_died_mirror" : "you_died";
     this.add.rectangle(0, 0, width, height, DEATH_CONFIG.backgroundColor, 1).setOrigin(0);
-    const anim = this.add.sprite(width / 2, height / 2, "you_died", 0);
+    const anim = this.add.sprite(width / 2, height / 2, key, 0);
     anim.setScale(width / 512, height / 288);
-    anim.play("you_died");
+    anim.play(key);
     anim.once("animationcomplete", () => {
       this.time.delayedCall(DEATH_CONFIG.holdMs, () => this.scene.get("GameScene").restartFromCheckpoint());
     });

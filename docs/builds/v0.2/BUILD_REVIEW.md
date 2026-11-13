@@ -85,5 +85,5 @@ v0.3 Parry Death & Enemies:
 - M1.6 two new enemies (proposed: Starved and Hollow Archer). These need owner approval of the concepts before art starts.
 
 ## Owner decision
-- **Decision:** PENDING
-- **Review date / reference:**
+- **Decision:** APPROVED
+- **Review date / reference:** 2026-11-13. The owner first requested changes: remove the main-menu key hints; P/menu leaves fullscreen; Resume re-enters it (commit 8088ded). The owner then said "lets proceed with the full plan in v0.3", which is recorded as approval.

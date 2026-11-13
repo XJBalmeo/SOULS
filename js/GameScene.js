@@ -325,7 +325,7 @@ class GameScene extends Phaser.Scene {
       }
       if (anim.key === "roll") {
         this.isRolling = false;
-        this.player.setData("isInvulnerable", false);
+        this.player.setData("isRollInvulnerable", false);
       }
     });
     const HUD_X = viewportX + 10;
@@ -440,7 +440,8 @@ class GameScene extends Phaser.Scene {
         }
         const leftDoorLocalX = leftDoorEntity.px[0];
         const leftDoorLocalY = leftDoorEntity.px[1];
-        const offsetX = currentRightDoor.absoluteX - leftDoorLocalX;
+        const offsetX =
+          currentRightDoor.absoluteX + currentRightDoor.width - leftDoorLocalX;
         const offsetY = currentRightDoor.absoluteY - leftDoorLocalY;
         const newRoomDoors = this.buildRoom(selectedLevel, offsetX, offsetY);
         bounds.minX = Math.min(bounds.minX, offsetX);
@@ -557,6 +558,7 @@ class GameScene extends Phaser.Scene {
             localY: ent.px[1],
             absoluteX: offsetX + ent.px[0],
             absoluteY: offsetY + ent.px[1],
+            width: ent.width,
             dir: dir,
             levelId: level.identifier,
           });
@@ -590,14 +592,28 @@ class GameScene extends Phaser.Scene {
     rat.setData("attackRange", 50);
     rat.setData("attackCooldown", 2000);
     rat.setData("lastAttackTime", 0);
+    // How long (ms) a rat freezes and stares at the player after an attack.
+    rat.setData("recoverTime", 500);
     rat.on("animationcomplete", (anim) => {
       if (anim.key === "rat_attack" && rat.getData("hp") > 0) {
-        rat.setData("state", "pursue");
+        rat.setData("state", "recover");
+        rat.setData("recoverUntil", this.time.now + rat.getData("recoverTime"));
         rat.setData("lastAttackTime", this.time.now);
+        rat.setVelocityX(0);
+        rat.anims.stop();
+        rat.setTexture("rat_walk", 0);
       }
     });
     this.physics.add.overlap(this.attackHitbox, rat, (hitbox, ratHit) => {
-      if (ratHit.getData("hp") > 0) {
+      if (
+        ratHit.getData("hp") > 0 &&
+        !this.hasWallBetween(
+          this.player.body.center.x,
+          this.player.body.center.y,
+          ratHit.body.center.x,
+          ratHit.body.center.y,
+        )
+      ) {
         ratHit.setData("hp", 0);
         ratHit.setTint(0xff0000);
         ratHit.setVelocityX(0);
@@ -607,16 +623,36 @@ class GameScene extends Phaser.Scene {
       }
     });
     this.physics.add.overlap(this.player, rat, (player, ratHit) => {
-      if (ratHit.getData("hp") > 0 && !player.getData("isInvulnerable")) {
+      const isInvulnerable =
+        player.getData("isRollInvulnerable") ||
+        this.time.now < (player.getData("hitInvulnerableUntil") || 0);
+      if (
+        ratHit.getData("hp") > 0 &&
+        ratHit.getData("state") === "attack" &&
+        !isInvulnerable
+      ) {
         this.takeDamage(20);
         player.setTint(0xff0000);
-        player.setData("isInvulnerable", true);
+        player.setData("hitInvulnerableUntil", this.time.now + 1000);
+        player.setData("knockbackUntil", this.time.now + 200);
+        // A hit cancels climbing/vaulting so platform collisions are restored.
+        player.setData("isClimbing", false);
+        player.setData("isVaulting", false);
+        player.body.allowGravity = true;
         const knockbackDirection = player.x < ratHit.x ? -1 : 1;
-        player.setVelocity(knockbackDirection * 200, -200);
+        // Don't shove the player into a wall: only push sideways if the way is clear.
+        const body = player.body;
+        const probeX = body.center.x + knockbackDirection * (body.halfWidth + 30);
+        const wallBehind = this.hasWallBetween(
+          body.center.x,
+          body.center.y,
+          probeX,
+          body.center.y,
+        );
+        player.setVelocity(wallBehind ? 0 : knockbackDirection * 200, -200);
         ratHit.setData("ignorePlayerUntil", this.time.now + 1000);
         this.time.delayedCall(1000, () => {
           player.clearTint();
-          player.setData("isInvulnerable", false);
         });
       }
     });
@@ -662,6 +698,72 @@ class GameScene extends Phaser.Scene {
       ease: "Sine.easeInOut",
     });
   }
+  // World-space body rectangle the player would have at (spriteX, spriteY)
+  // for a given hitbox key and facing (mirrors the offsets applied in update()).
+  getPlayerBodyRectAt(spriteX, spriteY, key, flipX) {
+    const hitboxes = this.heroConfig.hitboxes;
+    const box = hitboxes[key] || hitboxes.idle;
+    const originOffset =
+      (this.heroConfig.spriteOffsets && this.heroConfig.spriteOffsets[key]) || 0;
+    const originX = flipX ? 0.5 + originOffset : 0.5 - originOffset;
+    const offsetX = flipX
+      ? 100 - (box.x + box.w) + originOffset * 100
+      : box.x - originOffset * 100;
+    return new Phaser.Geom.Rectangle(
+      spriteX - 100 * originX + offsetX,
+      spriteY - 50 + box.y,
+      box.w,
+      box.h,
+    );
+  }
+  isRectBlockedBySolid(rect) {
+    const EPS = 0.5;
+    const blocks = this.ground.getChildren();
+    for (let i = 0; i < blocks.length; i++) {
+      const block = blocks[i];
+      if (block.isPlatform || block.isRope) continue;
+      const b = block.body;
+      if (
+        rect.right - EPS > b.x &&
+        rect.x + EPS < b.x + b.width &&
+        rect.bottom - EPS > b.y &&
+        rect.y + EPS < b.y + b.height
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
+  hasWallBetween(x1, y1, x2, y2) {
+    const line = new Phaser.Geom.Line(x1, y1, x2, y2);
+    const blocks = this.ground.getChildren();
+    for (let i = 0; i < blocks.length; i++) {
+      const block = blocks[i];
+      if (block.isPlatform || block.isRope) continue;
+      const b = block.body;
+      const rect = new Phaser.Geom.Rectangle(b.x, b.y, b.width, b.height);
+      if (Phaser.Geom.Intersects.LineToRectangle(line, rect)) return true;
+    }
+    return false;
+  }
+  // Move the player horizontally toward targetX, stopping before any solid tile.
+  snapPlayerXToward(targetX, key) {
+    const p = this.player;
+    let x = p.x;
+    const dir = Math.sign(targetX - x);
+    while (dir !== 0 && (targetX - x) * dir > 0) {
+      const nx = x + dir * Math.min(1, (targetX - x) * dir);
+      if (
+        this.isRectBlockedBySolid(
+          this.getPlayerBodyRectAt(nx, p.y, key, p.flipX),
+        )
+      ) {
+        break;
+      }
+      x = nx;
+    }
+    p.x = x;
+  }
   update(time, delta) {
     const speed = 160;
     if (this.hudHp && this.hudStamina) {
@@ -699,7 +801,7 @@ class GameScene extends Phaser.Scene {
       if (this.player.getData("stamina") >= this.STAMINA_COST_ROLL) {
         this.isRolling = true;
         this.consumeStamina(this.STAMINA_COST_ROLL);
-        this.player.setData("isInvulnerable", true);
+        this.player.setData("isRollInvulnerable", true);
         this.player.setData("isClimbing", false);
         this.player.body.allowGravity = true;
         this.player.anims.play("roll", true);
@@ -741,7 +843,7 @@ class GameScene extends Phaser.Scene {
               }
             } else {
               this.isRolling = false;
-              this.player.setData("isInvulnerable", false);
+              this.player.setData("isRollInvulnerable", false);
               this.player.anims.play("idle", true);
               if (rollCfg.stopVelocityOnSkip) {
                 this.player.setVelocityX(0);
@@ -764,6 +866,7 @@ class GameScene extends Phaser.Scene {
       }
     }
     let isMoving = false;
+    const inKnockback = time < (this.player.getData("knockbackUntil") || 0);
     const onGround = this.player.body.touching.down || this.player.body.blocked.down;
     const isDown = this.cursors.down.isDown || this.keys.s.isDown;
     const isUp = this.cursors.up.isDown || this.keys.w.isDown;
@@ -820,7 +923,7 @@ class GameScene extends Phaser.Scene {
 
     if (columnRopes.length > 0) {
       columnRopes.sort((a, b) => a.body.top - b.body.top);
-      const refBlock = touchingBlocks.length > 0 ? touchingBlocks[0] : (ropeBelow || columnRopes[0]);
+      const refBlock = touchingBlocks.length > 0 ? touchingBlocks[0] : ropeBelow;
       if (refBlock) {
         ropeTop = refBlock.body.top;
         ropeBottom = refBlock.body.bottom;
@@ -845,6 +948,17 @@ class GameScene extends Phaser.Scene {
     let wasClimbing = this.player.getData("isClimbing") || false;
     let isClimbing = wasClimbing;
 
+    // After jumping off a rope, don't re-grab it until the climb keys are released.
+    if (!isUp && !isDown) {
+      this.player.setData("ropeRegrabBlockX", null);
+    }
+    const ropeRegrabBlockX = this.player.getData("ropeRegrabBlockX");
+    const ropeRegrabBlocked =
+      ropeRegrabBlockX !== null &&
+      ropeRegrabBlockX !== undefined &&
+      ropeX !== null &&
+      Math.abs(ropeX - ropeRegrabBlockX) < 8;
+
     const isNearRopeBottom = ropeBottom !== null && pBody.bottom >= ropeBottom - 24;
     const atRopeEndGoingDown =
       isDown &&
@@ -852,7 +966,14 @@ class GameScene extends Phaser.Scene {
 
     if (this.isAttacking || this.isRolling) {
       isClimbing = false;
+      if (this.vaultTween) {
+        this.vaultTween.stop();
+        this.vaultTween = null;
+        this.player.body.allowGravity = true;
+      }
+      isVaulting = false;
       this.player.setData("isVaulting", false);
+      this.player.setData("isVaultingDown", false);
     } else if (isClimbing && atRopeEndGoingDown && !isVaulting) {
       // Automatically detach from rope when going down at the end of the rope
       isClimbing = false;
@@ -879,21 +1000,42 @@ class GameScene extends Phaser.Scene {
       this.player.body.allowGravity = false;
       this.player.setVelocity(0, 0);
 
-      this.player.x =
+      this.snapPlayerXToward(
         ropeBelow.x +
-        (this.player.flipX
-          ? ROPE_VISUAL_OFFSET_LEFT
-          : ROPE_VISUAL_OFFSET_RIGHT);
+          (this.player.flipX
+            ? ROPE_VISUAL_OFFSET_LEFT
+            : ROPE_VISUAL_OFFSET_RIGHT),
+        "climb",
+      );
       this.player.anims.play("climb", true);
 
-      const targetY = this.player.y + VAULT_DOWN_HEIGHT;
+      // Clamp the drop so the body never ends up inside floor tiles.
+      let dropDistance = 0;
+      while (dropDistance < VAULT_DOWN_HEIGHT) {
+        const nextDrop = Math.min(dropDistance + 1, VAULT_DOWN_HEIGHT);
+        if (
+          this.isRectBlockedBySolid(
+            this.getPlayerBodyRectAt(
+              this.player.x,
+              this.player.y + nextDrop,
+              "climb",
+              this.player.flipX,
+            ),
+          )
+        ) {
+          break;
+        }
+        dropDistance = nextDrop;
+      }
+      const targetY = this.player.y + dropDistance;
 
-      this.tweens.add({
+      this.vaultTween = this.tweens.add({
         targets: this.player,
         y: targetY,
         duration: 100,
         ease: "Sine.easeOut",
         onComplete: () => {
+          this.vaultTween = null;
           this.player.setData("isVaulting", false);
           this.player.setData("isVaultingDown", false);
           this.player.setData("isClimbing", true);
@@ -903,6 +1045,7 @@ class GameScene extends Phaser.Scene {
     } else if (
       (isUp || (isDown && !onGround && !atRopeEndGoingDown)) &&
       touchingRope &&
+      !ropeRegrabBlocked &&
       !this.isAttacking &&
       !this.isRolling &&
       !isVaulting
@@ -925,12 +1068,13 @@ class GameScene extends Phaser.Scene {
         const targetY =
           this.player.y - (pBody.bottom - (ropeTop - VAULT_HEIGHT));
 
-        this.tweens.add({
+        this.vaultTween = this.tweens.add({
           targets: this.player,
           y: targetY,
           duration: 100,
           ease: "Sine.easeOut",
           onComplete: () => {
+            this.vaultTween = null;
             this.player.setData("isVaulting", false);
             this.player.body.allowGravity = true;
           },
@@ -967,11 +1111,13 @@ class GameScene extends Phaser.Scene {
       const activeRopeX =
         ropeX !== null ? ropeX : ropeBelow ? ropeBelow.x : null;
       if (activeRopeX !== null) {
-        this.player.x =
+        this.snapPlayerXToward(
           activeRopeX +
-          (this.player.flipX
-            ? ROPE_VISUAL_OFFSET_LEFT
-            : ROPE_VISUAL_OFFSET_RIGHT);
+            (this.player.flipX
+              ? ROPE_VISUAL_OFFSET_LEFT
+              : ROPE_VISUAL_OFFSET_RIGHT),
+          "climb",
+        );
       }
 
       if (!isVaulting) {
@@ -986,16 +1132,22 @@ class GameScene extends Phaser.Scene {
     } else if (!isVaulting) {
       this.player.body.allowGravity = true;
 
-      if (isCrouching) {
+      if (inKnockback) {
+        // Keep the knockback velocity; movement input is ignored briefly.
+        // Stop sideways motion the moment a wall is hit.
+        if (this.player.body.blocked.left || this.player.body.blocked.right) {
+          this.player.setVelocityX(0);
+        }
+      } else if (isCrouching) {
         this.player.setVelocityX(0);
       } else if (this.cursors.left.isDown || this.keys.a.isDown) {
-        if (!this.isRolling) this.player.setFlipX(true);
+        if (!this.isRolling && !this.isAttacking) this.player.setFlipX(true);
         if (!this.isAttacking && !this.isRolling) {
           this.player.setVelocityX(-speed);
           isMoving = true;
         }
       } else if (this.cursors.right.isDown || this.keys.d.isDown) {
-        if (!this.isRolling) this.player.setFlipX(false);
+        if (!this.isRolling && !this.isAttacking) this.player.setFlipX(false);
         if (!this.isAttacking && !this.isRolling) {
           this.player.setVelocityX(speed);
           isMoving = true;
@@ -1009,6 +1161,10 @@ class GameScene extends Phaser.Scene {
 
     if (!this.isAttacking && !this.isRolling && !isVaulting) {
       if (isClimbing && jumpPressed) {
+        this.player.setData(
+          "ropeRegrabBlockX",
+          ropeX !== null ? ropeX : this.player.x,
+        );
         this.player.setData("isClimbing", false);
         this.player.body.allowGravity = true;
         this.player.setVelocityY(this.JUMP_VELOCITY_SINGLE);
@@ -1031,12 +1187,24 @@ class GameScene extends Phaser.Scene {
           this.player.setData("canDoubleJump", false);
         }
       }
-    } else if (this.isAttacking) {
+    } else if (this.isAttacking && !inKnockback) {
       this.player.setVelocityX(0);
     }
 
+    // The sword only hurts during the middle third of the attack animation.
+    let attackActive = false;
     if (this.isAttacking) {
-      this.attackHitbox.body.enable = true;
+      const atkAnim = this.player.anims.currentAnim;
+      const atkFrame = this.player.anims.currentFrame;
+      if (atkAnim && atkAnim.key === "attack" && atkFrame) {
+        const total = atkAnim.frames.length;
+        const frameIdx = atkFrame.index - 1;
+        attackActive =
+          frameIdx >= Math.floor(total / 3) && frameIdx < Math.ceil((2 * total) / 3);
+      }
+    }
+    if (this.isAttacking) {
+      this.attackHitbox.body.enable = attackActive;
       const atkCfg = this.heroConfig.attackHitbox;
       if (this.player.flipX) {
         this.attackHitbox.x = this.player.x - atkCfg.offsetX;
@@ -1148,7 +1316,7 @@ class GameScene extends Phaser.Scene {
           const groundBlocks = this.ground.getChildren();
           for (let i = 0; i < groundBlocks.length; i++) {
             const block = groundBlocks[i];
-            if (block.isPlatform) continue;
+            if (block.isPlatform || block.isRope) continue;
             if (
               block.x + block.width / 2 >= minX &&
               block.x - block.width / 2 <= maxX &&
@@ -1219,6 +1387,12 @@ class GameScene extends Phaser.Scene {
             if (rat.anims.currentAnim?.key !== "rat_run")
               rat.anims.play("rat_run", true);
           }
+        } else if (state === "recover") {
+          rat.setVelocityX(0);
+          rat.setFlipX(this.player.x < rat.x);
+          if (now >= rat.getData("recoverUntil")) {
+            rat.setData("state", "pursue");
+          }
         } else if (state === "attack") {
         }
         rat.setOrigin(0.5, 0.5);
@@ -1265,7 +1439,20 @@ class GameScene extends Phaser.Scene {
     const pBox = hitboxes[currentHitboxKey] || hitboxes["idle"];
     const currentStateHash = `${currentHitboxKey}_${this.player.flipX}_${originOffset}_${pBox.x}_${pBox.y}_${pBox.w}_${pBox.h}`;
     const previousStateHash = this.player.getData("lastHitboxState");
+    let hitboxSwapBlocked = false;
     if (currentStateHash !== previousStateHash) {
+      // Don't grow the body upward into a ceiling; retry next frame.
+      const newRect = this.getPlayerBodyRectAt(
+        this.player.x,
+        this.player.y,
+        currentHitboxKey,
+        this.player.flipX,
+      );
+      hitboxSwapBlocked =
+        newRect.y < this.player.body.y - 0.5 &&
+        this.isRectBlockedBySolid(newRect);
+    }
+    if (currentStateHash !== previousStateHash && !hitboxSwapBlocked) {
       this.player.setData("lastHitboxState", currentStateHash);
       this.player.body.setSize(pBox.w, pBox.h);
       if (this.player.flipX) {

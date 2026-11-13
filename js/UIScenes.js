@@ -30,8 +30,8 @@ const DEATH_CONFIG = {
   undimMs: 300, // on a successful parry the dim fades away
   firstFramesMs: 150, // YOU DIED frames 1-6 last this long each
   firstFramesCount: 6,
-  frameRate: 10, // the remaining YOU DIED frames
-  holdMs: 1500, // last frame stays up this long before respawning at the checkpoint
+  otherFramesMs: 80, // YOU DIED frames 7-15 last this long each
+  holdMs: 3000, // last frame stays up this long before respawning at the checkpoint
   backgroundColor: 0x000000, // behind the transparent parts of the sheet
 };
 

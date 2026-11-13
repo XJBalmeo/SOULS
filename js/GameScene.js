@@ -245,7 +245,7 @@ class GameScene extends Phaser.Scene {
       key,
       frames: this.anims.generateFrameNumbers(key).map((f, i) => ({
         ...f,
-        duration: i < DEATH_CONFIG.firstFramesCount ? DEATH_CONFIG.firstFramesMs : Math.round(1000 / DEATH_CONFIG.frameRate),
+        duration: i < DEATH_CONFIG.firstFramesCount ? DEATH_CONFIG.firstFramesMs : DEATH_CONFIG.otherFramesMs,
       })),
       repeat: 0,
     }));

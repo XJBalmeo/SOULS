@@ -11,11 +11,19 @@ const TITLE_CONFIG = {
   backgroundDim: 0.5892, // black over the menu background: 0 = no dim, 1 = full black
 };
 
-// Placeholder death sequence (no hurt/death animation yet).
+// Knight hit reaction (sprites/HERO/NEW_HURT.png, NEW_DOWN.png).
+const HURT_CONFIG = {
+  knockbackX: 90, // sideways push on a hit, px/s (was 200)
+  knockbackUp: 90, // upward hop on a hit, px/s (was 200)
+  hurtFrameRate: 14, // NEW_HURT: 7 frames -> 0.5 s
+  downFrameRate: 10, // NEW_DOWN: 2 frames, ends holding the ground frame
+};
+
+// YOU DIED screen (sprites/HERO/YOU DIED.png: 15 frames of 512x288, scaled to fill the screen).
 const DEATH_CONFIG = {
-  fallMs: 700, // knight falls and fades before the death screen
-  fadeMs: 500, // death screen fade-in
-  screenMs: 2000, // how long "You have fallen" shows before respawning
+  frameRate: 10, // 15 frames -> 1.5 s
+  holdMs: 1500, // last frame stays up this long before respawning at the checkpoint
+  backgroundColor: 0x000000, // behind the transparent parts of the sheet
 };
 
 // UI font. Set useCustomFont to false to go back to the Georgia serif.
@@ -354,17 +362,21 @@ class ConfirmScene extends Phaser.Scene {
   }
 }
 
-// "You have fallen", then respawn at the checkpoint (owner decision 2026-11-13).
+// The owner's YOU DIED animation over the whole screen, then respawn at the
+// checkpoint (owner decisions 2026-11-13 and 2026-11-14).
 class DeathScene extends Phaser.Scene {
   constructor() {
     super("DeathScene");
   }
   create() {
     const { width, height } = this.scale;
-    const shade = this.add.rectangle(0, 0, width, height, 0x000000, 1).setOrigin(0).setAlpha(0);
-    const text = UI.text(this, width / 2, height / 2, "YOU HAVE FALLEN", 72, "#b3261e").setAlpha(0);
-    this.tweens.add({ targets: [shade, text], alpha: 1, duration: DEATH_CONFIG.fadeMs });
-    this.time.delayedCall(DEATH_CONFIG.screenMs, () => this.scene.get("GameScene").restartFromCheckpoint());
+    this.add.rectangle(0, 0, width, height, DEATH_CONFIG.backgroundColor, 1).setOrigin(0);
+    const anim = this.add.sprite(width / 2, height / 2, "you_died", 0);
+    anim.setScale(width / 512, height / 288);
+    anim.play("you_died");
+    anim.once("animationcomplete", () => {
+      this.time.delayedCall(DEATH_CONFIG.holdMs, () => this.scene.get("GameScene").restartFromCheckpoint());
+    });
   }
 }
 

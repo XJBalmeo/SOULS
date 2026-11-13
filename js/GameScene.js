@@ -35,6 +35,15 @@ class GameScene extends Phaser.Scene {
       frameWidth: 100,
       frameHeight: 100,
     });
+    this.load.spritesheet("hero_down", "sprites/HERO/NEW_DOWN.png?v=" + Date.now(), {
+      frameWidth: 100,
+      frameHeight: 100,
+    });
+    // Full-screen death animation: 15 frames of 512x288 (the camera's view size).
+    this.load.spritesheet("you_died", "sprites/HERO/YOU%20DIED.png?v=" + Date.now(), {
+      frameWidth: 512,
+      frameHeight: 288,
+    });
     this.load.spritesheet("rat_walk", "sprites/ENEMIES/FAMINE/RAT_WALK.png", {
       frameWidth: 100,
       frameHeight: 100,
@@ -215,7 +224,21 @@ class GameScene extends Phaser.Scene {
     this.createAnimOnce({
       key: "hurt",
       frames: this.anims.generateFrameNumbers("hero_hurt"),
-      frameRate: 14,
+      frameRate: HURT_CONFIG.hurtFrameRate,
+      repeat: 0,
+    });
+    // Collapse after the fatal hit. Frame 1 follows the last hurt frame; the
+    // anim ends holding frame 2 (the knight on the ground).
+    this.createAnimOnce({
+      key: "down",
+      frames: this.anims.generateFrameNumbers("hero_down"),
+      frameRate: HURT_CONFIG.downFrameRate,
+      repeat: 0,
+    });
+    this.createAnimOnce({
+      key: "you_died",
+      frames: this.anims.generateFrameNumbers("you_died"),
+      frameRate: DEATH_CONFIG.frameRate,
       repeat: 0,
     });
     const ldtkData = this.cache.json.get("famine_ldtk");
@@ -716,7 +739,7 @@ class GameScene extends Phaser.Scene {
     const body = player.body;
     const probeX = body.center.x + knockbackDirection * (body.halfWidth + 30);
     const wallBehind = this.hasWallBetween(body.center.x, body.center.y, probeX, body.center.y);
-    player.setVelocity(wallBehind ? 0 : knockbackDirection * 200, -200);
+    player.setVelocity(wallBehind ? 0 : knockbackDirection * HURT_CONFIG.knockbackX, -HURT_CONFIG.knockbackUp);
     return true;
   }
   // Animations live in the game-wide manager and survive scene restarts.
@@ -756,26 +779,41 @@ class GameScene extends Phaser.Scene {
     enemy.setTint(0xff0000);
     this.time.delayedCall(200, () => enemy.destroy());
   }
-  // Placeholder death until hurt/death animations exist: red fall and fade,
-  // then DeathScene shows "You have fallen" and respawns at the checkpoint.
-  die() {
+  // Fatal hit: the hurt reaction, then the collapse (NEW_DOWN), then the
+  // full-screen YOU DIED animation, which respawns at the checkpoint.
+  // instant: skip straight to YOU DIED (a failed parry; the knight is already down).
+  die({ instant = false } = {}) {
     if (this.isDead) return;
     this.isDead = true;
     this.isAttacking = false;
     this.isRolling = false;
     this.attackHitbox.body.enable = false;
     this.physics.pause();
-    this.player.anims.stop();
-    this.player.setTint(0xff0000);
+    const p = this.player;
+    p.clearTint();
+    p.setAngle(0);
+    p.setAlpha(1);
+    if (instant) {
+      this.scene.launch("DeathScene");
+      return;
+    }
     this.cameras.main.shake(200, 0.004);
-    this.tweens.add({
-      targets: this.player,
-      angle: this.player.flipX ? -90 : 90,
-      alpha: 0.35,
-      duration: DEATH_CONFIG.fallMs,
-      ease: "Quad.easeIn",
-    });
-    this.time.delayedCall(DEATH_CONFIG.fallMs, () => this.scene.launch("DeathScene"));
+    this.playCollapse(() => this.scene.launch("DeathScene"));
+  }
+  // Hurt then down; onDown runs once the knight lies on the ground (held on
+  // the last down frame). Shared with the Parry Death encounter.
+  playCollapse(onDown) {
+    const p = this.player;
+    p.anims.stop();
+    p.anims.play("hurt");
+    p.anims.chain("down");
+    const onComplete = (anim) => {
+      if (anim.key !== "down") return;
+      p.off("animationcomplete", onComplete);
+      if (onDown) onDown();
+    };
+    p.on("animationcomplete", onComplete);
+    this.events.once("shutdown", () => p.off("animationcomplete", onComplete));
   }
   // Opens the pause menu (which also leaves fullscreen). scene.pause() is
   // queued, so isActive() stays true for the rest of this frame; the flag

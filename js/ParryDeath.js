@@ -7,7 +7,7 @@ const PARRY_DEATH_CONFIG = {
   enabled: true,
   parryKeyCodes: ["KeyC"],
   parryKeyLabel: "C",
-  downedMs: 600,
+  downedMs: 700,         // hurt (7 frames) + collapse to the ground before Death appears
   approachMs: 1200,
   delayMinMs: 600,       // random hover before the warning
   delayMaxMs: 2000,
@@ -112,10 +112,9 @@ class ParryDeathEncounter {
     p.body.allowGravity = true;
     p.setVelocity(0, 0);
     p.setAngle(0);
-    p.anims.stop();
-    const crouch = scene.textures.get("hero_crouch");
-    p.setTexture("hero_crouch", Math.max(0, crouch.frameTotal - 2));
-    p.setTint(0x55556a);
+    p.clearTint();
+    p.setAlpha(1);
+    scene.playCollapse(); // ends held on the ground frame until the parry resolves
     this.snapToGround();
 
     scene.input.keyboard.on("keydown", this.onKey);
@@ -152,9 +151,6 @@ class ParryDeathEncounter {
     const scene = this.scene;
     this.elapsedMs += delta;
     const t = this.elapsedMs - this.phaseStart;
-    if (this.state === "DOWNED" || this.state === "DEATH_APPROACH" || this.state === "TELEGRAPH" || this.state === "SINGLE_STRIKE") {
-      scene.player.setTint(0x55556a); // an earlier hit's clearTint timer must not undo the downed look
-    }
     switch (this.state) {
       case "DOWNED":
         if (t >= C.downedMs) this.startApproach();
@@ -249,10 +245,10 @@ class ParryDeathEncounter {
     } else {
       this.reaper.anims.play({ key: "reaper_strike", startFrame: 1 });
       this.track(Sfx.play(scene, "parry_fail"));
-      scene.player.setTint(0xff0000);
-      scene.cameras.main.shake(200, 0.006);
-      this.prompt.setText(reason === "early" ? "Too soon." : "Too late.").setFontSize(18).setColor("#b3261e");
+      this.prompt.setText("");
       this.setPhase("NORMAL_DEATH");
+      // Owner: a failed parry goes straight to YOU DIED (the knight is already down).
+      scene.die({ instant: true });
     }
   }
 
@@ -338,7 +334,7 @@ class ParryDeathEncounter {
     this.cleanupVisuals();
     this.state = "IDLE";
     scene.player.setData("hp", 0);
-    scene.die();
+    scene.die({ instant: true }); // no-op: YOU DIED already started in resolve()
   }
 
   track(sound) {

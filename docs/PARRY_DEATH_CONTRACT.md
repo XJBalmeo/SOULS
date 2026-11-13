@@ -59,11 +59,11 @@ From the window there are two outcomes:
 
 ## Presentation
 - **Knight:** no new knight art.
-  - Downed: last crouch frame, darkened.
+  - Downed: the owner's NEW_HURT then NEW_DOWN sheets, held on the second down frame (owner 2026-11-14).
   - Parry: attack animation with a white flash.
   - Revive: back to idle.
 - **Death's Shadow:** original sprites in `sprites/ENEMIES/DEATHS_SHADOW/` (float, raise, strike, parried, fade), 128×128 frames.
-- **Prompt** (bottom of the screen): "Death comes for you. Press C as the scythe falls." During the window it shows a large "C". On success it shows "DEATH IS DENIED"; on failure, "Too soon." or "Too late."
+- **Prompt** (bottom of the screen): "Death comes for you. Press C as the scythe falls." During the window it shows a large "C". On success it shows "DEATH IS DENIED". On failure the game goes straight to the full-screen YOU DIED animation (owner 2026-11-14).
 - **Sounds:** reaper_arrive, reaper_telegraph, scythe_swing, parry_clang, parry_fail, revive. They pause with the scene.
 
 ## Cleanup

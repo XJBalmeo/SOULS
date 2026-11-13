@@ -1,0 +1,102 @@
+{
+  "date": "2026-11-13T13:49:16.664Z",
+  "passed": 19,
+  "failed": 0,
+  "results": [
+    {
+      "name": "archers spawn from LDtk, one per middle room",
+      "ok": true,
+      "detail": "{\"archers\":3,\"grounded\":3,\"expected\":3,\"plan\":\"[\\\"Level_0\\\",\\\"Level_2\\\",\\\"Level_1\\\",\\\"Level_3\\\",\\\"Level_4\\\"]\"}"
+    },
+    {
+      "name": "every placed archer stands on a floor",
+      "ok": true,
+      "detail": "{\"archers\":3,\"grounded\":3,\"expected\":3,\"plan\":\"[\\\"Level_0\\\",\\\"Level_2\\\",\\\"Level_1\\\",\\\"Level_3\\\",\\\"Level_4\\\"]\"}"
+    },
+    {
+      "name": "test arena found",
+      "ok": true,
+      "detail": "{\"ok\":true,\"floorTiles\":22,\"dx\":220}"
+    },
+    {
+      "name": "archer starts drawing when it sees the knight",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "arrow released after the ~800 ms warning",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "warning lasts 700–1100 ms",
+      "ok": true,
+      "detail": "821 ms"
+    },
+    {
+      "name": "standing knight is hit for 15",
+      "ok": true,
+      "detail": "{\"hp\":85,\"x\":1816,\"archerX\":2036,\"archerHp\":2,\"archerState\":\"reload\",\"anim\":\"archer_reload\",\"arrows\":0}"
+    },
+    {
+      "name": "arrow is removed on hit",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "archer reloads after firing",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "no new draw during the 1.5 s reload",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "reload window about 1.5 s",
+      "ok": true,
+      "detail": "1496 ms"
+    },
+    {
+      "name": "crouching knight is not hit (arrow passes over)",
+      "ok": true,
+      "detail": "{\"hp\":100,\"x\":1816,\"archerX\":2036,\"archerHp\":2,\"archerState\":\"reload\",\"anim\":\"archer_reload\",\"arrows\":0}"
+    },
+    {
+      "name": "rolling knight passes through the arrow",
+      "ok": true,
+      "detail": "{\"hp\":100,\"x\":1916,\"archerX\":2076,\"archerHp\":2,\"archerState\":\"reload\",\"anim\":\"archer_reload\",\"arrows\":0}"
+    },
+    {
+      "name": "archer stays idle when the knight is out of range",
+      "ok": true,
+      "detail": "{\"hp\":100,\"x\":1606,\"archerX\":2036,\"archerHp\":2,\"archerState\":\"idle\",\"anim\":\"archer_idle\",\"arrows\":0}"
+    },
+    {
+      "name": "archer hops back once when the knight gets close",
+      "ok": true,
+      "detail": "moved 66.7 px"
+    },
+    {
+      "name": "first sword hit: archer at 1 HP",
+      "ok": true,
+      "detail": "{\"hp\":100,\"x\":1816,\"archerX\":1846,\"archerHp\":1,\"archerState\":\"reload\",\"anim\":\"archer_idle\",\"arrows\":0}"
+    },
+    {
+      "name": "second sword hit kills the archer",
+      "ok": true,
+      "detail": "{\"hp\":100,\"x\":1816,\"archerX\":null,\"archerHp\":0,\"archerState\":\"gone\",\"anim\":null,\"arrows\":0}"
+    },
+    {
+      "name": "restart restores every archer and clears arrows",
+      "ok": true,
+      "detail": "{\"archers\":3,\"arrows\":0}"
+    },
+    {
+      "name": "no console errors, page errors or failed requests",
+      "ok": true,
+      "detail": ""
+    }
+  ]
+}

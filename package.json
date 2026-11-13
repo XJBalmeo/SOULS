@@ -4,7 +4,8 @@
     "start": "node tests/serve.mjs 8000",
     "test:smoke": "node tests/smoke.mjs",
     "test:survival": "node tests/survival.mjs",
-    "test": "node tests/smoke.mjs && node tests/survival.mjs"
+    "test": "node tests/smoke.mjs && node tests/survival.mjs && node tests/archer.mjs",
+    "test:archer": "node tests/archer.mjs"
   },
   "dependencies": {
     "puppeteer": "25.12.0"

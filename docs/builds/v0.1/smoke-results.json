@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-13T13:38:29.504Z",
+  "date": "2026-11-13T13:48:12.044Z",
   "passed": 50,
   "failed": 0,
   "results": [
@@ -101,32 +101,32 @@
     {
       "name": "menu-to-game delay matches TITLE_CONFIG.startDelayMs",
       "ok": true,
-      "detail": "1641 ms (config 1500)"
+      "detail": "1649 ms (config 1500)"
     },
     {
       "name": "hero spawned with full HP/stamina",
       "ok": true,
-      "detail": "{\"x\":160,\"y\":366,\"vy\":0,\"onFloor\":true,\"hp\":100,\"stamina\":100,\"attacking\":false,\"rolling\":false,\"rats\":7,\"ratsAlive\":7}"
+      "detail": "{\"x\":160,\"y\":366,\"vy\":0,\"onFloor\":true,\"hp\":100,\"stamina\":100,\"attacking\":false,\"rolling\":false,\"rats\":8,\"ratsAlive\":8}"
     },
     {
       "name": "rats spawned",
       "ok": true,
-      "detail": "rats=7"
+      "detail": "rats=8"
     },
     {
       "name": "move right (D)",
       "ok": true,
-      "detail": "dx=98.7"
+      "detail": "dx=96.0"
     },
     {
       "name": "move left (←)",
       "ok": true,
-      "detail": "dx=-64.0"
+      "detail": "dx=-66.7"
     },
     {
       "name": "jump (Space)",
       "ok": true,
-      "detail": "dy=-25.7 vy=-146"
+      "detail": "dy=-27.9 vy=-133"
     },
     {
       "name": "sword attack (Z) uses stamina",
@@ -221,12 +221,12 @@
     {
       "name": "re-entry: fresh hero and rats",
       "ok": true,
-      "detail": "{\"x\":160,\"y\":366,\"vy\":0,\"onFloor\":true,\"hp\":100,\"stamina\":100,\"attacking\":false,\"rolling\":false,\"rats\":7,\"ratsAlive\":7}"
+      "detail": "{\"x\":160,\"y\":366,\"vy\":0,\"onFloor\":true,\"hp\":100,\"stamina\":100,\"attacking\":false,\"rolling\":false,\"rats\":8,\"ratsAlive\":8}"
     },
     {
       "name": "Continue rebuilds the saved layout",
       "ok": true,
-      "detail": "Level_0,Level_3,Level_1,Level_3,Level_4"
+      "detail": "Level_0,Level_2,Level_1,Level_1,Level_4"
     },
     {
       "name": "re-entry: movement works",

@@ -44,6 +44,7 @@ class GameScene extends Phaser.Scene {
       "sprites/ENEMIES/FAMINE/RAT_ATTACK.png",
       { frameWidth: 100, frameHeight: 100 },
     );
+    HollowArcher.preload(this);
     this.load.json("famine_ldtk", "levels/famine/FAMINE.ldtk?v=" + Date.now());
     this.load.spritesheet(
       "famine_tiles",
@@ -74,6 +75,8 @@ class GameScene extends Phaser.Scene {
     // The scene instance is reused when a new game starts from the menu, so
     // clear per-run objects that are created lazily or read before assignment.
     this.rats = null;
+    this.archers = null;
+    this.arrows = null;
     this.vaultTween = null;
     this.isDead = false;
     this.strikeId = 0; // increments per sword swing; enemies take one hit per strike
@@ -231,6 +234,7 @@ class GameScene extends Phaser.Scene {
     this.farBg.y = viewportY + verticalShift;
     this.ground = this.physics.add.staticGroup();
     this.ratSpawns = [];
+    this.archerSpawns = [];
     const playerSpawn = this.generateWorld(ldtkData);
     this.player = this.physics.add.sprite(
       playerSpawn.x,
@@ -300,6 +304,8 @@ class GameScene extends Phaser.Scene {
     } else {
       this.spawnRat(600, 300, true);
     }
+    HollowArcher.setup(this);
+    this.archerSpawns.forEach((spawn) => HollowArcher.spawn(this, spawn.x, spawn.y));
     this.setHitboxDebug(SoulsSettings.load().showHitboxes);
     this.input.keyboard.on("keydown-TAB", (event) => {
       event.preventDefault();
@@ -573,6 +579,8 @@ class GameScene extends Phaser.Scene {
           this.lastPlayerSpawn = { x: spawnX, y: spawnY };
         } else if (ent.__identifier === "Rat") {
           this.ratSpawns.push({ x: spawnX, y: spawnY });
+        } else if (ent.__identifier === "HollowArcher") {
+          this.archerSpawns.push({ x: spawnX, y: spawnY });
         } else if (ent.__identifier === "Door") {
           const dirField = ent.fieldInstances.find(
             (f) => f.__identifier === "direction",
@@ -643,44 +651,50 @@ class GameScene extends Phaser.Scene {
       }
     });
     this.physics.add.overlap(this.player, rat, (player, ratHit) => {
-      const isInvulnerable =
-        player.getData("isRollInvulnerable") ||
-        this.time.now < (player.getData("hitInvulnerableUntil") || 0);
       if (
         ratHit.getData("hp") > 0 &&
         ratHit.getData("state") === "attack" &&
         ratHit.getData("hitStrike") !== ratHit.getData("strike") &&
-        !isInvulnerable &&
-        !this.isDead
+        !this.isPlayerInvulnerable()
       ) {
         ratHit.setData("hitStrike", ratHit.getData("strike"));
-        this.takeDamage(20);
-        if (this.isDead) return;
-        player.setTint(0xff0000);
-        player.setData("hitInvulnerableUntil", this.time.now + 1000);
-        player.setData("knockbackUntil", this.time.now + 200);
-        // A hit cancels climbing/vaulting so platform collisions are restored.
-        player.setData("isClimbing", false);
-        player.setData("isVaulting", false);
-        player.body.allowGravity = true;
-        const knockbackDirection = player.x < ratHit.x ? -1 : 1;
-        // Don't shove the player into a wall: only push sideways if the way is clear.
-        const body = player.body;
-        const probeX = body.center.x + knockbackDirection * (body.halfWidth + 30);
-        const wallBehind = this.hasWallBetween(
-          body.center.x,
-          body.center.y,
-          probeX,
-          body.center.y,
-        );
-        player.setVelocity(wallBehind ? 0 : knockbackDirection * 200, -200);
-        ratHit.setData("ignorePlayerUntil", this.time.now + 1000);
-        this.time.delayedCall(1000, () => {
-          player.clearTint();
-        });
+        if (this.hurtPlayer(20, player.x < ratHit.x ? -1 : 1)) {
+          ratHit.setData("ignorePlayerUntil", this.time.now + 1000);
+        }
       }
     });
     this.rats.add(rat);
+  }
+  isPlayerInvulnerable() {
+    return (
+      this.isDead ||
+      this.player.getData("isRollInvulnerable") ||
+      this.time.now < (this.player.getData("hitInvulnerableUntil") || 0)
+    );
+  }
+  // Shared enemy-hit reaction: damage, red flash, 1 s of invulnerability and a
+  // knockback in knockbackDirection (-1 left, 1 right). Returns false if the
+  // hit was lethal (die() takes over from there).
+  hurtPlayer(amount, knockbackDirection) {
+    const player = this.player;
+    this.takeDamage(amount);
+    if (this.isDead) return false;
+    player.setTint(0xff0000);
+    player.setData("hitInvulnerableUntil", this.time.now + 1000);
+    player.setData("knockbackUntil", this.time.now + 200);
+    // A hit cancels climbing/vaulting so platform collisions are restored.
+    player.setData("isClimbing", false);
+    player.setData("isVaulting", false);
+    player.body.allowGravity = true;
+    // Don't shove the player into a wall: only push sideways if the way is clear.
+    const body = player.body;
+    const probeX = body.center.x + knockbackDirection * (body.halfWidth + 30);
+    const wallBehind = this.hasWallBetween(body.center.x, body.center.y, probeX, body.center.y);
+    player.setVelocity(wallBehind ? 0 : knockbackDirection * 200, -200);
+    this.time.delayedCall(1000, () => {
+      player.clearTint();
+    });
+    return true;
   }
   // Animations live in the game-wide manager and survive scene restarts.
   createAnimOnce(config) {
@@ -1352,6 +1366,7 @@ class GameScene extends Phaser.Scene {
         }
       }
     }
+    HollowArcher.update(this, time);
     if (this.rats) {
       this.rats.getChildren().forEach((rat) => {
         if (!rat.active || rat.getData("hp") <= 0) return;

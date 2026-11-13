@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-13T13:37:30.193Z",
+  "date": "2026-11-13T13:48:38.362Z",
   "passed": 46,
   "failed": 0,
   "results": [
@@ -21,7 +21,7 @@
     {
       "name": "save lists 5 room instances with stable unique IDs",
       "ok": true,
-      "detail": "Level_0,Level_1,Level_1,Level_1,Level_4"
+      "detail": "Level_0,Level_3,Level_1,Level_1,Level_4"
     },
     {
       "name": "built layout matches the save",
@@ -51,7 +51,7 @@
     {
       "name": "one fewer rat alive",
       "ok": true,
-      "detail": "8 of 9"
+      "detail": "7 of 8"
     },
     {
       "name": "a rat bite at 20 HP kills the knight (normal death)",
@@ -61,7 +61,7 @@
     {
       "name": "death locks the knight: HP 0, physics paused",
       "ok": true,
-      "detail": "{\"hp\":0,\"stamina\":82.12599999999989,\"x\":160,\"angle\":0,\"alpha\":1,\"dead\":true,\"physicsPaused\":true,\"ratsAlive\":8,\"rooms\":\"Level_0,Level_1,Level_1,Level_1,Level_4\"}"
+      "detail": "{\"hp\":0,\"stamina\":84.20899999999972,\"x\":160,\"angle\":0.14400000000000546,\"alpha\":0.99896,\"dead\":true,\"physicsPaused\":true,\"ratsAlive\":7,\"rooms\":\"Level_0,Level_3,Level_1,Level_1,Level_4\"}"
     },
     {
       "name": "pause is blocked while dead",
@@ -81,17 +81,17 @@
     {
       "name": "respawn: full HP and stamina",
       "ok": true,
-      "detail": "{\"hp\":100,\"stamina\":100,\"x\":160,\"angle\":0,\"alpha\":1,\"dead\":false,\"physicsPaused\":false,\"ratsAlive\":9,\"rooms\":\"Level_0,Level_1,Level_1,Level_1,Level_4\"}"
+      "detail": "{\"hp\":100,\"stamina\":100,\"x\":160,\"angle\":0,\"alpha\":1,\"dead\":false,\"physicsPaused\":false,\"ratsAlive\":8,\"rooms\":\"Level_0,Level_3,Level_1,Level_1,Level_4\"}"
     },
     {
       "name": "respawn: same map layout",
       "ok": true,
-      "detail": "Level_0,Level_1,Level_1,Level_1,Level_4"
+      "detail": "Level_0,Level_3,Level_1,Level_1,Level_4"
     },
     {
       "name": "respawn: regular enemies reset (killed rat is back)",
       "ok": true,
-      "detail": "9 of 9"
+      "detail": "8 of 8"
     },
     {
       "name": "respawn: knight upright and visible, physics running",
@@ -121,7 +121,7 @@
     {
       "name": "Retry: full HP/stamina, same layout, enemies reset",
       "ok": true,
-      "detail": "{\"hp\":100,\"stamina\":100,\"x\":160,\"angle\":0,\"alpha\":1,\"dead\":false,\"physicsPaused\":false,\"ratsAlive\":9,\"rooms\":\"Level_0,Level_1,Level_1,Level_1,Level_4\"}"
+      "detail": "{\"hp\":100,\"stamina\":100,\"x\":160,\"angle\":0,\"alpha\":1,\"dead\":false,\"physicsPaused\":false,\"ratsAlive\":8,\"rooms\":\"Level_0,Level_3,Level_1,Level_1,Level_4\"}"
     },
     {
       "name": "Retry closes the pause menu",
@@ -141,7 +141,7 @@
     {
       "name": "Continue: same campaign and same layout",
       "ok": true,
-      "detail": "Level_0,Level_1,Level_1,Level_1,Level_4"
+      "detail": "Level_0,Level_3,Level_1,Level_1,Level_4"
     },
     {
       "name": "Continue: full HP/stamina, all regular enemies",

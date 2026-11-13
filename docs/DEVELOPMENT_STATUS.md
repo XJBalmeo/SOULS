@@ -106,3 +106,28 @@ All four were implemented by the Lead directly (T1, small). `npm run test:smoke`
   - Chapter-transition save is untested until v0.5.
   - Human playtest pending.
 - Next: owner review of v0.2. Then v0.3 starts with a souls-architect design for the Parry Death state machine, plus owner approval of the two new enemy concepts.
+
+## Session log — 2026-11-13 — Lead — v0.2 owner changes + Hollow Archer demo
+- Owner request (while v0.2 is in REVIEW):
+  - Remove the key hints at the bottom of the main menu.
+  - P / menu leaves fullscreen.
+  - Continue/Resume re-enters it.
+  - Show a fully working Hollow Archer in the game as a demo.
+- v0.2 branch, commit 8088ded:
+  - Removed the menu hint line.
+  - The pause menu exits fullscreen. Resume and Retry request fullscreen; the game resumes only once it is granted. If the browser refuses (Esc is not a user gesture), the click-to-continue overlay is shown.
+  - Leaving fullscreen mid-run opens the pause menu; the overlay remains only for the death screen.
+  - Smoke 50/50, survival 46/46.
+- Archer demo branch `famine/v0.3-archer-demo` (from v0.2):
+  - js/HollowArcher.js: AI, 800 ms draw telegraph with glint, flat 320 px/s arrow for 15 dmg at 42 px height, 1.5 s reload, one backstep, 2 HP, line of sight within 420 px and 48 px vertical.
+  - Sprites in sprites/ENEMIES/FAMINE/ARCHER_*.png from tools/art/enemy_sprites.py.
+  - LDtk entity `HollowArcher` (uid 28), placed once in each of Level_1, Level_2 and Level_3.
+  - GameScene: shared `hurtPlayer` / `isPlayerInvulnerable` (rats use them too).
+  - Tests: tests/archer.mjs 19/19. `npm test` runs smoke + survival + archer, all green.
+- Not done / open:
+  - No archer death or hurt animation; it uses the rat's red-flash placeholder.
+  - No SFX.
+  - The sword cannot cut arrows. Hits do not interrupt the draw.
+  - Owner approval of the look and behaviour is pending.
+  - The Starved is not implemented.
+  - v0.2 is still REVIEW / PENDING.

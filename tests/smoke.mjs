@@ -77,7 +77,7 @@ const player = () =>
 
 try {
   await page.goto(url, { waitUntil: "load" });
-  await page.evaluate(() => localStorage.removeItem("souls.settings.v1"));
+  await page.evaluate(() => localStorage.clear());
   await page.reload({ waitUntil: "load" });
 
   check("Phaser 3.80.1 loaded", (await state(() => Phaser.VERSION)) === "3.80.1");
@@ -202,9 +202,6 @@ try {
   await shot("09-settings-over-pause");
   await press("Escape");
   check("settings returns to pause", await waitFor(() => game.scene.isActive("PauseScene") && !game.scene.isActive("SettingsScene")));
-  await press("ArrowDown"); // Retry (disabled)
-  await press("Enter");
-  check("disabled retry does nothing", (await sceneStatus()).PauseScene === "active");
   await press("Escape");
   check("Esc resumes game", await waitFor(() => game.scene.isActive("GameScene") && !game.scene.isActive("PauseScene")));
   const resumeX = (await player()).x;
@@ -231,11 +228,15 @@ try {
     getComputedStyle(document.getElementById("fullscreen-overlay")).display === "none"));
 
   await wait(300);
+  const savedRooms = await state(() => JSON.parse(localStorage.getItem("souls.save.v1")).chapters.famine.rooms.map((r) => r.template).join(","));
+  await press("ArrowDown"); // Continue, enabled now that a save exists
   await press("Enter");
-  check("second New Game starts cleanly", await waitFor(() => game.scene.isActive("GameScene") && !!game.scene.getScene("GameScene").player));
+  check("Continue re-enters the game", await waitFor(() => game.scene.isActive("GameScene") && !!game.scene.getScene("GameScene").player));
   await wait(1500);
   p = await player();
   check("re-entry: fresh hero and rats", p.hp === 100 && p.ratsAlive > 0, JSON.stringify(p));
+  const builtRooms = await state(() => game.scene.getScene("GameScene").roomPlan.join(","));
+  check("Continue rebuilds the saved layout", builtRooms === savedRooms, builtRooms);
   const reX = p.x;
   await press("KeyD", 500);
   check("re-entry: movement works", (await player()).x > reX + 10);
@@ -250,7 +251,7 @@ try {
     return SoulsSettings.load();
   });
   check("corrupt settings fall back to defaults", corrupt.masterVolume === 0.8 && corrupt.showHitboxes === false);
-  await state(() => localStorage.removeItem("souls.settings.v1"));
+  await state(() => localStorage.clear());
 } catch (e) {
   check("test run completed without exception", false, e.stack);
 }

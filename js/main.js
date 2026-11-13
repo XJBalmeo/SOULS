@@ -17,7 +17,7 @@ const config = {
     },
   },
   // Order is render order: PauseScene and SettingsScene draw above the game.
-  scene: [BootScene, MenuScene, GameScene, PauseScene, SettingsScene, CreditsScene],
+  scene: [BootScene, MenuScene, GameScene, DeathScene, PauseScene, SettingsScene, ConfirmScene, CreditsScene],
 };
 const game = new Phaser.Game(config);
 

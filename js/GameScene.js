@@ -75,6 +75,10 @@ class GameScene extends Phaser.Scene {
     // clear per-run objects that are created lazily or read before assignment.
     this.rats = null;
     this.vaultTween = null;
+    this.isDead = false;
+    this.strikeId = 0; // increments per sword swing; enemies take one hit per strike
+    // Normally created by the menu; covers starting GameScene directly (tests).
+    if (!SaveManager.campaign) SaveManager.startNewCampaign();
     this.hpDelayTween = null;
     this.stamDelayTween = null;
     // =========================================================================
@@ -304,7 +308,7 @@ class GameScene extends Phaser.Scene {
     const openPause = (event) => {
       // scene.pause() is queued, so isActive() stays true for the rest of
       // this frame; the flag stops a second key (Esc+P) launching twice.
-      if (event.repeat || this.pauseRequested) return;
+      if (event.repeat || this.pauseRequested || this.isDead) return;
       this.pauseRequested = true;
       this.scene.launch("PauseScene");
       this.scene.pause();
@@ -383,6 +387,7 @@ class GameScene extends Phaser.Scene {
     this.player.setData("stamina", 100);
     this.STAMINA_COST_ATTACK = 15;
     this.STAMINA_COST_ROLL = 25;
+    this.SWORD_DAMAGE = 1;
     this.STAMINA_REGEN = 20;
     this.HUD_MAX_WIDTH = 124;
     this.JUMP_VELOCITY_SINGLE = -253;
@@ -414,19 +419,10 @@ class GameScene extends Phaser.Scene {
     if (!currentRightDoor) {
       console.warn("No 'right' door found in Level_0!");
     } else {
-      const intermediateLevels = ldtkData.levels.filter((l) =>
-        ["Level_1", "Level_2", "Level_3"].includes(l.identifier),
-      );
-      const endLevel = ldtkData.levels.find((l) => l.identifier === "Level_4");
-      const numIntermediateRooms = 3;
-      for (let i = 0; i <= numIntermediateRooms; i++) {
+      this.roomPlan = this.planRooms(ldtkData, SaveManager.chapterState());
+      for (let i = 1; i < this.roomPlan.length; i++) {
         if (!currentRightDoor) break;
-        let selectedLevel;
-        if (i === numIntermediateRooms && endLevel) {
-          selectedLevel = endLevel;
-        } else {
-          selectedLevel = Phaser.Math.RND.pick(intermediateLevels);
-        }
+        const selectedLevel = ldtkData.levels.find((l) => l.identifier === this.roomPlan[i]);
         if (!selectedLevel) {
           console.warn("Could not find a valid level to attach");
           break;
@@ -481,6 +477,26 @@ class GameScene extends Phaser.Scene {
       bounds.maxY - bounds.minY,
     );
     return playerSpawn;
+  }
+  // Room templates for this chapter, in order. Uses the saved list so death,
+  // retry and Continue rebuild the same map; on first build picks from the
+  // campaign seed and saves the result (docs/SAVE_CONTRACT.md).
+  planRooms(ldtkData, state) {
+    const exists = (template) => ldtkData.levels.some((l) => l.identifier === template);
+    if (state.rooms && state.rooms.every((room) => exists(room.template))) {
+      return state.rooms.map((room) => room.template);
+    }
+    if (state.rooms) {
+      console.warn("Saved rooms are missing from FAMINE.ldtk; regenerating the layout from the seed.");
+      state.checkpointId = "famine-start"; // the old checkpoint may name a room that no longer exists
+    }
+    const rng = new Phaser.Math.RandomDataGenerator([String(state.seed)]);
+    const templates = ["Level_0"];
+    for (let i = 0; i < 3; i++) templates.push(rng.pick(["Level_1", "Level_2", "Level_3"]));
+    templates.push("Level_4");
+    state.rooms = templates.map((template, i) => ({ id: "famine-room-" + i, template }));
+    SaveManager.write();
+    return templates;
   }
   buildRoom(level, offsetX, offsetY) {
     const collisionLayer = level.layerInstances.find(
@@ -621,7 +637,6 @@ class GameScene extends Phaser.Scene {
     });
     this.physics.add.overlap(this.attackHitbox, rat, (hitbox, ratHit) => {
       if (
-        ratHit.getData("hp") > 0 &&
         !this.hasWallBetween(
           this.player.body.center.x,
           this.player.body.center.y,
@@ -629,12 +644,7 @@ class GameScene extends Phaser.Scene {
           ratHit.body.center.y,
         )
       ) {
-        ratHit.setData("hp", 0);
-        ratHit.setTint(0xff0000);
-        ratHit.setVelocityX(0);
-        this.time.delayedCall(200, () => {
-          ratHit.destroy();
-        });
+        this.damageEnemy(ratHit, this.SWORD_DAMAGE);
       }
     });
     this.physics.add.overlap(this.player, rat, (player, ratHit) => {
@@ -644,9 +654,13 @@ class GameScene extends Phaser.Scene {
       if (
         ratHit.getData("hp") > 0 &&
         ratHit.getData("state") === "attack" &&
-        !isInvulnerable
+        ratHit.getData("hitStrike") !== ratHit.getData("strike") &&
+        !isInvulnerable &&
+        !this.isDead
       ) {
+        ratHit.setData("hitStrike", ratHit.getData("strike"));
         this.takeDamage(20);
+        if (this.isDead) return;
         player.setTint(0xff0000);
         player.setData("hitInvulnerableUntil", this.time.now + 1000);
         player.setData("knockbackUntil", this.time.now + 200);
@@ -682,6 +696,49 @@ class GameScene extends Phaser.Scene {
     if (!on) this.physics.world.debugGraphic.clear();
     if (this.attackHitbox) this.attackHitbox.setVisible(on);
   }
+  // Every sword hit on an enemy goes through here: one hit per enemy per swing.
+  damageEnemy(enemy, amount) {
+    if (enemy.getData("hp") <= 0 || enemy.getData("lastHitStrike") === this.strikeId) return;
+    enemy.setData("lastHitStrike", this.strikeId);
+    const hp = Math.max(0, enemy.getData("hp") - amount);
+    enemy.setData("hp", hp);
+    if (hp > 0) {
+      enemy.setTintFill(0xffffff);
+      this.time.delayedCall(80, () => enemy.active && enemy.clearTint());
+      return;
+    }
+    enemy.setTint(0xff0000);
+    enemy.setVelocityX(0);
+    this.time.delayedCall(200, () => enemy.destroy());
+  }
+  // Placeholder death until hurt/death animations exist: red fall and fade,
+  // then DeathScene shows "You have fallen" and respawns at the checkpoint.
+  die() {
+    if (this.isDead) return;
+    this.isDead = true;
+    this.isAttacking = false;
+    this.isRolling = false;
+    this.attackHitbox.body.enable = false;
+    this.physics.pause();
+    this.player.anims.stop();
+    this.player.setTint(0xff0000);
+    this.cameras.main.shake(200, 0.004);
+    this.tweens.add({
+      targets: this.player,
+      angle: this.player.flipX ? -90 : 90,
+      alpha: 0.35,
+      duration: DEATH_CONFIG.fallMs,
+      ease: "Quad.easeIn",
+    });
+    this.time.delayedCall(DEATH_CONFIG.fallMs, () => this.scene.launch("DeathScene"));
+  }
+  // Checkpoint restore: rebuilds the saved map with full HP/stamina and all
+  // regular enemies reset. Used by death and by Retry from Checkpoint.
+  restartFromCheckpoint() {
+    this.scene.stop("PauseScene");
+    this.scene.stop("DeathScene");
+    this.scene.restart();
+  }
   takeDamage(amount) {
     if (this.player.getData("hp") <= 0) return;
     const currentHp = this.player.getData("hp");
@@ -701,6 +758,7 @@ class GameScene extends Phaser.Scene {
       duration: 300,
       ease: "Sine.easeInOut",
     });
+    if (newHp === 0) this.die();
   }
   consumeStamina(amount) {
     const currentStam = this.player.getData("stamina");
@@ -801,6 +859,7 @@ class GameScene extends Phaser.Scene {
     if (this.farBg) {
       this.farBg.tilePositionX = this.cameras.main.scrollX * 0.2;
     }
+    if (this.isDead) return;
     const mouseAttack = this.input.activePointer.leftButtonDown();
     if (!mouseAttack) this.ignorePointerUntilUp = false;
     if (
@@ -810,6 +869,7 @@ class GameScene extends Phaser.Scene {
     ) {
       if (this.player.getData("stamina") >= this.STAMINA_COST_ATTACK) {
         this.isAttacking = true;
+        this.strikeId++;
         this.consumeStamina(this.STAMINA_COST_ATTACK);
         this.player.anims.play("attack", true);
       }
@@ -1393,6 +1453,7 @@ class GameScene extends Phaser.Scene {
           ) {
             rat.setVelocityX(0);
             rat.setData("state", "attack");
+            rat.setData("strike", (rat.getData("strike") || 0) + 1);
             rat.setData("lastAttackTime", now);
             rat.anims.play("rat_attack", true);
             const dir = this.player.x < rat.x ? -1 : 1;

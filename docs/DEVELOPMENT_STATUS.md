@@ -1,6 +1,6 @@
 # Development status
 
-Current milestone: M1 — Famine. Current build: **v0.2 Combat & Survival — IN PROGRESS** (v0.1 Foundation DONE, owner approved 2026-11-13). Owner build approval for v0.2: PENDING. Branch: `famine/v0.1-foundation` (not merged). Review packet: `docs/builds/v0.1/BUILD_REVIEW.md`. Next tasks after approval: v0.2 — M1.3 combat/death, M1.4 checkpoint/save, save-dependent M1.2 (Continue, retry, New Game confirmation).
+Current milestone: M1 — Famine. Current build: **v0.2 Combat & Survival — REVIEW** (2026-11-13; v0.1 Foundation DONE, owner approved 2026-11-13). Owner build approval for v0.2: PENDING. Review packet: `docs/builds/v0.2/BUILD_REVIEW.md`. Branch `famine/v0.2-combat-survival`. Branch: `famine/v0.1-foundation` (not merged). Review packet: `docs/builds/v0.1/BUILD_REVIEW.md`. Next tasks after approval: v0.2 — M1.3 combat/death, M1.4 checkpoint/save, save-dependent M1.2 (Continue, retry, New Game confirmation).
 
 ## Existing implementation (static inspection)
 Browser Phaser game, hero movement/sword/stamina, rat enemy, Famine artwork, modular randomized rooms, parallax, fullscreen overlay. See ARCHITECTURE.md. No live playtest or automated baseline executed for this kit.
@@ -82,3 +82,27 @@ All four were implemented by the Lead directly (T1, small). `npm run test:smoke`
   1. Checkpoints: chapter start only for now. Death returns to the Famine start room with the same layout. Physical checkpoints come in v0.4 (M1.7).
   2. Reaching a checkpoint will refill HP and stamina, once physical checkpoints exist.
   3. Death: a short "You have fallen" screen, then an automatic respawn.
+
+## Session log — 2026-11-13 — Lead — M1.3, M1.4, M1.2 (save items) — v0.2 REVIEW
+- Routing:
+  - Lead: Opus 5.5, direct implementation.
+  - souls-architect (T3): requested Opus, actual Opus 5.5. Reviewed the save contract: APPROVE WITH CHANGES, six changes, all applied.
+  - souls-qa (T2): requested Sonnet, actual Sonnet 5.5. No blocker or major findings.
+- Files:
+  - js/SaveManager.js (new)
+  - js/GameScene.js: planRooms, damageEnemy, die, restartFromCheckpoint, per-strike rat bites
+  - js/UIScenes.js: DEATH_CONFIG, ConfirmScene, DeathScene, Continue, Retry
+  - js/main.js
+  - index.html
+  - tests/survival.mjs (new), tests/smoke.mjs, package.json (`npm test`)
+  - docs/SAVE_CONTRACT.md
+- Tests: smoke 48/48, survival 46/46, `npm test` exit 0. QA probes v02-edge1..3 all clean. Heap is flat over 20 restarts after forced GC (v02-heap.mjs).
+- Decisions:
+  - The checkpoint is the chapter start only (owner).
+  - Death is a placeholder fall, a 2 s screen, then respawn (owner).
+  - Rat HP stays 1. SWORD_DAMAGE is 1.
+- Open:
+  - No hurt or death animation sprites yet.
+  - Chapter-transition save is untested until v0.5.
+  - Human playtest pending.
+- Next: owner review of v0.2. Then v0.3 starts with a souls-architect design for the Parry Death state machine, plus owner approval of the two new enemy concepts.

@@ -1,6 +1,6 @@
 # M1 — Famine + game foundation
 
-Current (2026-11-13): M1.1 REVIEW; M1.2 v0.1 subset REVIEW (save-dependent parts remain for v0.2); M1.5 initial standards REVIEW; all other tasks BACKLOG. Active build v0.1 awaiting owner approval.
+Current (2026-11-13): v0.1 approved (M1.1 done; M1.2 v0.1 subset and M1.5 initial done). v0.2 REVIEW: M1.3 and M1.4 implemented for the chapter-start checkpoint, and M1.2 save-dependent items done. Physical checkpoints are deferred to M1.7 (owner decision). M1.4A, M1.6–M1.10 BACKLOG.
 
 | ID | Task | Owner | Depends on | Deliverable |
 |---|---|---|---|---|

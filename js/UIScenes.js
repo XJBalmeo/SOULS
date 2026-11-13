@@ -11,6 +11,13 @@ const TITLE_CONFIG = {
   backgroundDim: 0.5892, // black over the menu background: 0 = no dim, 1 = full black
 };
 
+// Placeholder death sequence (no hurt/death animation yet).
+const DEATH_CONFIG = {
+  fallMs: 700, // knight falls and fades before the death screen
+  fadeMs: 500, // death screen fade-in
+  screenMs: 2000, // how long "You have fallen" shows before respawning
+};
+
 // UI font. Set useCustomFont to false to go back to the Georgia serif.
 // Knight Warrior is a personal-use demo font (Maknastudio); a commercial
 // licence is required before release, and the file is not committed to git.
@@ -241,27 +248,51 @@ class MenuScene extends Phaser.Scene {
     this.title = this.add.sprite(width / 2, 170, "title").setScale(TITLE_CONFIG.scale).play("title_idle");
     UI.text(this, width / 2, 270, "CHAPTER I  -  FAMINE", 24, UI.COLORS.accent);
 
-    // A save system does not exist until Famine v0.2, so Continue is unavailable.
+    const save = SaveManager.inspect();
+    const continueHint = {
+      none: "No saved journey yet.",
+      corrupt: "Your saved journey could not be read. It is kept, not deleted.",
+      unavailable: "Saving is unavailable in this browser.",
+    }[save.status];
     this.menu = UI.menu(this, width / 2, 360, [
-      { label: "New Game", onSelect: () => this.startNewGame() },
-      {
-        label: "Continue",
-        disabled: true,
-        hint: "No saved journey yet. Saving arrives with checkpoints.",
-      },
+      { label: "New Game", onSelect: () => this.newGame(save.status) },
+      { label: "Continue", disabled: save.status !== "ok", hint: continueHint, onSelect: () => this.enterGame("continue") },
       { label: "Settings", onSelect: () => UI.openSettings(this) },
       { label: "Credits", onSelect: () => this.scene.start("CreditsScene") },
     ]);
 
     UI.text(this, width / 2, height - 40,
       "↑ ↓ choose   |   Enter / Z confirm   |   Esc / P pause in game", 16, UI.COLORS.dim);
-    UI.text(this, width - 90, height - 18, "build v0.1", 14, UI.COLORS.disabled);
+    UI.text(this, width - 90, height - 18, "build v0.2", 14, UI.COLORS.disabled);
     this.cameras.main.fadeIn(250, 0, 0, 0);
   }
   update(time, delta) {
     this.bg.tilePositionX += delta * 0.006;
   }
-  startNewGame() {
+  // An existing (or unreadable) save is only replaced after confirmation.
+  newGame(saveStatus) {
+    if (saveStatus !== "ok" && saveStatus !== "corrupt") {
+      this.enterGame("new");
+      return;
+    }
+    const message =
+      saveStatus === "ok"
+        ? "Begin a new journey?\nYour saved progress will be lost."
+        : "Begin a new journey?\nThe unreadable save will be set aside as a backup.";
+    this.scene.launch("ConfirmScene", {
+      from: this.scene.key,
+      message,
+      confirmLabel: "Begin Anew",
+      onConfirm: () => this.enterGame("new"),
+    });
+    this.scene.sleep();
+  }
+  enterGame(mode) {
+    if (mode === "continue" && !SaveManager.continueCampaign()) {
+      this.scene.restart(); // the save changed since the menu opened
+      return;
+    }
+    if (mode === "new") SaveManager.startNewCampaign();
     // Lock the menu so no other item can be chosen mid-transition.
     this.input.enabled = false;
     this.input.keyboard.enabled = false;
@@ -271,6 +302,56 @@ class MenuScene extends Phaser.Scene {
     const { startDelayMs, fadeMs } = TITLE_CONFIG;
     this.time.delayedCall(Math.max(0, startDelayMs - fadeMs), () => this.cameras.main.fadeOut(fadeMs, 0, 0, 0));
     this.time.delayedCall(startDelayMs, () => this.scene.start("GameScene"));
+  }
+}
+
+// Yes/Cancel prompt above a sleeping scene. Cancel is selected first.
+class ConfirmScene extends Phaser.Scene {
+  constructor() {
+    super("ConfirmScene");
+  }
+  init(data) {
+    this.request = data;
+  }
+  create() {
+    const { width, height } = this.scale;
+    const { from, message, confirmLabel, onConfirm } = this.request;
+    const close = () => {
+      this.scene.stop();
+      this.scene.wake(from);
+    };
+    this.add.rectangle(0, 0, width, height, 0x000000, 0.9).setOrigin(0);
+    UI.text(this, width / 2, 250, message, 32).setLineSpacing(10);
+    UI.menu(
+      this,
+      width / 2,
+      380,
+      [
+        { label: "Cancel", onSelect: close },
+        {
+          label: confirmLabel,
+          onSelect: () => {
+            close();
+            onConfirm();
+          },
+        },
+      ],
+      { onBack: close },
+    );
+  }
+}
+
+// "You have fallen", then respawn at the checkpoint (owner decision 2026-11-13).
+class DeathScene extends Phaser.Scene {
+  constructor() {
+    super("DeathScene");
+  }
+  create() {
+    const { width, height } = this.scale;
+    const shade = this.add.rectangle(0, 0, width, height, 0x000000, 1).setOrigin(0).setAlpha(0);
+    const text = UI.text(this, width / 2, height / 2, "YOU HAVE FALLEN", 72, "#b3261e").setAlpha(0);
+    this.tweens.add({ targets: [shade, text], alpha: 1, duration: DEATH_CONFIG.fadeMs });
+    this.time.delayedCall(DEATH_CONFIG.screenMs, () => this.scene.get("GameScene").restartFromCheckpoint());
   }
 }
 
@@ -291,8 +372,8 @@ class PauseScene extends Phaser.Scene {
         { label: "Settings", onSelect: () => UI.openSettings(this) },
         {
           label: "Retry from Checkpoint",
-          disabled: true,
-          hint: "Checkpoints arrive with the save system.",
+          hint: "Back to the last checkpoint with full health. Enemies return.",
+          onSelect: () => this.scene.get("GameScene").restartFromCheckpoint(),
         },
         { label: "Quit to Main Menu", onSelect: () => this.quitToMenu() },
       ],

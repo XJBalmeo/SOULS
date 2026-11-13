@@ -22,7 +22,7 @@ Build labels are internal review labels, not published release tags. No gate pas
 
 ## Build checklist (initial)
 - [x] v0.1 Foundation — DONE (owner approved 2026-11-13; docs/builds/v0.1/BUILD_REVIEW.md)
-- [ ] v0.2 Combat & Survival — IN PROGRESS (2026-11-13)
+- [ ] v0.2 Combat & Survival — REVIEW (2026-11-13, awaiting owner approval; docs/builds/v0.2/BUILD_REVIEW.md)
 - [ ] v0.3 Parry Death & Enemies — BACKLOG
 - [ ] v0.4 Famine Expanded — BACKLOG
 - [ ] v0.5 The Hollow King — BACKLOG

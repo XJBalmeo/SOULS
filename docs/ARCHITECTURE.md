@@ -27,9 +27,9 @@ Verified by static inspection plus a live headless-Chrome run (`npm run test:smo
 ## GameScene (js/GameScene.js)
 - `preload` loads hero sheets `sprites/HERO/NEW_*.png` (100x100 frames), rat sheets `sprites/ENEMIES/FAMINE/RAT_*.png`, `levels/famine/FAMINE.ldtk`, tiles/ropes/ledges (16px, spacing 1), `FARBACKGROUND_LEVEL1.png`, HUD images.
 - `create` resets per-run state (the instance is reused on New Game), builds `heroConfig` (hitboxes/offsets per state), `generateWorld`, animations through `createAnimOnce` (game-wide anim manager), rats, input, HUD (HP/stamina with delayed bars).
-- **Rooms:** `generateWorld` = Level_0 (start) + 3 intermediates picked with replacement from Level_1–3 via unseeded `Phaser.Math.RND.pick` + Level_4 (end); doors aligned. No room-instance IDs or seed → layout is not reproducible yet (M1.4, v0.2).
-- **Combat:** sword overlap kills a rat outright (rat HP 1, no shared damage system). Rat attack: `takeDamage(20)` with 1000 ms invulnerability + knockback; range 50, vision 300, cooldown 2000 ms. `takeDamage` is the **only** HP-reduction path.
-- **Death: none.** At HP 0 the hero keeps playing; there is no death, respawn, checkpoint or game over. (M1.3/M1.4, v0.2.)
+- **Rooms:** `generateWorld` builds Level_0, then 3 intermediates from Level_1–3, then Level_4, with doors aligned. `planRooms` takes the order from the save (`famine-room-0..4`), or on first build picks the templates from the campaign seed and saves them (v0.2; see SAVE_CONTRACT.md).
+- **Combat:** sword hits go through `damageEnemy` (one hit per enemy per swing, using `strikeId`; `SWORD_DAMAGE` 1; rat HP 1). Rat bites register once per rat strike. Rat attack: `takeDamage(20)` with 1000 ms invulnerability + knockback; range 50, vision 300, cooldown 2000 ms. `takeDamage` is the **only** HP-reduction path.
+- **Death (v0.2):** `takeDamage` reaching 0 calls `die()`. Physics pauses, input and pause are locked, a placeholder fall plays, then `DeathScene` appears and calls `restartFromCheckpoint()`. That `scene.restart()` rebuilds the saved map with full HP/stamina and fresh enemies. Retry from Checkpoint uses the same path. Save: `js/SaveManager.js`.
 
 ## Fixed in v0.1
 - Rat sheets loaded from `Sprites/...` (capital S) → 404 on case-sensitive hosts; now `sprites/...`.

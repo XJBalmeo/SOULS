@@ -1,0 +1,241 @@
+{
+  "date": "2026-11-13T12:03:30.295Z",
+  "passed": 46,
+  "failed": 0,
+  "results": [
+    {
+      "name": "no save: Continue disabled",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "New Game without a save starts directly (no confirm)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "save written with version, campaign and checkpoint",
+      "ok": true,
+      "detail": "{\"v\":1,\"cp\":\"famine-start\"}"
+    },
+    {
+      "name": "save lists 5 room instances with stable unique IDs",
+      "ok": true,
+      "detail": "Level_0,Level_1,Level_3,Level_2,Level_4"
+    },
+    {
+      "name": "built layout matches the save",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "one sword swing deals exactly one hit (3 -> 2)",
+      "ok": true,
+      "detail": "2"
+    },
+    {
+      "name": "second swing deals the next hit (2 -> 1)",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "repeat hits within one strike are ignored (shared damage path)",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "third swing kills the rat",
+      "ok": true,
+      "detail": "destroyed"
+    },
+    {
+      "name": "one fewer rat alive",
+      "ok": true,
+      "detail": "6 of 7"
+    },
+    {
+      "name": "a rat bite at 20 HP kills the knight (normal death)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "death locks the knight: HP 0, physics paused",
+      "ok": true,
+      "detail": "{\"hp\":0,\"stamina\":84.21460000000008,\"x\":160,\"angle\":0.15446938775517083,\"alpha\":0.998884387755102,\"dead\":true,\"physicsPaused\":true,\"ratsAlive\":6,\"rooms\":\"Level_0,Level_1,Level_3,Level_2,Level_4\"}"
+    },
+    {
+      "name": "pause is blocked while dead",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "death screen appears",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "respawns at the checkpoint after the death screen",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "respawn: full HP and stamina",
+      "ok": true,
+      "detail": "{\"hp\":100,\"stamina\":100,\"x\":160,\"angle\":0,\"alpha\":1,\"dead\":false,\"physicsPaused\":false,\"ratsAlive\":7,\"rooms\":\"Level_0,Level_1,Level_3,Level_2,Level_4\"}"
+    },
+    {
+      "name": "respawn: same map layout",
+      "ok": true,
+      "detail": "Level_0,Level_1,Level_3,Level_2,Level_4"
+    },
+    {
+      "name": "respawn: regular enemies reset (killed rat is back)",
+      "ok": true,
+      "detail": "7 of 7"
+    },
+    {
+      "name": "respawn: knight upright and visible, physics running",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "death screen closed",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "respawn: controls work",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "death did not rewrite the campaign",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Retry restarts from the checkpoint",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Retry: full HP/stamina, same layout, enemies reset",
+      "ok": true,
+      "detail": "{\"hp\":100,\"stamina\":100,\"x\":160,\"angle\":0,\"alpha\":1,\"dead\":false,\"physicsPaused\":false,\"ratsAlive\":7,\"rooms\":\"Level_0,Level_1,Level_3,Level_2,Level_4\"}"
+    },
+    {
+      "name": "Retry closes the pause menu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "after reload: valid save found",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Continue enters the game",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Continue: same campaign and same layout",
+      "ok": true,
+      "detail": "Level_0,Level_1,Level_3,Level_2,Level_4"
+    },
+    {
+      "name": "Continue: full HP/stamina, all regular enemies",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "New Game with a save asks for confirmation",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Cancel returns to the menu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Cancel keeps the save",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Begin Anew starts a new game",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Begin Anew replaces the campaign",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unreadable save: Continue disabled",
+      "ok": true,
+      "detail": "{\"status\":\"corrupt\",\"continueColor\":\"#46503f\"}"
+    },
+    {
+      "name": "unreadable save: hint explains it is kept",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unreadable save: New Game asks for confirmation",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unreadable save copied aside before replacing",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "new valid save written",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "stale tab cannot overwrite another campaign",
+      "ok": true,
+      "detail": "{\"staleWrite\":false,\"staleStopped\":true,\"otherKept\":true,\"mergeWrite\":true,\"flagMerged\":true,\"duplicateRejected\":true,\"badChapterRejected\":true,\"futureVersionRejected\":true,\"extraFieldAllowed\":true}"
+    },
+    {
+      "name": "parryDeathUsed merges monotonically",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "validation rejects duplicate room IDs, bad chapters, unknown versions",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "validation allows extra fields for later builds",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "storage unavailable: reported, game keeps a campaign in memory, no crash",
+      "ok": true,
+      "detail": "{\"status\":\"unavailable\",\"hasCampaign\":true,\"persistent\":false}"
+    },
+    {
+      "name": "no unexpected console warnings",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "no console errors, page errors or failed requests",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "warnings": [
+    "Another journey was started elsewhere; this one is no longer saved. ",
+    "Progress could not be saved; it is kept for this session only. Error: storage denied"
+  ]
+}

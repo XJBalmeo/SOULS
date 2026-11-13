@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-13T11:29:06.486Z",
+  "date": "2026-11-13T12:02:57.735Z",
   "passed": 48,
   "failed": 0,
   "results": [
@@ -101,32 +101,32 @@
     {
       "name": "menu-to-game delay matches TITLE_CONFIG.startDelayMs",
       "ok": true,
-      "detail": "2043 ms (config 1500)"
+      "detail": "1946 ms (config 1500)"
     },
     {
       "name": "hero spawned with full HP/stamina",
       "ok": true,
-      "detail": "{\"x\":160,\"y\":366,\"vy\":0,\"onFloor\":true,\"hp\":100,\"stamina\":100,\"attacking\":false,\"rolling\":false,\"rats\":8,\"ratsAlive\":8}"
+      "detail": "{\"x\":160,\"y\":366,\"vy\":0,\"onFloor\":true,\"hp\":100,\"stamina\":100,\"attacking\":false,\"rolling\":false,\"rats\":9,\"ratsAlive\":9}"
     },
     {
       "name": "rats spawned",
       "ok": true,
-      "detail": "rats=8"
+      "detail": "rats=9"
     },
     {
       "name": "move right (D)",
       "ok": true,
-      "detail": "dx=96.0"
+      "detail": "dx=98.7"
     },
     {
       "name": "move left (←)",
       "ok": true,
-      "detail": "dx=-74.7"
+      "detail": "dx=-69.3"
     },
     {
       "name": "jump (Space)",
       "ok": true,
-      "detail": "dy=-29.9 vy=-120"
+      "detail": "dy=-25.7 vy=-146"
     },
     {
       "name": "sword attack (Z) uses stamina",
@@ -174,11 +174,6 @@
       "detail": ""
     },
     {
-      "name": "disabled retry does nothing",
-      "ok": true,
-      "detail": ""
-    },
-    {
       "name": "Esc resumes game",
       "ok": true,
       "detail": ""
@@ -209,14 +204,19 @@
       "detail": ""
     },
     {
-      "name": "second New Game starts cleanly",
+      "name": "Continue re-enters the game",
       "ok": true,
       "detail": ""
     },
     {
       "name": "re-entry: fresh hero and rats",
       "ok": true,
-      "detail": "{\"x\":160,\"y\":366,\"vy\":0,\"onFloor\":true,\"hp\":100,\"stamina\":100,\"attacking\":false,\"rolling\":false,\"rats\":7,\"ratsAlive\":7}"
+      "detail": "{\"x\":160,\"y\":366,\"vy\":0,\"onFloor\":true,\"hp\":100,\"stamina\":100,\"attacking\":false,\"rolling\":false,\"rats\":9,\"ratsAlive\":9}"
+    },
+    {
+      "name": "Continue rebuilds the saved layout",
+      "ok": true,
+      "detail": "Level_0,Level_1,Level_1,Level_1,Level_4"
     },
     {
       "name": "re-entry: movement works",

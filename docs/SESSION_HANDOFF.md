@@ -15,7 +15,10 @@ Read this first, then AGENTS.md, MASTER_PROMPT.md and docs/DEVELOPMENT_STATUS.md
 - **`main`** on GitHub (`origin`, https://github.com/XJBalmeo/SOULS, **PUBLIC** repo) is still `47885db`. It is an ancestor of all famine branches, so the push will be a clean fast-forward.
 - **Backups:** the `backup/*` branches and `C:\Users\elija\AppData\Local\Temp\claude\168109f7e6a124c1\c0318b8d-59c4-461d-a223-63deaefc66fa\scratchpad\souls-before-font-removal.bundle` hold the pre-rewrite history *with the font*. **Never push `backup/*`.**
 
-## Pending: push to GitHub (the owner asked for it)
+## GitHub push: CANCELLED by the owner (2026-11-13: "i wont push aynmore")
+Do not push and do not suggest pushing unless the owner raises it again. Everything stays local. The notes below are only for reference.
+
+## Push notes (reference only)
 - **Owner's request:** "just push everything to main except the font".
 - **Font:** the Knight Warrior font (personal-use licence) has already been **removed from the history of all famine branches** (git filter-branch). It is now in `.gitignore`, and the owner keeps it locally at `sprites/FONTS/KnightWarrior.otf`. A clone without it shows the Georgia fallback.
 - **Pre-push check:** the published content was grepped for email, username and local paths, with no hits.
@@ -61,7 +64,7 @@ Read this first, then AGENTS.md, MASTER_PROMPT.md and docs/DEVELOPMENT_STATUS.md
 7. The purpose of `sprites/dim.png`.
 
 ## Next steps
-1. Help the owner finish the push (see above).
+1. (The push was cancelled by the owner; nothing to do.)
 2. Wait for the owner's v0.3 decision. If they request changes, set the build back to IN PROGRESS, fix, retest and present again.
 3. After approval:
    - record it in BUILD_REVIEW, FAMINE_PLAYABLE_BUILDS and DEVELOPMENT_STATUS;

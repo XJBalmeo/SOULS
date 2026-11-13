@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-13T14:13:51.247Z",
+  "date": "2026-11-13T14:41:43.810Z",
   "passed": 20,
   "failed": 0,
   "results": [
@@ -31,12 +31,12 @@
     {
       "name": "warning lasts 700–1100 ms",
       "ok": true,
-      "detail": "829 ms"
+      "detail": "824 ms"
     },
     {
       "name": "standing knight is hit for 15",
       "ok": true,
-      "detail": "{\"hp\":85,\"x\":1812.6666666666667,\"archerX\":2036,\"archerHp\":2,\"archerState\":\"reload\",\"anim\":\"archer_reload\",\"arrows\":0}"
+      "detail": "{\"hp\":85,\"x\":1816,\"archerX\":2036,\"archerHp\":2,\"archerState\":\"reload\",\"anim\":\"archer_reload\",\"arrows\":0}"
     },
     {
       "name": "arrow is removed on hit",
@@ -56,7 +56,7 @@
     {
       "name": "reload window about 1.5 s",
       "ok": true,
-      "detail": "1500 ms"
+      "detail": "1489 ms"
     },
     {
       "name": "crouching knight is not hit (arrow passes over)",

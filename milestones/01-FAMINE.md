@@ -1,6 +1,6 @@
 # M1 — Famine + game foundation
 
-Current (2026-11-13): v0.1 approved (M1.1 done; M1.2 v0.1 subset and M1.5 initial done). v0.2 REVIEW: M1.3 and M1.4 implemented for the chapter-start checkpoint, and M1.2 save-dependent items done. Physical checkpoints are deferred to M1.7 (owner decision). M1.4A, M1.6–M1.10 BACKLOG.
+Current (2026-11-13): v0.1 approved (M1.1 done; M1.2 v0.1 subset and M1.5 initial done). v0.2 REVIEW: M1.3 and M1.4 implemented for the chapter-start checkpoint, and M1.2 save-dependent items done. Physical checkpoints are deferred to M1.7 (owner decision). Update 2026-11-13: v0.2 approved. v0.3 REVIEW: M1.4A implemented, M1.5 production standards written, M1.6 has 3 of the 5 minimum enemy types (rat, Starved, Hollow Archer). M1.7–M1.10 BACKLOG.
 
 | ID | Task | Owner | Depends on | Deliverable |
 |---|---|---|---|---|

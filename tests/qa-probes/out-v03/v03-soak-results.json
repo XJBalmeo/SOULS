@@ -1,0 +1,18 @@
+{
+  "date": "2026-11-13T14:36:40.035Z",
+  "passed": 2,
+  "failed": 0,
+  "results": [
+    {
+      "name": "8a: 3-minute soak: no console errors/page errors",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "no console errors, page errors or failed requests",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "warnings": []
+}

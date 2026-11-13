@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-13T14:14:51.604Z",
+  "date": "2026-11-13T14:42:45.733Z",
   "passed": 44,
   "failed": 0,
   "results": [
@@ -16,12 +16,12 @@
     {
       "name": "the opportunity is spent and saved before any input",
       "ok": true,
-      "detail": "{\"state\":\"DOWNED\",\"outcome\":null,\"persisted\":true,\"elapsed\":13.909999999999991,\"hp\":0,\"stamina\":100,\"dead\":false,\"physicsPaused\":true,\"reapers\":0,\"listeners\":1,\"storedFlag\":true,\"memFlag\":true}"
+      "detail": "{\"state\":\"DOWNED\",\"outcome\":null,\"persisted\":true,\"elapsed\":22.279999999999973,\"hp\":0,\"stamina\":100,\"dead\":false,\"physicsPaused\":true,\"reapers\":0,\"listeners\":1,\"storedFlag\":true,\"memFlag\":true}"
     },
     {
       "name": "the fight is frozen while downed",
       "ok": true,
-      "detail": "{\"state\":\"DOWNED\",\"outcome\":null,\"persisted\":true,\"elapsed\":13.909999999999991,\"hp\":0,\"stamina\":100,\"dead\":false,\"physicsPaused\":true,\"reapers\":0,\"listeners\":1,\"storedFlag\":true,\"memFlag\":true}"
+      "detail": "{\"state\":\"DOWNED\",\"outcome\":null,\"persisted\":true,\"elapsed\":22.279999999999973,\"hp\":0,\"stamina\":100,\"dead\":false,\"physicsPaused\":true,\"reapers\":0,\"listeners\":1,\"storedFlag\":true,\"memFlag\":true}"
     },
     {
       "name": "the knight is no longer hurt by anything",
@@ -31,7 +31,7 @@
     {
       "name": "exactly one Death's Shadow appears",
       "ok": true,
-      "detail": "{\"state\":\"DEATH_APPROACH\",\"outcome\":null,\"persisted\":true,\"elapsed\":1425.790000000003,\"hp\":0,\"stamina\":100,\"dead\":false,\"physicsPaused\":true,\"reapers\":1,\"listeners\":1,\"storedFlag\":true,\"memFlag\":true}"
+      "detail": "{\"state\":\"DEATH_APPROACH\",\"outcome\":null,\"persisted\":true,\"elapsed\":1411.890000000003,\"hp\":0,\"stamina\":100,\"dead\":false,\"physicsPaused\":true,\"reapers\":1,\"listeners\":1,\"storedFlag\":true,\"memFlag\":true}"
     },
     {
       "name": "its warning comes after a random wait",
@@ -46,7 +46,7 @@
     {
       "name": "pressing C during the strike parries (default 300 ms window)",
       "ok": true,
-      "detail": "{\"state\":\"PARRY_SUCCESS\",\"outcome\":\"success\",\"reason\":null,\"persisted\":true,\"elapsed\":3839.189999999992,\"hp\":0,\"stamina\":100,\"dead\":false,\"physicsPaused\":true,\"reapers\":1,\"listeners\":0,\"storedFlag\":true,\"memFlag\":true}"
+      "detail": "{\"state\":\"PARRY_SUCCESS\",\"outcome\":\"success\",\"reason\":null,\"persisted\":true,\"elapsed\":4186.959999999988,\"hp\":0,\"stamina\":100,\"dead\":false,\"physicsPaused\":true,\"reapers\":1,\"listeners\":0,\"storedFlag\":true,\"memFlag\":true}"
     },
     {
       "name": "revival completes",
@@ -56,7 +56,7 @@
     {
       "name": "full HP and stamina after revival",
       "ok": true,
-      "detail": "{\"state\":\"IDLE\",\"outcome\":\"success\",\"reason\":null,\"persisted\":true,\"elapsed\":4903.3599999999815,\"hp\":100,\"stamina\":100,\"dead\":false,\"physicsPaused\":false,\"reapers\":1,\"listeners\":0,\"storedFlag\":true,\"memFlag\":true}"
+      "detail": "{\"state\":\"IDLE\",\"outcome\":\"success\",\"reason\":null,\"persisted\":true,\"elapsed\":5244.13999999998,\"hp\":100,\"stamina\":100,\"dead\":false,\"physicsPaused\":false,\"reapers\":1,\"listeners\":0,\"storedFlag\":true,\"memFlag\":true}"
     },
     {
       "name": "same fight resumes: no reload, the archer keeps its HP and place",
@@ -76,12 +76,12 @@
     {
       "name": "Death's Shadow fades away and its key listener is removed",
       "ok": true,
-      "detail": "{\"e\":{\"state\":\"IDLE\",\"outcome\":\"success\",\"reason\":null,\"persisted\":true,\"elapsed\":4903.3599999999815,\"hp\":100,\"stamina\":100,\"dead\":false,\"physicsPaused\":false,\"reapers\":0,\"listeners\":0,\"storedFlag\":true,\"memFlag\":true},\"baseline\":{\"listeners\":0}}"
+      "detail": "{\"e\":{\"state\":\"IDLE\",\"outcome\":\"success\",\"reason\":null,\"persisted\":true,\"elapsed\":5244.13999999998,\"hp\":100,\"stamina\":100,\"dead\":false,\"physicsPaused\":false,\"reapers\":0,\"listeners\":0,\"storedFlag\":true,\"memFlag\":true},\"baseline\":{\"listeners\":0}}"
     },
     {
       "name": "after a success, the next fatal hit is a normal death",
       "ok": true,
-      "detail": "{\"state\":\"IDLE\",\"outcome\":\"success\",\"reason\":null,\"persisted\":true,\"elapsed\":4903.3599999999815,\"hp\":0,\"stamina\":100,\"dead\":true,\"physicsPaused\":true,\"reapers\":0,\"listeners\":0,\"storedFlag\":true,\"memFlag\":true}"
+      "detail": "{\"state\":\"IDLE\",\"outcome\":\"success\",\"reason\":null,\"persisted\":true,\"elapsed\":5244.13999999998,\"hp\":0,\"stamina\":100,\"dead\":true,\"physicsPaused\":true,\"reapers\":0,\"listeners\":0,\"storedFlag\":true,\"memFlag\":true}"
     },
     {
       "name": "death screen follows",
@@ -96,7 +96,7 @@
     {
       "name": "two fatal hits in one frame start exactly one encounter",
       "ok": true,
-      "detail": "{\"state\":\"DEATH_APPROACH\",\"outcome\":null,\"persisted\":true,\"elapsed\":229.52999999999972,\"hp\":0,\"stamina\":100,\"dead\":false,\"physicsPaused\":true,\"reapers\":1,\"listeners\":1,\"storedFlag\":true,\"memFlag\":true}"
+      "detail": "{\"state\":\"DEATH_APPROACH\",\"outcome\":null,\"persisted\":true,\"elapsed\":243.43000000000006,\"hp\":0,\"stamina\":100,\"dead\":false,\"physicsPaused\":true,\"reapers\":1,\"listeners\":1,\"storedFlag\":true,\"memFlag\":true}"
     },
     {
       "name": "random wait stays within its bounds",
@@ -106,7 +106,7 @@
     {
       "name": "pressing during the warning (too soon) fails",
       "ok": true,
-      "detail": "{\"state\":\"NORMAL_DEATH\",\"outcome\":\"fail\",\"reason\":\"early\",\"persisted\":true,\"elapsed\":577.2999999999997,\"hp\":0,\"stamina\":100,\"dead\":false,\"physicsPaused\":true,\"reapers\":1,\"listeners\":0,\"storedFlag\":true,\"memFlag\":true}"
+      "detail": "{\"state\":\"NORMAL_DEATH\",\"outcome\":\"fail\",\"reason\":\"early\",\"persisted\":true,\"elapsed\":563.42,\"hp\":0,\"stamina\":100,\"dead\":false,\"physicsPaused\":true,\"reapers\":1,\"listeners\":0,\"storedFlag\":true,\"memFlag\":true}"
     },
     {
       "name": "a second press after failing changes nothing",
@@ -131,12 +131,12 @@
     {
       "name": "a key held from before the strike cannot parry",
       "ok": true,
-      "detail": "{\"state\":\"NORMAL_DEATH\",\"outcome\":\"fail\",\"reason\":\"late\",\"persisted\":true,\"elapsed\":1384.0400000000016,\"hp\":0,\"stamina\":100,\"dead\":false,\"physicsPaused\":true,\"reapers\":1,\"listeners\":0,\"storedFlag\":true,\"memFlag\":true}"
+      "detail": "{\"state\":\"NORMAL_DEATH\",\"outcome\":\"fail\",\"reason\":\"late\",\"persisted\":true,\"elapsed\":1384.1100000000015,\"hp\":0,\"stamina\":100,\"dead\":false,\"physicsPaused\":true,\"reapers\":1,\"listeners\":0,\"storedFlag\":true,\"memFlag\":true}"
     },
     {
       "name": "no press at all is too late",
       "ok": true,
-      "detail": "{\"state\":\"NORMAL_DEATH\",\"outcome\":\"fail\",\"reason\":\"late\",\"persisted\":true,\"elapsed\":1168.440000000002,\"hp\":0,\"stamina\":100,\"dead\":false,\"physicsPaused\":true,\"reapers\":1,\"listeners\":0,\"storedFlag\":true,\"memFlag\":true}"
+      "detail": "{\"state\":\"NORMAL_DEATH\",\"outcome\":\"fail\",\"reason\":\"late\",\"persisted\":true,\"elapsed\":1168.460000000001,\"hp\":0,\"stamina\":100,\"dead\":false,\"physicsPaused\":true,\"reapers\":1,\"listeners\":0,\"storedFlag\":true,\"memFlag\":true}"
     },
     {
       "name": "the pause menu opens during the encounter",
@@ -146,7 +146,7 @@
     {
       "name": "the encounter clock stops while paused",
       "ok": true,
-      "detail": "{\"before\":111.25999999999985,\"e\":{\"state\":\"DEATH_APPROACH\",\"outcome\":null,\"persisted\":true,\"elapsed\":111.25999999999985,\"hp\":0,\"stamina\":100,\"dead\":false,\"physicsPaused\":true,\"reapers\":1,\"listeners\":1,\"storedFlag\":true,\"memFlag\":true}}"
+      "detail": "{\"before\":114.01999999999973,\"e\":{\"state\":\"DEATH_APPROACH\",\"outcome\":null,\"persisted\":true,\"elapsed\":114.01999999999973,\"hp\":0,\"stamina\":100,\"dead\":false,\"physicsPaused\":true,\"reapers\":1,\"listeners\":1,\"storedFlag\":true,\"memFlag\":true}}"
     },
     {
       "name": "C pressed while paused is ignored",
@@ -201,7 +201,7 @@
     {
       "name": "with storage unavailable the encounter still runs",
       "ok": true,
-      "detail": "{\"state\":\"DOWNED\",\"outcome\":null,\"persisted\":false,\"elapsed\":6.95,\"hp\":0,\"stamina\":100,\"dead\":false,\"physicsPaused\":true,\"reapers\":0,\"listeners\":1,\"storedFlag\":false,\"memFlag\":true}"
+      "detail": "{\"state\":\"DOWNED\",\"outcome\":null,\"persisted\":false,\"elapsed\":6.940000000000055,\"hp\":0,\"stamina\":100,\"dead\":false,\"physicsPaused\":true,\"reapers\":0,\"listeners\":1,\"storedFlag\":false,\"memFlag\":true}"
     },
     {
       "name": "and a warning is logged",

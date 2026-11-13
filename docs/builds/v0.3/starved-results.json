@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-13T14:14:05.183Z",
+  "date": "2026-11-13T14:41:58.006Z",
   "passed": 21,
   "failed": 0,
   "results": [
@@ -21,12 +21,12 @@
     {
       "name": "it shuffles toward the knight when it sees him",
       "ok": true,
-      "detail": "moved 22.0 px, anim starved_walk"
+      "detail": "moved 21.5 px, anim starved_walk"
     },
     {
       "name": "slower than a rat (30 px/s)",
       "ok": true,
-      "detail": "22.0 px in 0.7 s"
+      "detail": "21.5 px in 0.7 s"
     },
     {
       "name": "it winds up within lunge range",
@@ -46,7 +46,7 @@
     {
       "name": "wind-up warning lasts about 600 ms",
       "ok": true,
-      "detail": "608 ms"
+      "detail": "591 ms"
     },
     {
       "name": "a standing knight is grabbed for 30",
@@ -66,7 +66,7 @@
     {
       "name": "ground window about 0.9 s",
       "ok": true,
-      "detail": "811 ms"
+      "detail": "813 ms"
     },
     {
       "name": "no second wind-up before the 2.5 s cooldown",
@@ -76,7 +76,7 @@
     {
       "name": "rolling through the lunge avoids the grab",
       "ok": true,
-      "detail": "{\"hp\":100,\"knightX\":1906,\"x\":1825.4999999999986,\"eHp\":3,\"state\":\"ground\",\"anim\":\"starved_ground\"}"
+      "detail": "{\"hp\":100,\"knightX\":1901,\"x\":1825.4999999999986,\"eHp\":3,\"state\":\"ground\",\"anim\":\"starved_ground\"}"
     },
     {
       "name": "melee arena found",

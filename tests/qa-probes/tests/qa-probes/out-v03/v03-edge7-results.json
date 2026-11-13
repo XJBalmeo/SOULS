@@ -1,0 +1,43 @@
+{
+  "date": "2026-11-13T14:31:57.529Z",
+  "passed": 5,
+  "failed": 2,
+  "results": [
+    {
+      "name": "7a: starved never stuck in an unknown state",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "7b: starved idle when knight out of range / 80px above",
+      "ok": false,
+      "detail": "{\"far\":{\"dx\":400,\"vx\":0,\"st\":\"idle\"},\"above\":{\"dx\":6,\"st\":\"idle\",\"hp\":10}}"
+    },
+    {
+      "name": "7b: starved recovers (not stuck) after losing the knight mid-windup",
+      "ok": true,
+      "detail": "{\"st1\":\"windup\",\"st2\":\"idle\",\"dx\":274}"
+    },
+    {
+      "name": "7c: archer+starved produce a fatal hit -> exactly one encounter",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "7c: parry succeeds",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "7c: archer not stuck frozen/in draw after revive",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "name": "no console errors, page errors or failed requests",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "warnings": []
+}

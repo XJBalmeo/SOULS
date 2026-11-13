@@ -169,6 +169,8 @@ await throughDeath();
 await newCampaign();
 await fast();
 await fatal();
+await inState("SINGLE_STRIKE", 4000);
+await shot("parry-02b-strike-window");
 await inState("NORMAL_DEATH", 4000);
 e = await enc();
 check("no press at all is too late", e.outcome === "fail" && e.reason === "late", JSON.stringify(e));

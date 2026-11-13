@@ -7,8 +7,8 @@ Minimum five regular enemy types per chapter plus one distinct boss; six is targ
 | Enemy | Role / behavior |
 |---|---|
 | Scavenger Rat | Existing patrol, pursuit, bite |
-| The Starved | Slow approach, telegraphed lunge |
-| Hollow Archer | Aim, shoot, reload |
+| The Starved | Slow approach, telegraphed lunge. **Implemented v0.3**: 3 HP, 600 ms wind-up, 30 dmg lunge, 0.9 s ground window |
+| Hollow Archer | Aim, shoot, reload. **Implemented v0.3**: 2 HP, 800 ms draw, 15 dmg flat arrow at chest height, 1.5 s reload |
 | Carrion Crow | Hover, dive, recover |
 | Rot Carrier | Poison cloud, area denial |
 | Gut Crawler | Low-profile rush |

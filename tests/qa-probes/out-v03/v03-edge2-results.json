@@ -1,0 +1,183 @@
+{
+  "date": "2026-11-13T14:40:23.211Z",
+  "passed": 35,
+  "failed": 0,
+  "results": [
+    {
+      "name": "2a: roll actually started",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "2a: roll state cleared on trigger",
+      "ok": true,
+      "detail": "{\"st\":\"DOWNED\",\"out\":null,\"hp\":0,\"x\":215,\"y\":366,\"vx\":0,\"roll\":false,\"rollInv\":false,\"att\":false,\"hit\":false,\"dead\":false,\"inv\":false,\"anim\":\"roll\",\"alpha\":1,\"angle\":0}"
+    },
+    {
+      "name": "2a: strike",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "2a: success",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "2a: no stuck roll/attack flags after revive",
+      "ok": true,
+      "detail": "{\"st\":\"IDLE\",\"out\":\"success\",\"why\":null,\"hp\":100,\"x\":215,\"y\":366,\"vx\":0,\"roll\":false,\"rollInv\":false,\"att\":false,\"hit\":false,\"dead\":false,\"inv\":true,\"anim\":\"idle\",\"alpha\":1,\"angle\":0}"
+    },
+    {
+      "name": "2a: attack works after revive",
+      "ok": true,
+      "detail": "{\"st\":\"IDLE\",\"out\":\"success\",\"why\":null,\"hp\":100,\"x\":215,\"y\":366,\"vx\":0,\"roll\":false,\"rollInv\":false,\"att\":true,\"hit\":true,\"dead\":false,\"inv\":false,\"anim\":\"attack\",\"alpha\":1,\"angle\":0}"
+    },
+    {
+      "name": "2a: roll works after revive",
+      "ok": true,
+      "detail": "{\"st\":\"IDLE\",\"out\":\"success\",\"why\":null,\"hp\":100,\"x\":260,\"y\":366,\"vx\":300,\"roll\":true,\"rollInv\":true,\"att\":false,\"hit\":false,\"dead\":false,\"inv\":false,\"anim\":\"roll\",\"alpha\":1,\"angle\":0}"
+    },
+    {
+      "name": "2b: swing active",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "2b: attack state cleared, hitbox disabled",
+      "ok": true,
+      "detail": "{\"st\":\"DOWNED\",\"out\":null,\"hp\":0,\"x\":160,\"y\":366,\"vx\":0,\"roll\":false,\"rollInv\":false,\"att\":false,\"hit\":false,\"dead\":false,\"inv\":false,\"anim\":\"attack\",\"alpha\":1,\"angle\":0}"
+    },
+    {
+      "name": "2b: strike",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "2b: success",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "2b: attack works after revive",
+      "ok": true,
+      "detail": "{\"st\":\"IDLE\",\"out\":\"success\",\"why\":null,\"hp\":100,\"x\":160,\"y\":366,\"vx\":0,\"roll\":false,\"rollInv\":false,\"att\":true,\"hit\":true,\"dead\":false,\"inv\":false,\"anim\":\"attack\",\"alpha\":1,\"angle\":0}"
+    },
+    {
+      "name": "2c: lunge kills -> encounter DOWNED",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "2c: strike",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "2c: success",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "2c: starved does not re-hit during the 1.5 s invulnerability window",
+      "ok": true,
+      "detail": "{\"t\":25689,\"hp\":70,\"dx\":-7,\"es\":\"lunge\",\"inv\":true,\"ehp\":3}"
+    },
+    {
+      "name": "3a: three hits in one call stack -> exactly one trigger",
+      "ok": true,
+      "detail": "{\"trig\":1,\"st\":\"DOWNED\"}"
+    },
+    {
+      "name": "3b: five hits across five frames -> exactly one trigger, one reaper",
+      "ok": true,
+      "detail": "{\"trig\":1,\"st\":\"DEATH_APPROACH\",\"listeners\":1,\"reapers\":1}"
+    },
+    {
+      "name": "3b: still parry-able and succeeds",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "3c: real rat + arrow + lunge overlap -> exactly one trigger",
+      "ok": true,
+      "detail": "{\"trig\":1,\"st\":\"DEATH_APPROACH\",\"hp\":0,\"reapers\":1}"
+    },
+    {
+      "name": "5a: in NORMAL_DEATH",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "5a: death screen follows pause/resume",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "5a: checkpoint restore completes, full HP, IDLE",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "5b: PARRY_SUCCESS",
+      "ok": true,
+      "detail": "{\"st\":\"PARRY_SUCCESS\",\"out\":\"success\",\"why\":null,\"hp\":0,\"x\":160,\"y\":364,\"vx\":0,\"roll\":false,\"rollInv\":false,\"att\":false,\"hit\":false,\"dead\":false,\"inv\":false,\"anim\":\"attack\",\"alpha\":1,\"angle\":0}"
+    },
+    {
+      "name": "5b: revives after resume",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "5b: full hp, alive",
+      "ok": true,
+      "detail": "{\"st\":\"IDLE\",\"out\":\"success\",\"why\":null,\"hp\":100,\"x\":160,\"y\":364,\"vx\":0,\"roll\":false,\"rollInv\":false,\"att\":false,\"hit\":false,\"dead\":false,\"inv\":true,\"anim\":\"jump\",\"alpha\":1,\"angle\":0}"
+    },
+    {
+      "name": "5b: reaper/prompt cleaned, physics running, no stuck tint",
+      "ok": true,
+      "detail": "{\"tinted\":false,\"physPaused\":false,\"prompts\":0,\"reapers\":0}"
+    },
+    {
+      "name": "5c: REVIVE pause -> finishes",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "5c: hp 100 alive",
+      "ok": true,
+      "detail": "{\"st\":\"IDLE\",\"out\":\"success\",\"why\":null,\"hp\":100,\"x\":160,\"y\":364,\"vx\":0,\"roll\":false,\"rollInv\":false,\"att\":false,\"hit\":false,\"dead\":false,\"inv\":true,\"anim\":\"jump\",\"alpha\":1,\"angle\":0}"
+    },
+    {
+      "name": "5d: TELEGRAPH pause -> still reaches strike, parry works",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "6a: spam during DOWNED ignored",
+      "ok": true,
+      "detail": "{\"st\":\"DEATH_APPROACH\",\"out\":null,\"hp\":0,\"x\":160,\"y\":365,\"vx\":0,\"roll\":false,\"rollInv\":false,\"att\":false,\"hit\":false,\"dead\":false,\"inv\":false,\"anim\":\"jump\",\"alpha\":1,\"angle\":0}"
+    },
+    {
+      "name": "6a: strike reached",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "6a: single correct press succeeds",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "6b: spam during DEATH_APPROACH -> early fail",
+      "ok": true,
+      "detail": "{\"st\":\"NORMAL_DEATH\",\"out\":\"fail\",\"why\":\"early\",\"hp\":0,\"x\":160,\"y\":364,\"vx\":0,\"roll\":false,\"rollInv\":false,\"att\":false,\"hit\":false,\"dead\":false,\"inv\":false,\"anim\":\"jump\",\"alpha\":1,\"angle\":0}"
+    },
+    {
+      "name": "no console errors, page errors or failed requests",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "warnings": []
+}

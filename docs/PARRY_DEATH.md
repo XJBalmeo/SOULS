@@ -1,6 +1,6 @@
 # Parry Death — feature specification v1.1
 
-Status: owner-approved core mechanic; implementation and presentation pending. Milestone 1, M1.4A. Applies across all four chapters. Not currently implemented.
+Status: owner-approved core mechanic; implemented in v0.3 (2026-11-13, see PARRY_DEATH_CONTRACT.md). The key, timings and presentation are awaiting owner review. Milestone 1, M1.4A. Applies across all four chapters. Not currently implemented.
 
 ## Confirmed behavior
 On fatal damage the knight is downed instead of immediately dying, if the once-per-run opportunity remains. A Death enemy spawns and approaches to claim the knight’s soul. It attacks exactly once at random; a successful parry revives the knight with full health and stamina (all normal player resources restored). Failure leads to the normal death/checkpoint flow. This encounter occurs only once per run, whether won or lost.

@@ -139,3 +139,26 @@ The owner said "lets proceed with the full plan in v0.3" after the menu/fullscre
   - The sword cannot cut arrows.
   - Hits do not interrupt the Starved's wind-up.
   - Parry Death input and timing.
+
+## Session log — 2026-11-13 — Lead — v0.3 Parry Death & Enemies — REVIEW
+- **Routing:**
+  - Lead: Opus 5.5.
+  - souls-architect (Opus 5.5): Parry Death contract (docs/PARRY_DEATH_CONTRACT.md).
+  - souls-qa (Sonnet): no BLOCKER or MAJOR issues. The Lead fixed both MINOR findings and the readability notes.
+- **Files:**
+  - Game code: js/ParryDeath.js, js/Starved.js and js/Sfx.js (new); js/GameScene.js (onFatalDamage, getEnemySprites, enemy death animations, viewport); js/HollowArcher.js (death, SFX, freeze guard).
+  - LDtk: entity `Starved` (uid 29).
+  - Generators: tools/art/enemy_sprites.py, tools/audio/sfx.py.
+  - Assets: sprites/ENEMIES/FAMINE/STARVED_*, ARCHER_DEATH and sprites/ENEMIES/DEATHS_SHADOW/*; sprites/SFX/*.wav.
+  - Tests: tests/helpers.mjs, starved.mjs, parrydeath.mjs.
+- **Tests:** `npm test` gives 182/182 (smoke 50, survival 47, archer 20, starved 21, parrydeath 44).
+- **Decisions using Lead defaults until the owner answers:**
+  - Parry key C, 300 ms window, early press fails.
+  - The sword can't cut arrows.
+  - Hits don't interrupt the Starved's wind-up.
+- **Open:**
+  - The owner needs to review the look and the sound.
+  - Human playtest.
+  - Boss coexistence (v0.5).
+  - Enemy hurt animations.
+- **Next:** owner review of v0.3. After approval, v0.4: the 2–3 remaining Famine enemies (Carrion Crow, Rot Carrier, Gut Crawler proposals) and M1.7 maps.

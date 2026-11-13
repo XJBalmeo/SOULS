@@ -23,6 +23,7 @@ const PARRY_DEATH_CONFIG = {
   snapToGroundMaxPx: 300,
   clearRadiusPx: 96,
   pushbackVelocityX: 220,
+  calmExtraMs: 1000,     // enemies near the knight stay calm this long after the protection ends
   forcedDelayMs: null,   // test seam: fixed hover delay
   rng: null,             // test seam: () => number in [0, 1)
 };
@@ -119,7 +120,7 @@ class ParryDeathEncounter {
 
     scene.input.keyboard.on("keydown", this.onKey);
     this.prompt = UI.text(scene, scene.viewport.x + scene.viewport.w / 2, scene.viewport.y + scene.viewport.h - 30,
-      "", 11, UI.COLORS.dim).setScrollFactor(0).setDepth(1001);
+      "", 13, UI.COLORS.bone).setScrollFactor(0).setDepth(1001);
     scene.cameras.main.shake(180, 0.004);
     Sfx.play(scene, "player_hurt");
   }
@@ -199,6 +200,9 @@ class ParryDeathEncounter {
 
   startTelegraph() {
     this.reaper.anims.play("reaper_raise");
+    // Amber is the game's "danger now" colour: flash Death with it as the scythe rises.
+    this.reaper.setTintFill(0xe8b04a);
+    this.scene.time.delayedCall(90, () => this.reaper && this.reaper.clearTint());
     this.track(Sfx.play(this.scene, "reaper_telegraph"));
     this.setPhase("TELEGRAPH");
   }
@@ -294,10 +298,13 @@ class ParryDeathEncounter {
       if (!e.active || e.getData("hp") <= 0) return;
       const near = Math.abs(e.x - p.x) <= C.clearRadiusPx;
       if (e === this.source || near) {
-        e.setData("ignorePlayerUntil", now + C.reviveInvulnerableMs);
-        if (e.getData("kind") === "starved" && e.getData("state") === "lunge") {
-          e.setData("state", "ground");
-          e.anims.play("starved_ground");
+        e.setData("ignorePlayerUntil", now + C.reviveInvulnerableMs + C.calmExtraMs);
+        if (e.getData("kind") === "starved") {
+          e.setData("nextLungeAt", now + C.reviveInvulnerableMs + C.calmExtraMs);
+          if (e.getData("state") === "lunge") {
+            e.setData("state", "ground");
+            e.anims.play("starved_ground");
+          }
         } else if (!e.getData("kind")) {
           e.setData("state", "recover");
           e.setData("recoverUntil", now + C.reviveInvulnerableMs);

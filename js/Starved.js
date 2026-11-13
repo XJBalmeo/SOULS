@@ -122,7 +122,8 @@ const Starved = {
           s.setData("lungeHit", true);
           scene.hurtPlayer(C.lungeDamage, s.getData("dir"), s);
         }
-        if (time >= s.getData("lungeUntil") || s.body.blocked.left || s.body.blocked.right) {
+        const atLedge = s.body.blocked.down && !Starved.groundAhead(scene, s, s.getData("dir"));
+        if (time >= s.getData("lungeUntil") || s.body.blocked.left || s.body.blocked.right || atLedge) {
           s.setVelocityX(0);
           s.setData("state", "ground");
           s.anims.play("starved_ground");
@@ -142,7 +143,8 @@ const Starved = {
       }
       Starved.face(s, toward);
       const dist = Math.abs(player.body.center.x - s.body.center.x);
-      if (dist <= C.lungeTrigger && time >= s.getData("nextLungeAt") && s.body.blocked.down) {
+      const calm = time < (s.getData("ignorePlayerUntil") || 0);
+      if (dist <= C.lungeTrigger && !calm && time >= s.getData("nextLungeAt") && s.body.blocked.down) {
         s.setVelocityX(0);
         s.setData({ state: "windup", nextLungeAt: time + C.cooldownMs });
         s.anims.play("starved_windup");

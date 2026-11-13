@@ -31,6 +31,10 @@ class GameScene extends Phaser.Scene {
       frameWidth: 100,
       frameHeight: 100,
     });
+    this.load.spritesheet("hero_hurt", "sprites/HERO/NEW_HURT.png?v=" + Date.now(), {
+      frameWidth: 100,
+      frameHeight: 100,
+    });
     this.load.spritesheet("rat_walk", "sprites/ENEMIES/FAMINE/RAT_WALK.png", {
       frameWidth: 100,
       frameHeight: 100,
@@ -205,6 +209,13 @@ class GameScene extends Phaser.Scene {
       key: "crouch",
       frames: this.anims.generateFrameNumbers("hero_crouch"),
       frameRate: 10,
+      repeat: 0,
+    });
+    // Owner-drawn hurt reaction: red flash fading back to normal, with blink frames.
+    this.createAnimOnce({
+      key: "hurt",
+      frames: this.anims.generateFrameNumbers("hero_hurt"),
+      frameRate: 14,
       repeat: 0,
     });
     const ldtkData = this.cache.json.get("famine_ldtk");
@@ -693,7 +704,8 @@ class GameScene extends Phaser.Scene {
     this.takeDamage(amount, source);
     if (this.isDead || (this.parryDeath && this.parryDeath.isActive())) return false;
     Sfx.play(this, "player_hurt", 0.8);
-    player.setTint(0xff0000);
+    // The hurt sheet carries its own red flash, so no tint. Attack/roll still cut it short.
+    if (!this.isAttacking && !this.isRolling) player.anims.play("hurt", true);
     player.setData("hitInvulnerableUntil", this.time.now + 1000);
     player.setData("knockbackUntil", this.time.now + 200);
     // A hit cancels climbing/vaulting so platform collisions are restored.
@@ -705,9 +717,6 @@ class GameScene extends Phaser.Scene {
     const probeX = body.center.x + knockbackDirection * (body.halfWidth + 30);
     const wallBehind = this.hasWallBetween(body.center.x, body.center.y, probeX, body.center.y);
     player.setVelocity(wallBehind ? 0 : knockbackDirection * 200, -200);
-    this.time.delayedCall(1000, () => {
-      player.clearTint();
-    });
     return true;
   }
   // Animations live in the game-wide manager and survive scene restarts.
@@ -1369,7 +1378,8 @@ class GameScene extends Phaser.Scene {
       this.attackHitbox.y = -1000;
     }
 
-    if (!this.isAttacking && !this.isRolling) {
+    const hurtPlaying = this.player.anims.isPlaying && this.player.anims.currentAnim?.key === "hurt";
+    if (!this.isAttacking && !this.isRolling && !hurtPlaying) {
       if (isVaulting) {
         if (this.player.getData("isVaultingDown")) {
           if (this.player.anims.currentAnim?.key !== "climb") {

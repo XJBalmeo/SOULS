@@ -1,0 +1,113 @@
+{
+  "date": "2026-11-13T14:14:05.183Z",
+  "passed": 21,
+  "failed": 0,
+  "results": [
+    {
+      "name": "the Starved spawn from LDtk, one per middle room",
+      "ok": true,
+      "detail": "{\"count\":3,\"grounded\":3,\"expected\":3}"
+    },
+    {
+      "name": "every Starved stands on a floor",
+      "ok": true,
+      "detail": "{\"count\":3,\"grounded\":3,\"expected\":3}"
+    },
+    {
+      "name": "test arena found",
+      "ok": true,
+      "detail": "{\"ok\":true,\"floorTiles\":22,\"dx\":208}"
+    },
+    {
+      "name": "it shuffles toward the knight when it sees him",
+      "ok": true,
+      "detail": "moved 22.0 px, anim starved_walk"
+    },
+    {
+      "name": "slower than a rat (30 px/s)",
+      "ok": true,
+      "detail": "22.0 px in 0.7 s"
+    },
+    {
+      "name": "it winds up within lunge range",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "a hit during the wind-up does not cancel it",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "it lunges after the ~600 ms warning",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "wind-up warning lasts about 600 ms",
+      "ok": true,
+      "detail": "608 ms"
+    },
+    {
+      "name": "a standing knight is grabbed for 30",
+      "ok": true,
+      "detail": "{\"hp\":70,\"knightX\":1812.6666666666667,\"x\":1839.6666666666654,\"eHp\":2,\"state\":\"lunge\",\"anim\":\"starved_lunge\"}"
+    },
+    {
+      "name": "it lies on the ground after the lunge",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "it gets back up after about 0.9 s",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "ground window about 0.9 s",
+      "ok": true,
+      "detail": "811 ms"
+    },
+    {
+      "name": "no second wind-up before the 2.5 s cooldown",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "rolling through the lunge avoids the grab",
+      "ok": true,
+      "detail": "{\"hp\":100,\"knightX\":1906,\"x\":1825.4999999999986,\"eHp\":3,\"state\":\"ground\",\"anim\":\"starved_ground\"}"
+    },
+    {
+      "name": "melee arena found",
+      "ok": true,
+      "detail": "{\"ok\":true,\"floorTiles\":22,\"dx\":24}"
+    },
+    {
+      "name": "three sword hits bring it to 0 HP",
+      "ok": true,
+      "detail": "{\"hp\":100,\"knightX\":1816,\"x\":1835,\"eHp\":0,\"state\":\"ground\",\"anim\":\"starved_death\"}"
+    },
+    {
+      "name": "it plays its death animation",
+      "ok": true,
+      "detail": "{\"hp\":100,\"knightX\":1816,\"x\":1835,\"eHp\":0,\"state\":\"ground\",\"anim\":\"starved_death\"}"
+    },
+    {
+      "name": "the body fades out and is removed",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "restart restores every Starved",
+      "ok": true,
+      "detail": "3"
+    },
+    {
+      "name": "no console errors, page errors or failed requests",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "warnings": []
+}

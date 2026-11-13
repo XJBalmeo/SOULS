@@ -46,6 +46,7 @@ const arena = (distance) =>
     const s = game.scene.getScene("GameScene");
     const p = s.player;
     s.rats.getChildren().slice().forEach((r) => r.destroy());
+    if (s.starved) s.starved.getChildren().slice().forEach((r) => r.destroy());
     s.arrows.getChildren().slice().forEach((a) => a.destroy());
     const archers = s.archers.getChildren().filter((a) => a.active);
     archers.slice(1).forEach((a) => a.destroy());
@@ -204,9 +205,11 @@ await page.keyboard.down("KeyZ"); await wait(60); await page.keyboard.up("KeyZ")
 await wait(700);
 check("first sword hit: archer at 1 HP", (await knight()).archerHp === 1, JSON.stringify(await knight()));
 await page.keyboard.down("KeyZ"); await wait(60); await page.keyboard.up("KeyZ");
+check("second sword hit plays the archer's death animation", await waitFor(() =>
+  window.__archer.getData("hp") === 0 && window.__archer.anims.currentAnim.key === "archer_death", 1500));
 await wait(700);
-check("second sword hit kills the archer", (await knight()).archerState === "gone", JSON.stringify(await knight()));
 await shot("04-archer-killed");
+check("the dead archer fades out and is removed", await waitFor(() => !window.__archer.active, 3000), JSON.stringify(await knight()));
 
 // 7. Checkpoint restart brings archers back and clears arrows.
 await state(() => game.scene.getScene("GameScene").restartFromCheckpoint());

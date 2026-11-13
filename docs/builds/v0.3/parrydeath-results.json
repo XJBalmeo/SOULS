@@ -1,0 +1,231 @@
+{
+  "date": "2026-11-13T14:14:51.604Z",
+  "passed": 44,
+  "failed": 0,
+  "results": [
+    {
+      "name": "arena with an archer",
+      "ok": true,
+      "detail": "{\"ok\":true,\"floorTiles\":22,\"dx\":220}"
+    },
+    {
+      "name": "a lethal arrow downs the knight instead of killing him",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "the opportunity is spent and saved before any input",
+      "ok": true,
+      "detail": "{\"state\":\"DOWNED\",\"outcome\":null,\"persisted\":true,\"elapsed\":13.909999999999991,\"hp\":0,\"stamina\":100,\"dead\":false,\"physicsPaused\":true,\"reapers\":0,\"listeners\":1,\"storedFlag\":true,\"memFlag\":true}"
+    },
+    {
+      "name": "the fight is frozen while downed",
+      "ok": true,
+      "detail": "{\"state\":\"DOWNED\",\"outcome\":null,\"persisted\":true,\"elapsed\":13.909999999999991,\"hp\":0,\"stamina\":100,\"dead\":false,\"physicsPaused\":true,\"reapers\":0,\"listeners\":1,\"storedFlag\":true,\"memFlag\":true}"
+    },
+    {
+      "name": "the knight is no longer hurt by anything",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "exactly one Death's Shadow appears",
+      "ok": true,
+      "detail": "{\"state\":\"DEATH_APPROACH\",\"outcome\":null,\"persisted\":true,\"elapsed\":1425.790000000003,\"hp\":0,\"stamina\":100,\"dead\":false,\"physicsPaused\":true,\"reapers\":1,\"listeners\":1,\"storedFlag\":true,\"memFlag\":true}"
+    },
+    {
+      "name": "its warning comes after a random wait",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "the strike opens the parry window",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "pressing C during the strike parries (default 300 ms window)",
+      "ok": true,
+      "detail": "{\"state\":\"PARRY_SUCCESS\",\"outcome\":\"success\",\"reason\":null,\"persisted\":true,\"elapsed\":3839.189999999992,\"hp\":0,\"stamina\":100,\"dead\":false,\"physicsPaused\":true,\"reapers\":1,\"listeners\":0,\"storedFlag\":true,\"memFlag\":true}"
+    },
+    {
+      "name": "revival completes",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "full HP and stamina after revival",
+      "ok": true,
+      "detail": "{\"state\":\"IDLE\",\"outcome\":\"success\",\"reason\":null,\"persisted\":true,\"elapsed\":4903.3599999999815,\"hp\":100,\"stamina\":100,\"dead\":false,\"physicsPaused\":false,\"reapers\":1,\"listeners\":0,\"storedFlag\":true,\"memFlag\":true}"
+    },
+    {
+      "name": "same fight resumes: no reload, the archer keeps its HP and place",
+      "ok": true,
+      "detail": "{\"sameRun\":true,\"archerAlive\":true,\"archerMovedLittle\":true,\"arrows\":0,\"invulnerable\":true,\"physicsRunning\":true}"
+    },
+    {
+      "name": "arrows in flight are cleared and the knight is briefly protected",
+      "ok": true,
+      "detail": "{\"sameRun\":true,\"archerAlive\":true,\"archerMovedLittle\":true,\"arrows\":0,\"invulnerable\":true,\"physicsRunning\":true}"
+    },
+    {
+      "name": "the world runs again",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Death's Shadow fades away and its key listener is removed",
+      "ok": true,
+      "detail": "{\"e\":{\"state\":\"IDLE\",\"outcome\":\"success\",\"reason\":null,\"persisted\":true,\"elapsed\":4903.3599999999815,\"hp\":100,\"stamina\":100,\"dead\":false,\"physicsPaused\":false,\"reapers\":0,\"listeners\":0,\"storedFlag\":true,\"memFlag\":true},\"baseline\":{\"listeners\":0}}"
+    },
+    {
+      "name": "after a success, the next fatal hit is a normal death",
+      "ok": true,
+      "detail": "{\"state\":\"IDLE\",\"outcome\":\"success\",\"reason\":null,\"persisted\":true,\"elapsed\":4903.3599999999815,\"hp\":0,\"stamina\":100,\"dead\":true,\"physicsPaused\":true,\"reapers\":0,\"listeners\":0,\"storedFlag\":true,\"memFlag\":true}"
+    },
+    {
+      "name": "death screen follows",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "still no encounter after the checkpoint restore",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "two fatal hits in one frame start exactly one encounter",
+      "ok": true,
+      "detail": "{\"state\":\"DEATH_APPROACH\",\"outcome\":null,\"persisted\":true,\"elapsed\":229.52999999999972,\"hp\":0,\"stamina\":100,\"dead\":false,\"physicsPaused\":true,\"reapers\":1,\"listeners\":1,\"storedFlag\":true,\"memFlag\":true}"
+    },
+    {
+      "name": "random wait stays within its bounds",
+      "ok": true,
+      "detail": "{\"lo\":600,\"hi\":1999.9986,\"min\":600,\"max\":2000}"
+    },
+    {
+      "name": "pressing during the warning (too soon) fails",
+      "ok": true,
+      "detail": "{\"state\":\"NORMAL_DEATH\",\"outcome\":\"fail\",\"reason\":\"early\",\"persisted\":true,\"elapsed\":577.2999999999997,\"hp\":0,\"stamina\":100,\"dead\":false,\"physicsPaused\":true,\"reapers\":1,\"listeners\":0,\"storedFlag\":true,\"memFlag\":true}"
+    },
+    {
+      "name": "a second press after failing changes nothing",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "failure leads to the normal death screen",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "checkpoint restore after failure: full HP",
+      "ok": true,
+      "detail": "{\"state\":\"IDLE\",\"outcome\":null,\"hp\":100,\"stamina\":100,\"dead\":false,\"physicsPaused\":false,\"reapers\":0,\"listeners\":0,\"storedFlag\":true,\"memFlag\":true}"
+    },
+    {
+      "name": "after a failure, the next fatal hit is a normal death",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "a key held from before the strike cannot parry",
+      "ok": true,
+      "detail": "{\"state\":\"NORMAL_DEATH\",\"outcome\":\"fail\",\"reason\":\"late\",\"persisted\":true,\"elapsed\":1384.0400000000016,\"hp\":0,\"stamina\":100,\"dead\":false,\"physicsPaused\":true,\"reapers\":1,\"listeners\":0,\"storedFlag\":true,\"memFlag\":true}"
+    },
+    {
+      "name": "no press at all is too late",
+      "ok": true,
+      "detail": "{\"state\":\"NORMAL_DEATH\",\"outcome\":\"fail\",\"reason\":\"late\",\"persisted\":true,\"elapsed\":1168.440000000002,\"hp\":0,\"stamina\":100,\"dead\":false,\"physicsPaused\":true,\"reapers\":1,\"listeners\":0,\"storedFlag\":true,\"memFlag\":true}"
+    },
+    {
+      "name": "the pause menu opens during the encounter",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "the encounter clock stops while paused",
+      "ok": true,
+      "detail": "{\"before\":111.25999999999985,\"e\":{\"state\":\"DEATH_APPROACH\",\"outcome\":null,\"persisted\":true,\"elapsed\":111.25999999999985,\"hp\":0,\"stamina\":100,\"dead\":false,\"physicsPaused\":true,\"reapers\":1,\"listeners\":1,\"storedFlag\":true,\"memFlag\":true}}"
+    },
+    {
+      "name": "C pressed while paused is ignored",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "after resuming, the encounter continues to the strike",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "and can still be parried",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "leaving fullscreen during the encounter opens the pause menu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Retry mid-encounter: no Death left behind, listener count normal",
+      "ok": true,
+      "detail": "{\"state\":\"IDLE\",\"outcome\":null,\"hp\":100,\"stamina\":100,\"dead\":false,\"physicsPaused\":false,\"reapers\":0,\"listeners\":0,\"storedFlag\":true,\"memFlag\":true}"
+    },
+    {
+      "name": "Retry mid-encounter: the opportunity stays spent",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Retry mid-encounter: the next fatal hit is a normal death",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "reload mid-encounter + Continue: opportunity stays spent",
+      "ok": true,
+      "detail": "{\"state\":\"IDLE\",\"outcome\":null,\"hp\":100,\"stamina\":100,\"dead\":false,\"physicsPaused\":false,\"reapers\":0,\"listeners\":0,\"storedFlag\":true,\"memFlag\":true}"
+    },
+    {
+      "name": "reload mid-encounter + Continue: no replay of the encounter",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "New Game gives a fresh opportunity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "with storage unavailable the encounter still runs",
+      "ok": true,
+      "detail": "{\"state\":\"DOWNED\",\"outcome\":null,\"persisted\":false,\"elapsed\":6.95,\"hp\":0,\"stamina\":100,\"dead\":false,\"physicsPaused\":true,\"reapers\":0,\"listeners\":1,\"storedFlag\":false,\"memFlag\":true}"
+    },
+    {
+      "name": "and a warning is logged",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "with storage unavailable the checkpoint restart happened",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "with storage unavailable a checkpoint restart still skips it (in memory)",
+      "ok": true,
+      "detail": "{\"state\":\"IDLE\",\"outcome\":null,\"hp\":0,\"stamina\":100,\"dead\":true,\"physicsPaused\":true,\"reapers\":0,\"listeners\":0,\"storedFlag\":false,\"memFlag\":true}"
+    },
+    {
+      "name": "no console errors, page errors or failed requests",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "warnings": [
+    "Progress could not be saved; it is kept for this session only. Error: quota (test)",
+    "Parry Death used; could not be saved (storage unavailable)."
+  ]
+}

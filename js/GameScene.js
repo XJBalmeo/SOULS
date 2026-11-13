@@ -45,6 +45,9 @@ class GameScene extends Phaser.Scene {
       { frameWidth: 100, frameHeight: 100 },
     );
     HollowArcher.preload(this);
+    Starved.preload(this);
+    ParryDeath.preload(this);
+    Sfx.preload(this);
     this.load.json("famine_ldtk", "levels/famine/FAMINE.ldtk?v=" + Date.now());
     this.load.spritesheet(
       "famine_tiles",
@@ -77,6 +80,8 @@ class GameScene extends Phaser.Scene {
     this.rats = null;
     this.archers = null;
     this.arrows = null;
+    this.starved = null;
+    this.parryDeath = null;
     this.vaultTween = null;
     this.isDead = false;
     this.strikeId = 0; // increments per sword swing; enemies take one hit per strike
@@ -208,6 +213,7 @@ class GameScene extends Phaser.Scene {
     const screenH = this.sys.game.config.height;
     const viewportX = (screenW - screenW / zoom) / 2;
     const viewportY = (screenH - screenH / zoom) / 2;
+    this.viewport = { x: viewportX, y: viewportY, w: screenW / zoom, h: screenH / zoom };
     const viewW = screenW / zoom;
     const viewH = screenH / zoom;
     this.cameras.main.setBackgroundColor("#324031");
@@ -235,6 +241,7 @@ class GameScene extends Phaser.Scene {
     this.ground = this.physics.add.staticGroup();
     this.ratSpawns = [];
     this.archerSpawns = [];
+    this.starvedSpawns = [];
     const playerSpawn = this.generateWorld(ldtkData);
     this.player = this.physics.add.sprite(
       playerSpawn.x,
@@ -306,6 +313,9 @@ class GameScene extends Phaser.Scene {
     }
     HollowArcher.setup(this);
     this.archerSpawns.forEach((spawn) => HollowArcher.spawn(this, spawn.x, spawn.y));
+    Starved.setup(this);
+    this.starvedSpawns.forEach((spawn) => Starved.spawn(this, spawn.x, spawn.y));
+    this.parryDeath = new ParryDeathEncounter(this);
     this.setHitboxDebug(SoulsSettings.load().showHitboxes);
     this.input.keyboard.on("keydown-TAB", (event) => {
       event.preventDefault();
@@ -581,6 +591,8 @@ class GameScene extends Phaser.Scene {
           this.ratSpawns.push({ x: spawnX, y: spawnY });
         } else if (ent.__identifier === "HollowArcher") {
           this.archerSpawns.push({ x: spawnX, y: spawnY });
+        } else if (ent.__identifier === "Starved") {
+          this.starvedSpawns.push({ x: spawnX, y: spawnY });
         } else if (ent.__identifier === "Door") {
           const dirField = ent.fieldInstances.find(
             (f) => f.__identifier === "direction",
@@ -658,7 +670,7 @@ class GameScene extends Phaser.Scene {
         !this.isPlayerInvulnerable()
       ) {
         ratHit.setData("hitStrike", ratHit.getData("strike"));
-        if (this.hurtPlayer(20, player.x < ratHit.x ? -1 : 1)) {
+        if (this.hurtPlayer(20, player.x < ratHit.x ? -1 : 1, ratHit)) {
           ratHit.setData("ignorePlayerUntil", this.time.now + 1000);
         }
       }
@@ -668,6 +680,7 @@ class GameScene extends Phaser.Scene {
   isPlayerInvulnerable() {
     return (
       this.isDead ||
+      (this.parryDeath && this.parryDeath.isActive()) ||
       this.player.getData("isRollInvulnerable") ||
       this.time.now < (this.player.getData("hitInvulnerableUntil") || 0)
     );
@@ -675,10 +688,11 @@ class GameScene extends Phaser.Scene {
   // Shared enemy-hit reaction: damage, red flash, 1 s of invulnerability and a
   // knockback in knockbackDirection (-1 left, 1 right). Returns false if the
   // hit was lethal (die() takes over from there).
-  hurtPlayer(amount, knockbackDirection) {
+  hurtPlayer(amount, knockbackDirection, source = null) {
     const player = this.player;
-    this.takeDamage(amount);
-    if (this.isDead) return false;
+    this.takeDamage(amount, source);
+    if (this.isDead || (this.parryDeath && this.parryDeath.isActive())) return false;
+    Sfx.play(this, "player_hurt", 0.8);
     player.setTint(0xff0000);
     player.setData("hitInvulnerableUntil", this.time.now + 1000);
     player.setData("knockbackUntil", this.time.now + 200);
@@ -711,13 +725,26 @@ class GameScene extends Phaser.Scene {
     enemy.setData("lastHitStrike", this.strikeId);
     const hp = Math.max(0, enemy.getData("hp") - amount);
     enemy.setData("hp", hp);
+    Sfx.play(this, "enemy_hit", 0.8);
     if (hp > 0) {
       enemy.setTintFill(0xffffff);
       this.time.delayedCall(80, () => enemy.active && enemy.clearTint());
       return;
     }
-    enemy.setTint(0xff0000);
     enemy.setVelocityX(0);
+    const deathAnim = enemy.getData("deathAnim");
+    if (deathAnim) {
+      // Real death animation, then a short fade. The body stops colliding at once.
+      enemy.setTintFill(0xffffff);
+      this.time.delayedCall(80, () => enemy.active && enemy.clearTint());
+      enemy.anims.play(deathAnim);
+      Sfx.play(this, "body_thud", 0.7);
+      enemy.once("animationcomplete", () => {
+        this.tweens.add({ targets: enemy, alpha: 0, delay: 500, duration: 500, onComplete: () => enemy.destroy() });
+      });
+      return;
+    }
+    enemy.setTint(0xff0000);
     this.time.delayedCall(200, () => enemy.destroy());
   }
   // Placeholder death until hurt/death animations exist: red fall and fade,
@@ -758,7 +785,7 @@ class GameScene extends Phaser.Scene {
     this.scene.stop("DeathScene");
     this.scene.restart();
   }
-  takeDamage(amount) {
+  takeDamage(amount, source = null) {
     if (this.player.getData("hp") <= 0) return;
     const currentHp = this.player.getData("hp");
     const newHp = Math.max(0, currentHp - amount);
@@ -777,7 +804,22 @@ class GameScene extends Phaser.Scene {
       duration: 300,
       ease: "Sine.easeInOut",
     });
-    if (newHp === 0) this.die();
+    if (newHp === 0) this.onFatalDamage(source);
+  }
+  // One fatal hit: the once-per-campaign Parry Death encounter if still
+  // available, otherwise normal death. hp is already 0, so a second hit in the
+  // same frame returns early in takeDamage.
+  onFatalDamage(source) {
+    if (this.parryDeath && this.parryDeath.canTrigger()) this.parryDeath.trigger(source);
+    else this.die();
+  }
+  // Every enemy sprite that has AI or animations to freeze.
+  getEnemySprites() {
+    const all = [];
+    [this.rats, this.archers, this.starved].forEach((group) => {
+      if (group) group.getChildren().forEach((e) => e.active && all.push(e));
+    });
+    return all;
   }
   consumeStamina(amount) {
     const currentStam = this.player.getData("stamina");
@@ -877,6 +919,10 @@ class GameScene extends Phaser.Scene {
     }
     if (this.farBg) {
       this.farBg.tilePositionX = this.cameras.main.scrollX * 0.2;
+    }
+    if (this.parryDeath && this.parryDeath.isActive()) {
+      this.parryDeath.update(delta); // the fight stays frozen meanwhile
+      return;
     }
     if (this.isDead) return;
     const mouseAttack = this.input.activePointer.leftButtonDown();
@@ -1367,6 +1413,7 @@ class GameScene extends Phaser.Scene {
       }
     }
     HollowArcher.update(this, time);
+    if (this.starved) Starved.update(this, time);
     if (this.rats) {
       this.rats.getChildren().forEach((rat) => {
         if (!rat.active || rat.getData("hp") <= 0) return;

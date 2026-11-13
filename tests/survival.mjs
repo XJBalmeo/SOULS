@@ -133,7 +133,10 @@ try {
   check("one fewer rat alive", (await run()).ratsAlive === ratsAtStart - 1, (await run()).ratsAlive + " of " + ratsAtStart);
 
   // --- Normal death from an enemy attack ---
+  // Parry Death (v0.3) is spent first, so this fatal hit takes the normal path.
   await state(() => {
+    SaveManager.campaign.parryDeathUsed = true;
+    SaveManager.write();
     const s = game.scene.getScene("GameScene");
     s.player.setData("hp", 20); // one rat bite left
     s.player.setData("hitInvulnerableUntil", 0);
@@ -145,6 +148,10 @@ try {
   });
   const diedFromRat = await waitFor(() => game.scene.getScene("GameScene").isDead, 8000);
   check("a rat bite at 20 HP kills the knight (normal death)", diedFromRat);
+  check("with Parry Death spent, no Death encounter starts", await state(() => {
+    const s = game.scene.getScene("GameScene");
+    return !s.parryDeath.isActive() && !s.parryDeath.reaper;
+  }));
   if (!diedFromRat) {
     // Fall back to the same damage path so the rest of the death flow is still tested.
     await state(() => game.scene.getScene("GameScene").takeDamage(999));

@@ -31,6 +31,7 @@ const HollowArcher = {
     scene.load.spritesheet("archer_draw", dir + "ARCHER_DRAW.png", frame);
     scene.load.spritesheet("archer_release", dir + "ARCHER_RELEASE.png", frame);
     scene.load.spritesheet("archer_reload", dir + "ARCHER_RELOAD.png", frame);
+    scene.load.spritesheet("archer_death", dir + "ARCHER_DEATH.png", frame);
     scene.load.image("archer_arrow", dir + "ARCHER_ARROW.png");
   },
 
@@ -40,6 +41,7 @@ const HollowArcher = {
     scene.createAnimOnce({ key: "archer_idle", frames: scene.anims.generateFrameNumbers("archer_idle"), frameRate: 3, repeat: -1 });
     scene.createAnimOnce({ key: "archer_draw", frames: frames("archer_draw", C.drawFrameMs), repeat: 0 });
     scene.createAnimOnce({ key: "archer_release", frames: frames("archer_release", [C.releaseFrameMs, C.releaseFrameMs]), repeat: 0 });
+    scene.createAnimOnce({ key: "archer_death", frames: frames("archer_death", [100, 120, 140, 400]), repeat: 0 });
     scene.createAnimOnce({ key: "archer_reload", frames: frames("archer_reload", [C.reloadFrameMs, C.reloadFrameMs, C.reloadFrameMs, C.reloadFrameMs * 2]), repeat: 0 });
   },
 
@@ -49,12 +51,16 @@ const HollowArcher = {
     scene.archers = scene.add.group();
     scene.arrows = scene.physics.add.group({ allowGravity: false });
     // Walls stop arrows; one-way platforms and ropes do not.
-    scene.physics.add.overlap(scene.arrows, scene.ground, (arrow) => arrow.destroy(), (arrow, block) => !block.isPlatform && !block.isRope);
+    scene.physics.add.overlap(scene.arrows, scene.ground, (arrow) => {
+      Sfx.play(scene, "arrow_hit", 0.5);
+      arrow.destroy();
+    }, (arrow, block) => !block.isPlatform && !block.isRope);
     scene.physics.add.overlap(scene.player, scene.arrows, (player, arrow) => {
       if (!arrow.active || scene.isPlayerInvulnerable()) return; // a roll passes straight through
       const direction = Math.sign(arrow.body.velocity.x) || 1;
       arrow.destroy();
-      scene.hurtPlayer(ARCHER_CONFIG.arrowDamage, direction);
+      Sfx.play(scene, "arrow_hit", 0.8);
+      scene.hurtPlayer(ARCHER_CONFIG.arrowDamage, direction, { kind: "arrow" });
     });
   },
 
@@ -65,7 +71,7 @@ const HollowArcher = {
     archer.body.setSize(C.body.w, C.body.h);
     archer.setCollideWorldBounds(true);
     scene.physics.add.collider(archer, scene.ground);
-    archer.setData({ kind: "archer", hp: C.hp, state: "idle", lastSeenAt: 0, reloadUntil: 0, nextBackstepAt: 0, arrow: null });
+    archer.setData({ kind: "archer", deathAnim: "archer_death", hp: C.hp, state: "idle", lastSeenAt: 0, reloadUntil: 0, nextBackstepAt: 0, arrow: null });
     HollowArcher.face(archer, -1); // watches toward the room entrance until it sees the knight
     archer.anims.play("archer_idle");
     archer.on("animationcomplete", (anim) => {
@@ -101,6 +107,7 @@ const HollowArcher = {
 
   fire(scene, archer) {
     const C = ARCHER_CONFIG;
+    if (scene.parryDeath && scene.parryDeath.isActive()) return; // the world is frozen
     const dir = archer.getData("dir");
     const old = archer.getData("arrow");
     if (old && old.active) old.destroy(); // one arrow in flight per archer
@@ -115,6 +122,7 @@ const HollowArcher = {
     archer.setData("state", "reload");
     archer.setData("reloadUntil", scene.time.now + C.reloadMs);
     archer.anims.play("archer_release");
+    Sfx.play(scene, "bow_release", 0.8);
   },
 
   update(scene, time) {
@@ -145,11 +153,14 @@ const HollowArcher = {
           HollowArcher.face(archer, towardPlayer); // direction is locked for the whole draw
           archer.setData("state", "draw");
           archer.anims.play("archer_draw");
+          archer.setData("drawSound", Sfx.play(scene, "bow_draw", 0.7));
         }
       } else if (state === "draw") {
         if (time - archer.getData("lastSeenAt") > C.loseSightMs) {
           archer.setData("state", "idle"); // lowers the bow when the knight hides
           archer.anims.play("archer_idle");
+          const creak = archer.getData("drawSound");
+          if (creak && creak.isPlaying) creak.stop();
         }
       } else if (state === "reload" && time >= archer.getData("reloadUntil")) {
         archer.setData("state", "idle");

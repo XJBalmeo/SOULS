@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-13T13:48:12.044Z",
+  "date": "2026-11-13T14:13:06.565Z",
   "passed": 50,
   "failed": 0,
   "results": [
@@ -101,22 +101,22 @@
     {
       "name": "menu-to-game delay matches TITLE_CONFIG.startDelayMs",
       "ok": true,
-      "detail": "1649 ms (config 1500)"
+      "detail": "1796 ms (config 1500)"
     },
     {
       "name": "hero spawned with full HP/stamina",
       "ok": true,
-      "detail": "{\"x\":160,\"y\":366,\"vy\":0,\"onFloor\":true,\"hp\":100,\"stamina\":100,\"attacking\":false,\"rolling\":false,\"rats\":8,\"ratsAlive\":8}"
+      "detail": "{\"x\":160,\"y\":366,\"vy\":0,\"onFloor\":true,\"hp\":100,\"stamina\":100,\"attacking\":false,\"rolling\":false,\"rats\":6,\"ratsAlive\":6}"
     },
     {
       "name": "rats spawned",
       "ok": true,
-      "detail": "rats=8"
+      "detail": "rats=6"
     },
     {
       "name": "move right (D)",
       "ok": true,
-      "detail": "dx=96.0"
+      "detail": "dx=98.7"
     },
     {
       "name": "move left (←)",
@@ -221,12 +221,12 @@
     {
       "name": "re-entry: fresh hero and rats",
       "ok": true,
-      "detail": "{\"x\":160,\"y\":366,\"vy\":0,\"onFloor\":true,\"hp\":100,\"stamina\":100,\"attacking\":false,\"rolling\":false,\"rats\":8,\"ratsAlive\":8}"
+      "detail": "{\"x\":160,\"y\":366,\"vy\":0,\"onFloor\":true,\"hp\":100,\"stamina\":100,\"attacking\":false,\"rolling\":false,\"rats\":6,\"ratsAlive\":6}"
     },
     {
       "name": "Continue rebuilds the saved layout",
       "ok": true,
-      "detail": "Level_0,Level_2,Level_1,Level_1,Level_4"
+      "detail": "Level_0,Level_3,Level_2,Level_3,Level_4"
     },
     {
       "name": "re-entry: movement works",

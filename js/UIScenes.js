@@ -276,7 +276,7 @@ class MenuScene extends Phaser.Scene {
       { label: "Credits", onSelect: () => this.scene.start("CreditsScene") },
     ]);
 
-    UI.text(this, width - 90, height - 18, "build v0.2", 14, UI.COLORS.disabled);
+    UI.text(this, width - 90, height - 18, "build v0.3", 14, UI.COLORS.disabled);
     this.cameras.main.fadeIn(250, 0, 0, 0);
   }
   update(time, delta) {
@@ -452,7 +452,7 @@ class SettingsScene extends Phaser.Scene {
       [
         volume("masterVolume", "Master Volume", "← → to adjust."),
         volume("musicVolume", "Music Volume", "Saved now; music is added in a later build."),
-        volume("sfxVolume", "Effects Volume", "Saved now; sound effects are added in a later build."),
+        volume("sfxVolume", "Effects Volume", "Enemy and Parry Death sounds. Menu sounds come later."),
         toggle("showHitboxes", "Show Hitboxes", "Debug view of collision and sword hitboxes (Tab in game)."),
         { label: "Back", onSelect: () => this.back() },
       ],

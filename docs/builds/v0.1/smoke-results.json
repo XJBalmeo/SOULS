@@ -1,0 +1,210 @@
+{
+  "date": "2026-11-13T10:33:51.302Z",
+  "passed": 40,
+  "failed": 0,
+  "results": [
+    {
+      "name": "Phaser 3.80.1 loaded",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "boots into MenuScene",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "click-to-start overlay shown",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "menu ignores keys behind overlay",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "overlay dismissed by click",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Continue shown disabled",
+      "ok": true,
+      "detail": "#46503f"
+    },
+    {
+      "name": "Continue explains why unavailable",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "disabled Continue does nothing",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Settings opens from menu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "menu sleeps under settings",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "master volume change persisted",
+      "ok": true,
+      "detail": "{\"masterVolume\":0.9,\"musicVolume\":0.8,\"sfxVolume\":0.8,\"fullscreen\":true,\"showHitboxes\":false}"
+    },
+    {
+      "name": "master volume applied to sound manager",
+      "ok": true,
+      "detail": "0.8999999761581421"
+    },
+    {
+      "name": "Esc returns from settings to menu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Credits opens",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Credits back to menu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "New Game starts GameScene",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "hero spawned with full HP/stamina",
+      "ok": true,
+      "detail": "{\"x\":160,\"y\":366,\"vy\":0,\"onFloor\":true,\"hp\":100,\"stamina\":100,\"attacking\":false,\"rolling\":false,\"rats\":7,\"ratsAlive\":7}"
+    },
+    {
+      "name": "rats spawned",
+      "ok": true,
+      "detail": "rats=7"
+    },
+    {
+      "name": "move right (D)",
+      "ok": true,
+      "detail": "dx=98.7"
+    },
+    {
+      "name": "move left (←)",
+      "ok": true,
+      "detail": "dx=-66.7"
+    },
+    {
+      "name": "jump (Space)",
+      "ok": true,
+      "detail": "dy=-29.9 vy=-120"
+    },
+    {
+      "name": "sword attack (Z) uses stamina",
+      "ok": true,
+      "detail": "stamina=85"
+    },
+    {
+      "name": "roll (X)",
+      "ok": true,
+      "detail": "rolling=true stamina=75"
+    },
+    {
+      "name": "P opens pause menu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "gameplay paused under menu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "hero frozen while paused",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Settings opens from pause",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "hitbox toggle applies to running game",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "settings returns to pause",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "disabled retry does nothing",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Esc resumes game",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "controls work after resume",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Quit returns to main menu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "second New Game starts cleanly",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "re-entry: fresh hero and rats",
+      "ok": true,
+      "detail": "{\"x\":160,\"y\":366,\"vy\":0,\"onFloor\":true,\"hp\":100,\"stamina\":100,\"attacking\":false,\"rolling\":false,\"rats\":7,\"ratsAlive\":7}"
+    },
+    {
+      "name": "re-entry: movement works",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "settings survive reload",
+      "ok": true,
+      "detail": "{\"masterVolume\":0.9,\"musicVolume\":0.8,\"sfxVolume\":0.8,\"fullscreen\":true,\"showHitboxes\":true}"
+    },
+    {
+      "name": "corrupt settings fall back to defaults",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "no duplicate animation/texture warnings on re-entry",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "no console errors, page errors or failed requests",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "warnings": [
+    "Settings unreadable, using defaults: SyntaxError: Expected property name or '}' in JSON at position 1 (line 1 column 2)"
+  ]
+}

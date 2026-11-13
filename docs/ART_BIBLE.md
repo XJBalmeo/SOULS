@@ -1,0 +1,6 @@
+# Art bible — initial direction
+Famine's actual assets are the authority: dark olive-green ruined city silhouettes, near-black stone, mossy platforms, green haze and distant illuminated windows. Camera #324031, dark fill #0A100C. Approximate supporting colors #192219, #43553B, #177F73; sample actual PNGs before final palette. Preserve existing hero and rat silhouette. Side view, consistent pixel density, crisp nearest-neighbor rendering and readable silhouettes. Use contrast to distinguish enemies, interactables, hazards and backgrounds; avoid details that obscure hitboxes. Use warmer accent lights sparingly. Maintain parallax and layering.
+
+Future chapter palettes are proposals: War crimson/charcoal/fire, Conquest ivory/tarnished gold/purple, Death spectral violet/cyan/black. Approve reference sheet for each before asset production. Horsemen must look distinct. Original art only; references are not production assets. Review concept, sprite at actual scale and animation before approval. Record source/license.
+
+Parry Death visual proposal: spectral reaper (working name Death’s Shadow), readable silhouette against all four chapter palettes; visually distinct from the final Death boss. Approval before final sprites.

@@ -21,8 +21,8 @@ Milestone 1 only. These are six integration/review gates, not additional chapter
 Build labels are internal review labels, not published release tags. No gate passes solely from generated code/assets or a plan. Human playtest required for final milestone; interim owner reviews can use a playable build and evidence, but cannot replace final human testing. No automatic main merge.
 
 ## Build checklist (initial)
-- [ ] v0.1 Foundation — REVIEW (2026-11-13, awaiting owner approval; docs/builds/v0.1/BUILD_REVIEW.md)
-- [ ] v0.2 Combat & Survival — BACKLOG
+- [x] v0.1 Foundation — DONE (owner approved 2026-11-13; docs/builds/v0.1/BUILD_REVIEW.md)
+- [ ] v0.2 Combat & Survival — IN PROGRESS (2026-11-13)
 - [ ] v0.3 Parry Death & Enemies — BACKLOG
 - [ ] v0.4 Famine Expanded — BACKLOG
 - [ ] v0.5 The Hollow King — BACKLOG

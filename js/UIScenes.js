@@ -11,6 +11,15 @@ const TITLE_CONFIG = {
   backgroundDim: 0.5892, // black over the menu background: 0 = no dim, 1 = full black
 };
 
+// UI font. Set useCustomFont to false to go back to the Georgia serif.
+// Knight Warrior is a personal-use demo font (Maknastudio); a commercial
+// licence is required before release, and the file is not committed to git.
+const FONT_CONFIG = {
+  useCustomFont: true,
+  custom: { family: "Knight Warrior", url: "sprites/FONTS/KnightWarrior.otf" },
+  fallback: '"Georgia", "Times New Roman", serif',
+};
+
 // Player settings, persisted independently of any future campaign save.
 // Fullscreen is mandatory, so it is not a setting.
 const SoulsSettings = {
@@ -49,7 +58,18 @@ const SoulsSettings = {
 };
 
 const UI = {
-  FONT: '"Georgia", "Times New Roman", serif',
+  get FONT() {
+    const { useCustomFont, custom, fallback } = FONT_CONFIG;
+    return useCustomFont ? `"${custom.family}", ${fallback}` : fallback;
+  },
+
+  // Resolves once the custom font is usable (or has failed, leaving the fallback).
+  fontReady: FONT_CONFIG.useCustomFont
+    ? new FontFace(FONT_CONFIG.custom.family, `url("${FONT_CONFIG.custom.url}")`)
+        .load()
+        .then((face) => document.fonts.add(face))
+        .catch((e) => console.warn("UI font failed to load, using fallback:", e))
+    : Promise.resolve(),
   COLORS: {
     bone: "#ffffff",
     accent: "#a8d672",
@@ -104,7 +124,7 @@ const UI = {
       texts.forEach((t, i) => {
         const item = items[i];
         const selected = i === index;
-        t.setText(selected ? `›  ${labelOf(item)}  ‹` : labelOf(item));
+        t.setText(selected ? `>  ${labelOf(item)}  <` : labelOf(item));
         t.setColor(item.disabled ? UI.COLORS.disabled : selected ? UI.COLORS.accent : UI.COLORS.bone);
       });
       hint.setText(items[index].hint || "");
@@ -174,6 +194,16 @@ const UI = {
   },
 };
 
+// Waits for the UI font so no text is drawn with the fallback first.
+class BootScene extends Phaser.Scene {
+  constructor() {
+    super("BootScene");
+  }
+  create() {
+    UI.fontReady.then(() => this.scene.start("MenuScene"));
+  }
+}
+
 class MenuScene extends Phaser.Scene {
   constructor() {
     super("MenuScene");
@@ -209,7 +239,7 @@ class MenuScene extends Phaser.Scene {
       });
     }
     this.title = this.add.sprite(width / 2, 170, "title").setScale(TITLE_CONFIG.scale).play("title_idle");
-    UI.text(this, width / 2, 270, "CHAPTER I  ·  FAMINE", 24, UI.COLORS.accent);
+    UI.text(this, width / 2, 270, "CHAPTER I  -  FAMINE", 24, UI.COLORS.accent);
 
     // A save system does not exist until Famine v0.2, so Continue is unavailable.
     this.menu = UI.menu(this, width / 2, 360, [
@@ -224,7 +254,7 @@ class MenuScene extends Phaser.Scene {
     ]);
 
     UI.text(this, width / 2, height - 40,
-      "↑ ↓ choose   ·   Enter / Z confirm   ·   Esc / P pause in game", 16, UI.COLORS.dim);
+      "↑ ↓ choose   |   Enter / Z confirm   |   Esc / P pause in game", 16, UI.COLORS.dim);
     UI.text(this, width - 90, height - 18, "build v0.1", 14, UI.COLORS.disabled);
     this.cameras.main.fadeIn(250, 0, 0, 0);
   }
@@ -349,7 +379,7 @@ class CreditsScene extends Phaser.Scene {
       this,
       width / 2,
       300,
-      "SOULS — an original dark-fantasy action platformer\n\n" +
+      "SOULS - an original dark-fantasy action platformer\n\n" +
         "Game, art and level design: the SOULS team\n" +
         "Engine: Phaser 3.80.1 (MIT License)\n" +
         "Levels authored with LDtk\n\n" +

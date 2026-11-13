@@ -70,8 +70,8 @@ v0.2 Combat & Survival:
 - Enable the Retry and Continue items.
 
 ## Owner decision
-- **Decision:** PENDING
-- **Review date / reference:**
+- **Decision:** APPROVED (owner: "lets proceed to v0.2")
+- **Review date / reference:** 2026-11-13, in the Claude Code session, after change rounds 1-3 (fullscreen/title/white text; menu dim 58.92%; Knight Warrior font)
 
 ## Owner change requests — round 1 (2026-11-13) — done, back in REVIEW
 1. Removed the Fullscreen option from Settings, because fullscreen is mandatory.

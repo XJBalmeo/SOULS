@@ -1,6 +1,6 @@
 # Development status
 
-Current milestone: M1 — Famine. Current build: v0.1 Foundation. Build state: **REVIEW** (2026-11-13). Owner build approval: PENDING. Branch: `famine/v0.1-foundation` (not merged). Review packet: `docs/builds/v0.1/BUILD_REVIEW.md`. Next tasks after approval: v0.2 — M1.3 combat/death, M1.4 checkpoint/save, save-dependent M1.2 (Continue, retry, New Game confirmation).
+Current milestone: M1 — Famine. Current build: **v0.2 Combat & Survival — IN PROGRESS** (v0.1 Foundation DONE, owner approved 2026-11-13). Owner build approval for v0.2: PENDING. Branch: `famine/v0.1-foundation` (not merged). Review packet: `docs/builds/v0.1/BUILD_REVIEW.md`. Next tasks after approval: v0.2 — M1.3 combat/death, M1.4 checkpoint/save, save-dependent M1.2 (Continue, retry, New Game confirmation).
 
 ## Existing implementation (static inspection)
 Browser Phaser game, hero movement/sword/stamina, rat enemy, Famine artwork, modular randomized rooms, parallax, fullscreen overlay. See ARCHITECTURE.md. No live playtest or automated baseline executed for this kit.
@@ -72,3 +72,13 @@ The owner requested four changes:
 - Menu text is white.
 
 All four were implemented by the Lead directly (T1, small). `npm run test:smoke` gives 48/48 PASS, exit 0. Gate stays REVIEW, and owner approval is pending.
+
+## 2026-11-13 — v0.1 APPROVED, v0.2 started
+- Further v0.1 changes requested by the owner:
+  - Menu background dim set to pure black at 58.92% (`TITLE_CONFIG.backgroundDim`).
+  - Knight Warrior font for all UI text (`FONT_CONFIG.useCustomFont`). The file is committed on the owner's instruction; it carries a personal-use licence (see ASSET_LICENSES.md).
+- v0.1 approved by the owner ("lets proceed to v0.2").
+- Owner decisions for v0.2:
+  1. Checkpoints: chapter start only for now. Death returns to the Famine start room with the same layout. Physical checkpoints come in v0.4 (M1.7).
+  2. Reaching a checkpoint will refill HP and stamina, once physical checkpoints exist.
+  3. Death: a short "You have fallen" screen, then an automatic respawn.

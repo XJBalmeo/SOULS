@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-13T11:24:14.244Z",
+  "date": "2026-11-13T11:29:06.486Z",
   "passed": 48,
   "failed": 0,
   "results": [
@@ -101,7 +101,7 @@
     {
       "name": "menu-to-game delay matches TITLE_CONFIG.startDelayMs",
       "ok": true,
-      "detail": "2067 ms (config 1500)"
+      "detail": "2043 ms (config 1500)"
     },
     {
       "name": "hero spawned with full HP/stamina",
@@ -116,17 +116,17 @@
     {
       "name": "move right (D)",
       "ok": true,
-      "detail": "dx=101.3"
+      "detail": "dx=96.0"
     },
     {
       "name": "move left (←)",
       "ok": true,
-      "detail": "dx=-66.7"
+      "detail": "dx=-74.7"
     },
     {
       "name": "jump (Space)",
       "ok": true,
-      "detail": "dy=-27.9 vy=-133"
+      "detail": "dy=-29.9 vy=-120"
     },
     {
       "name": "sword attack (Z) uses stamina",
@@ -216,7 +216,7 @@
     {
       "name": "re-entry: fresh hero and rats",
       "ok": true,
-      "detail": "{\"x\":160,\"y\":366,\"vy\":0,\"onFloor\":true,\"hp\":100,\"stamina\":100,\"attacking\":false,\"rolling\":false,\"rats\":6,\"ratsAlive\":6}"
+      "detail": "{\"x\":160,\"y\":366,\"vy\":0,\"onFloor\":true,\"hp\":100,\"stamina\":100,\"attacking\":false,\"rolling\":false,\"rats\":7,\"ratsAlive\":7}"
     },
     {
       "name": "re-entry: movement works",

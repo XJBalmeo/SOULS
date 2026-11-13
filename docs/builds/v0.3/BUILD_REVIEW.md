@@ -32,7 +32,7 @@
 - **Still open, so my proposed defaults are used:**
   - The sword cannot cut arrows.
   - Hits don't interrupt the Starved's wind-up.
-  - Parry key C, the 300 ms window and the other timings.
+  - Parry on the right mouse button (owner 2026-11-14, was C), the 300 ms window and the other timings.
   - Early presses fail.
   - The look of the Starved and Death's Shadow.
 

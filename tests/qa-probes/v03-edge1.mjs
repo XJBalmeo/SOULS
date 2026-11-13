@@ -17,7 +17,7 @@ const fast = () => state(() => { PARRY_DEATH_CONFIG.forcedDelayMs = 0; });
 const hurt = (amt = 200, dir = 1) => state(([a, d]) => { const s = game.scene.getScene("GameScene"); s.hurtPlayer(a, d, null); }, [amt, dir]);
 const reviveAndCheck = async (label) => {
   check(label + ": reaches strike", await waitFor(() => game.scene.getScene("GameScene").parryDeath.state === "SINGLE_STRIKE", 6000));
-  await tap("KeyC");
+  await g.rightClick();
   check(label + ": revive completes", await waitFor(() => { const d = game.scene.getScene("GameScene").parryDeath; return d.state === "IDLE" && d.outcome === "success"; }, 4000));
   const i = await info(); console.log("   after revive", JSON.stringify(i));
   check(label + ": gravity on, not climbing, full hp", i.grav && !i.climbing && !i.vaulting && i.hp === 100, JSON.stringify(i));

@@ -104,7 +104,7 @@ const t = await waitFor(() => game.scene.getScene("GameScene").parryDeath.state 
 check("7c: archer+starved produce a fatal hit -> exactly one encounter", t);
 const frozen = await state(() => { const a = window.__arch, e = window.__enemy; return { aAnim: a.anims.isPaused, eAnim: e.anims.isPaused, aState: a.getData("state"), eState: e.getData("state"), arrows: game.scene.getScene("GameScene").arrows.getLength() }; });
 console.log("7c at trigger", JSON.stringify(frozen));
-await waitFor(() => game.scene.getScene("GameScene").parryDeath.state === "SINGLE_STRIKE", 6000); await tap("KeyC");
+await waitFor(() => game.scene.getScene("GameScene").parryDeath.state === "SINGLE_STRIKE", 6000); await g.rightClick();
 check("7c: parry succeeds", await waitFor(() => { const d = game.scene.getScene("GameScene").parryDeath; return d.state === "IDLE" && d.outcome === "success"; }, 5000));
 const hist = [];
 for (let i = 0; i < 25; i++) { await wait(200); hist.push(await state(() => { const s = game.scene.getScene("GameScene"); return [Math.round(s.time.now), s.player.getData("hp"), window.__arch.getData("state"), window.__enemy.getData("state"), s.arrows.getLength()]; })); }

@@ -23,7 +23,7 @@ check("2a: roll actually started", i.roll === true);
 await hurt(200, -1); await wait(50);
 i = await info(); console.log("2a downed", JSON.stringify(i));
 check("2a: roll state cleared on trigger", !i.roll && !i.rollInv && i.vx === 0 && i.st === "DOWNED", JSON.stringify(i));
-check("2a: strike", await strike()); await tap("KeyC"); check("2a: success", await idle());
+check("2a: strike", await strike()); await g.rightClick(); check("2a: success", await idle());
 await wait(300); i = await info(); console.log("2a revived", JSON.stringify(i));
 check("2a: no stuck roll/attack flags after revive", !i.roll && !i.rollInv && !i.att && !i.hit, JSON.stringify(i));
 await wait(1500);
@@ -42,7 +42,7 @@ check("2b: swing active", i.att === true);
 await hurt(200, 1); await wait(50);
 i = await info();
 check("2b: attack state cleared, hitbox disabled", !i.att && !i.hit, JSON.stringify(i));
-check("2b: strike", await strike()); await tap("KeyC"); check("2b: success", await idle());
+check("2b: strike", await strike()); await g.rightClick(); check("2b: success", await idle());
 await wait(1600); await tap("KeyZ", 40); await wait(120); i = await info();
 check("2b: attack works after revive", i.att === true && i.hp === 100, JSON.stringify(i));
 
@@ -51,7 +51,7 @@ await newCampaign(); await fast();
 const a = await g.arena(110, "starved"); console.log("2c arena", JSON.stringify(a));
 await state(() => { const s = game.scene.getScene("GameScene"), e = window.__enemy; s.player.setData("hp", 25); Starved.face(e, -1); e.setData({ state: "idle", nextLungeAt: 0 }); });
 check("2c: lunge kills -> encounter DOWNED", await waitFor(() => game.scene.getScene("GameScene").parryDeath.state === "DOWNED", 6000));
-check("2c: strike", await strike()); await tap("KeyC"); check("2c: success", await idle());
+check("2c: strike", await strike()); await g.rightClick(); check("2c: success", await idle());
 const t0 = Date.now(); const tl = [];
 while (Date.now() - t0 < 6000) {
   tl.push(await state(() => { const s = game.scene.getScene("GameScene"), e = window.__enemy, p = s.player;
@@ -78,7 +78,7 @@ await wait(1500);
 r = await state(() => ({ trig: window.__trig, st: game.scene.getScene("GameScene").parryDeath.state, listeners: game.scene.getScene("GameScene").input.keyboard.listenerCount("keydown") }));
 r.reapers = await reapers();
 check("3b: five hits across five frames -> exactly one trigger, one reaper", r.trig === 1 && r.reapers === 1, JSON.stringify(r));
-await strike(); await tap("KeyC"); check("3b: still parry-able and succeeds", await idle());
+await strike(); await g.rightClick(); check("3b: still parry-able and succeeds", await idle());
 // real physics: rat bite + arrow + starved lunge on one step
 await newCampaign(); await fast();
 await g.arena(40, "starved");
@@ -118,7 +118,7 @@ const pauseResume = async () => {
 };
 await newCampaign(); await fast(); await clear();
 await hurt(); await waitFor(() => game.scene.getScene("GameScene").parryDeath.state === "DEATH_APPROACH", 3000);
-await tap("KeyC"); await wait(120);
+await g.rightClick(); await wait(120);
 i = await info(); console.log("5a", JSON.stringify(i));
 check("5a: in NORMAL_DEATH", i.st === "NORMAL_DEATH");
 await pauseResume();
@@ -127,18 +127,18 @@ check("5a: checkpoint restore completes, full HP, IDLE", await waitFor(() => { c
 console.log("5a end", JSON.stringify(await state(() => ({ used: SaveManager.campaign.parryDeathUsed, playing: game.sound.sounds.filter(x => x.isPlaying).length }))));
 
 await newCampaign(); await fast(); await clear();
-await hurt(); await strike(); await tap("KeyC"); await wait(150);
+await hurt(); await strike(); await g.rightClick(); await wait(150);
 i = await info(); check("5b: PARRY_SUCCESS", i.st === "PARRY_SUCCESS", JSON.stringify(i));
 await pauseResume();
 check("5b: revives after resume", await idle());
 i = await info(); check("5b: full hp, alive", i.hp === 100 && !i.dead, JSON.stringify(i));
 await wait(1000);
-r = await state(() => ({ tinted: game.scene.getScene("GameScene").player.isTinted, physPaused: game.scene.getScene("GameScene").physics.world.isPaused, prompts: game.scene.getScene("GameScene").children.list.filter(o => o.type === "Text" && /DENIED|Press C/.test(o.text)).length }));
+r = await state(() => ({ tinted: game.scene.getScene("GameScene").player.isTinted, physPaused: game.scene.getScene("GameScene").physics.world.isPaused, prompts: game.scene.getScene("GameScene").children.list.filter(o => o.type === "Text" && /DENIED/.test(o.text)).length }));
 r.reapers = await reapers();
 check("5b: reaper/prompt cleaned, physics running, no stuck tint", r.reapers === 0 && r.prompts === 0 && !r.physPaused && !r.tinted, JSON.stringify(r));
 
 await newCampaign(); await fast(); await clear();
-await hurt(); await strike(); await tap("KeyC");
+await hurt(); await strike(); await g.rightClick();
 await waitFor(() => game.scene.getScene("GameScene").parryDeath.state === "REVIVE", 3000);
 await pauseResume();
 check("5c: REVIVE pause -> finishes", await idle()); i = await info();
@@ -147,18 +147,18 @@ check("5c: hp 100 alive", i.hp === 100 && !i.dead, JSON.stringify(i));
 await newCampaign(); await fast(); await clear();
 await hurt(); await waitFor(() => game.scene.getScene("GameScene").parryDeath.state === "TELEGRAPH", 4000);
 await pauseResume();
-check("5d: TELEGRAPH pause -> still reaches strike, parry works", (await strike()) && (await tap("KeyC"), await idle()));
+check("5d: TELEGRAPH pause -> still reaches strike, parry works", (await strike()) && (await g.rightClick(), await idle()));
 
 // ---- 6: C spam ----
 await newCampaign(); await fast(); await clear();
 await hurt();
-for (let k = 0; k < 10; k++) { await tap("KeyC", 15); await wait(15); }
+for (let k = 0; k < 10; k++) { await g.rightClick(15); await wait(15); }
 i = await info(); console.log("6a after DOWNED spam", JSON.stringify(i));
 check("6a: spam during DOWNED ignored", i.out === null && i.st !== "NORMAL_DEATH", JSON.stringify(i));
-check("6a: strike reached", await strike()); await tap("KeyC"); check("6a: single correct press succeeds", await idle());
+check("6a: strike reached", await strike()); await g.rightClick(); check("6a: single correct press succeeds", await idle());
 await newCampaign(); await fast(); await clear();
 await hurt(); await waitFor(() => game.scene.getScene("GameScene").parryDeath.state === "DEATH_APPROACH", 3000);
-for (let k = 0; k < 6; k++) { await tap("KeyC", 15); await wait(15); }
+for (let k = 0; k < 6; k++) { await g.rightClick(15); await wait(15); }
 i = await info(); console.log("6b after APPROACH spam", JSON.stringify(i));
 check("6b: spam during DEATH_APPROACH -> early fail", i.st === "NORMAL_DEATH" && i.why === "early", JSON.stringify(i));
 await g.finish("v03-edge2");

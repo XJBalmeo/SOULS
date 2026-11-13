@@ -26,7 +26,7 @@ From the window there are two outcomes:
 ## Config defaults (proposals)
 | Key | Default | Meaning |
 |---|---|---|
-| parryKeyCodes / label | KeyC / "C" | Not Z: someone mashing attack at the moment of death would trip the early-press rule |
+| parry input | Right mouse button | Owner 2026-11-14 (was the C key). Not the attack button: someone mashing attack at the moment of death would trip the early-press rule |
 | downedMs | 600 | Knight collapses; presses are ignored |
 | approachMs | 1200 | Death floats in |
 | delayMinMs / delayMaxMs | 600 / 2000 | Random hover before the warning |
@@ -63,7 +63,7 @@ From the window there are two outcomes:
   - Parry: attack animation with a white flash.
   - Revive: back to idle.
 - **Death's Shadow:** original sprites in `sprites/ENEMIES/DEATHS_SHADOW/` (float, raise, strike, parried, fade), 128×128 frames.
-- **Prompt** (bottom of the screen): "Death comes for you. Press C as the scythe falls." During the window it shows a large "C". On success it shows "DEATH IS DENIED". On failure the game goes straight to the full-screen YOU DIED animation (owner 2026-11-14).
+- **Prompt** (bottom of the screen): no instructions and no key hint (owner 2026-11-14). On success it shows "DEATH IS DENIED". On failure the game goes straight to the full-screen YOU DIED animation (owner 2026-11-14).
 - **Sounds:** reaper_arrive, reaper_telegraph, scythe_swing, parry_clang, parry_fail, revive. They pause with the scene.
 
 ## Cleanup

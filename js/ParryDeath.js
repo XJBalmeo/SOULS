@@ -5,8 +5,7 @@
 // Contract: docs/PARRY_DEATH_CONTRACT.md. All timings are proposals for owner review.
 const PARRY_DEATH_CONFIG = {
   enabled: true,
-  parryKeyCodes: ["KeyC"],
-  parryKeyLabel: "C",
+  // Parry is the right mouse button (owner 2026-11-14). No on-screen hint.
   downedMs: 900,         // hurt (7 frames) + collapse to the ground before Death appears
   approachMs: 1200,
   delayMinMs: 600,       // random hover before the warning
@@ -44,7 +43,7 @@ class ParryDeathEncounter {
     this.state = "IDLE";
     this.outcome = null;
     this.sounds = [];
-    this.onKey = (event) => this.handleKey(event);
+    this.onPointer = (pointer) => pointer.rightButtonDown() && this.handleParryPress();
     this.onPause = () => this.sounds.forEach((s) => s.isPlaying && s.pause());
     this.onResume = () => this.sounds.forEach((s) => s.isPaused && s.resume());
     scene.events.on("pause", this.onPause);
@@ -117,7 +116,7 @@ class ParryDeathEncounter {
     scene.playCollapse(); // ends held on the ground frame until the parry resolves
     this.snapToGround();
 
-    scene.input.keyboard.on("keydown", this.onKey);
+    scene.input.on("pointerdown", this.onPointer);
     this.prompt = UI.text(scene, scene.viewport.x + scene.viewport.w / 2, scene.viewport.y + scene.viewport.h - 30,
       "", 13, UI.COLORS.bone).setScrollFactor(0).setDepth(1001);
     scene.cameras.main.shake(180, 0.004);
@@ -190,7 +189,6 @@ class ParryDeathEncounter {
     this.reaper.anims.play("reaper_float");
     scene.tweens.add({ targets: this.reaper, x: p.x + side * C.approachOffsetPx, alpha: 1, duration: C.approachMs, ease: "Sine.easeOut" });
     this.track(Sfx.play(scene, "reaper_arrive", 0.9));
-    this.prompt.setText("Death comes for you.  Press " + C.parryKeyLabel + " as the scythe falls.");
     this.setPhase("DEATH_APPROACH");
   }
 
@@ -207,13 +205,11 @@ class ParryDeathEncounter {
     this.reaper.anims.play("reaper_strike");
     this.reaper.anims.pause(); // hold the mid-swing frame for the whole window
     this.track(Sfx.play(this.scene, "scythe_swing"));
-    this.prompt.setText(PARRY_DEATH_CONFIG.parryKeyLabel).setFontSize(26).setColor(UI.COLORS.accent);
     this.windowOpenAt = this.elapsedMs;
     this.setPhase("SINGLE_STRIKE");
   }
 
-  handleKey(event) {
-    if (!PARRY_DEATH_CONFIG.parryKeyCodes.includes(event.code) || event.repeat) return;
+  handleParryPress() {
     if (!this.scene.sys.isActive() || this.outcome !== null) return; // paused, or already decided
     if (this.state === "SINGLE_STRIKE") this.resolve("success");
     else if (PARRY_DEATH_CONFIG.earlyPressFails && (this.state === "DEATH_APPROACH" || this.state === "TELEGRAPH")) {
@@ -227,7 +223,7 @@ class ParryDeathEncounter {
     this.outcome = outcome;
     this.failReason = reason || null;
     const scene = this.scene;
-    scene.input.keyboard.off("keydown", this.onKey);
+    scene.input.off("pointerdown", this.onPointer);
     if (!this.reaper) this.startApproach(); // early press before Death arrived
     this.reaper.anims.resume();
     if (outcome === "success") {
@@ -358,7 +354,7 @@ class ParryDeathEncounter {
   // Scene shutdown (restart, retry, quit) mid-encounter.
   destroy() {
     const scene = this.scene;
-    scene.input.keyboard.off("keydown", this.onKey);
+    scene.input.off("pointerdown", this.onPointer);
     scene.events.off("pause", this.onPause);
     scene.events.off("resume", this.onResume);
     this.sounds.forEach((s) => {

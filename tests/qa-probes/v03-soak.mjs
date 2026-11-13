@@ -16,7 +16,7 @@ while (Date.now() - t0 < 180000) {
     if (r === "forced") {
       enc.trig++;
       const mode = Math.random();
-      if (mode < 0.5) { await g.waitFor(() => game.scene.getScene("GameScene").parryDeath.state === "SINGLE_STRIKE", 6000); await g.tap("KeyC"); }
+      if (mode < 0.5) { await g.waitFor(() => game.scene.getScene("GameScene").parryDeath.state === "SINGLE_STRIKE", 6000); await g.rightClick(); }
       await wait(2500);
     }
   }

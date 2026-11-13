@@ -6,7 +6,7 @@
 import { openGame } from "./helpers.mjs";
 
 const T = await openGame("docs/builds/v0.3");
-const { page, check, wait, state, waitFor, tap, shot, newCampaign, arena, gameReady, warnings } = T;
+const { page, check, wait, state, waitFor, tap, rightClick, shot, newCampaign, arena, gameReady, warnings } = T;
 
 const DEFAULTS = await state(() => ({ ...PARRY_DEATH_CONFIG }));
 const fast = (extra = {}) =>
@@ -24,14 +24,14 @@ const enc = () =>
       hp: s.player.getData("hp"), stamina: s.player.getData("stamina"), dead: s.isDead,
       physicsPaused: s.physics.world.isPaused,
       reapers: s.children.list.filter((c) => c.texture && c.texture.key.startsWith("reaper") && c.active).length,
-      listeners: s.input.keyboard.listenerCount("keydown"),
+      listeners: s.input.listenerCount("pointerdown"),
       storedFlag: (JSON.parse(localStorage.getItem("souls.save.v1") || "{}")).parryDeathUsed,
       memFlag: SaveManager.campaign && SaveManager.campaign.parryDeathUsed,
     };
   });
 const inState = (name, timeout = 8000) => waitFor((n) => game.scene.getScene("GameScene").parryDeath.state === n, timeout, name);
 const fatal = () => state(() => game.scene.getScene("GameScene").takeDamage(999));
-const pressC = () => tap("KeyC", 40);
+const pressC = () => rightClick(40);
 // Waits through the death screen until the checkpoint restart has finished.
 const throughDeath = async () => {
   await waitFor(() => game.scene.isActive("DeathScene"), 5000);
@@ -48,7 +48,7 @@ const baseline = await state(() => {
   const s = game.scene.getScene("GameScene");
   s.__sameRun = "yes";
   window.__archerX = window.__enemy.x;
-  return { listeners: s.input.keyboard.listenerCount("keydown") };
+  return { listeners: s.input.listenerCount("pointerdown") };
 });
 await state(() => {
   const p = game.scene.getScene("GameScene").player;
@@ -68,12 +68,10 @@ check("its warning comes after a random wait", await inState("TELEGRAPH", 5000))
 await wait(250);
 await shot("parry-02-telegraph-glint");
 check("the strike opens the parry window", await inState("SINGLE_STRIKE", 2000));
-await page.keyboard.down("KeyC");
-await wait(40);
-await page.keyboard.up("KeyC");
+await rightClick(40);
 await shot("parry-03-parried");
 e = await enc();
-check("pressing C during the strike parries (default 300 ms window)", e.outcome === "success", JSON.stringify(e));
+check("right click during the strike parries (default 300 ms window)", e.outcome === "success", JSON.stringify(e));
 check("revival completes", await inState("IDLE", 4000));
 e = await enc();
 check("full HP and stamina after revival", e.hp === 100 && e.stamina === 100, JSON.stringify(e));
@@ -157,13 +155,14 @@ await newCampaign();
 await fast({ downedMs: 300 });
 await fatal();
 await inState("DOWNED", 1000);
-await page.keyboard.down("KeyC");               // pressed while downed: ignored
-await inState("SINGLE_STRIKE", 4000);
-await page.keyboard.down("KeyC");               // auto-repeat while held (repeat: true)
+const box = await (await page.$("canvas")).boundingBox();
+await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+await page.mouse.down({ button: "right" });     // pressed while downed: ignored
+await inState("SINGLE_STRIKE", 4000);           // still held through the strike
 await inState("NORMAL_DEATH", 2000);
-await page.keyboard.up("KeyC");
+await page.mouse.up({ button: "right" });
 e = await enc();
-check("a key held from before the strike cannot parry", e.outcome === "fail" && e.reason === "late", JSON.stringify(e));
+check("a button held from before the strike cannot parry", e.outcome === "fail" && e.reason === "late", JSON.stringify(e));
 await throughDeath();
 
 await newCampaign();

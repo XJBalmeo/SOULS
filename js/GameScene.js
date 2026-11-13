@@ -364,6 +364,7 @@ class GameScene extends Phaser.Scene {
     this.input.keyboard.on("keydown-ESC", openPause);
     this.input.keyboard.on("keydown-P", openPause);
     // Keys held when the game was paused never see their keyup; clear them.
+    this.input.mouse.disableContextMenu(); // right click is the Death parry
     // A mouse button held while clicking a menu must not swing the sword.
     this.ignorePointerUntilUp = true;
     this.pauseRequested = false;

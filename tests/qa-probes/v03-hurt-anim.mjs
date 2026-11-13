@@ -67,7 +67,7 @@ await wait(800);
 await state(() => { PARRY_DEATH_CONFIG.forcedDelayMs = 300; });
 await state(() => game.scene.getScene("GameScene").takeDamage(999));
 await waitFor(() => game.scene.getScene("GameScene").parryDeath.state === "SINGLE_STRIKE", 6000);
-await tap("KeyC");
+await g.rightClick();
 await waitFor(() => game.scene.getScene("GameScene").parryDeath.state === "IDLE", 4000);
 await wait(500);
 const z = await state(() => { const s = game.scene.getScene("GameScene"); return { dim: !!s.deathDim, rects: s.children.list.filter((c) => c.type === "Rectangle" && c.depth === DEATH_CONFIG.dimDepth).length, player: s.player.depth, outcome: s.parryDeath.outcome }; });

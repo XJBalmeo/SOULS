@@ -42,6 +42,14 @@ export async function openGame(outDir) {
     await wait(hold);
     await page.keyboard.up(code);
   };
+  // Right mouse button over the middle of the game canvas (the Death parry).
+  const rightClick = async (hold = 40) => {
+    const box = await (await page.$("canvas")).boundingBox();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down({ button: "right" });
+    await wait(hold);
+    await page.mouse.up({ button: "right" });
+  };
   const shot = (name) => page.screenshot({ path: path.join(SHOTS, name + ".png") });
   const gameReady = () =>
     waitFor(() => game.scene.isActive("GameScene") && !!game.scene.getScene("GameScene").player &&
@@ -119,5 +127,5 @@ export async function openGame(outDir) {
 
   await page.goto(url, { waitUntil: "load" });
   await waitFor(() => game.scene.isActive("MenuScene"));
-  return { page, url, check, wait, state, waitFor, tap, shot, gameReady, newCampaign, arena, finish, errors, warnings };
+  return { page, url, check, wait, state, waitFor, tap, rightClick, shot, gameReady, newCampaign, arena, finish, errors, warnings };
 }

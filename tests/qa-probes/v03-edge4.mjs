@@ -53,12 +53,12 @@ s = await snap(); console.log("after new game", JSON.stringify(s));
 check("4c: New Game: opportunity fresh", s.used === false, JSON.stringify(s));
 await state(() => { delete PARRY_DEATH_CONFIG.forcedDelayMs; PARRY_DEATH_CONFIG.forcedDelayMs = 0; const sc = game.scene.getScene("GameScene"); sc.getEnemySprites().forEach(e => e.destroy()); sc.hurtPlayer(200, 1, null); });
 await waitFor(() => game.scene.getScene("GameScene").parryDeath.state === "SINGLE_STRIKE", 6000);
-await tap("KeyC");
+await g.rightClick();
 check("4c: New Game: encounter runs and parry succeeds", await waitFor(() => { const d = game.scene.getScene("GameScene").parryDeath; return d.state === "IDLE" && d.outcome === "success"; }, 5000));
 // Quit during PARRY_SUCCESS and during DOWNED too
 await state(() => { SaveManager.campaign.parryDeathUsed = false; });
 await state(() => { PARRY_DEATH_CONFIG.forcedDelayMs = 0; game.scene.getScene("GameScene").hurtPlayer(200, 1, null); });
-await waitFor(() => game.scene.getScene("GameScene").parryDeath.state === "SINGLE_STRIKE", 6000); await tap("KeyC"); await wait(200);
+await waitFor(() => game.scene.getScene("GameScene").parryDeath.state === "SINGLE_STRIKE", 6000); await g.rightClick(); await wait(200);
 await state(() => game.scene.getScene("GameScene").requestPause());
 await waitFor(() => game.scene.isActive("PauseScene"), 2000);
 await state(() => game.scene.getScene("PauseScene").quitToMenu());

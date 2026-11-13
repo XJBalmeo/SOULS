@@ -97,6 +97,7 @@ class GameScene extends Phaser.Scene {
     this.parryDeath = null;
     this.vaultTween = null;
     this.isDead = false;
+    this.deathDim = null;
     this.strikeId = 0; // increments per sword swing; enemies take one hit per strike
     // Normally created by the menu; covers starting GameScene directly (tests).
     if (!SaveManager.campaign) SaveManager.startNewCampaign();
@@ -237,8 +238,10 @@ class GameScene extends Phaser.Scene {
     });
     this.createAnimOnce({
       key: "you_died",
-      frames: this.anims.generateFrameNumbers("you_died"),
-      frameRate: DEATH_CONFIG.frameRate,
+      frames: this.anims.generateFrameNumbers("you_died").map((f, i) => ({
+        ...f,
+        duration: i < DEATH_CONFIG.firstFramesCount ? DEATH_CONFIG.firstFramesMs : Math.round(1000 / DEATH_CONFIG.frameRate),
+      })),
       repeat: 0,
     });
     const ldtkData = this.cache.json.get("famine_ldtk");
@@ -781,8 +784,8 @@ class GameScene extends Phaser.Scene {
   }
   // Fatal hit: the hurt reaction, then the collapse (NEW_DOWN), then the
   // full-screen YOU DIED animation, which respawns at the checkpoint.
-  // instant: skip straight to YOU DIED (a failed parry; the knight is already down).
-  die({ instant = false } = {}) {
+  // knightDown: a failed parry; the knight already lies on the ground under the dim.
+  die({ knightDown = false } = {}) {
     if (this.isDead) return;
     this.isDead = true;
     this.isAttacking = false;
@@ -793,12 +796,43 @@ class GameScene extends Phaser.Scene {
     p.clearTint();
     p.setAngle(0);
     p.setAlpha(1);
-    if (instant) {
-      this.scene.launch("DeathScene");
+    const toYouDied = () => this.fadeDimToBlack(() => this.scene.launch("DeathScene"));
+    if (knightDown) {
+      toYouDied();
       return;
     }
     this.cameras.main.shake(200, 0.004);
-    this.playCollapse(() => this.time.delayedCall(DEATH_CONFIG.downHoldMs, () => this.scene.launch("DeathScene")));
+    this.playCollapse(toYouDied);
+  }
+  // Dim layer between the world and the knight (and Death, see ParryDeath).
+  startDeathDim() {
+    if (this.deathDim) return;
+    const p = this.player;
+    this.deathDim = this.add.rectangle(p.x, p.y, 20000, 20000, 0x000000).setDepth(DEATH_CONFIG.dimDepth).setAlpha(0);
+    p.setDepth(DEATH_CONFIG.dimDepth + 1);
+    this.deathDimTween = this.tweens.add({ targets: this.deathDim, alpha: DEATH_CONFIG.dimAlpha, duration: DEATH_CONFIG.dimMs });
+  }
+  // Waits for the dim to reach 80 %, then takes it to black, then onBlack.
+  fadeDimToBlack(onBlack) {
+    this.startDeathDim();
+    const toBlack = () => this.tweens.add({
+      targets: this.deathDim, alpha: 1, duration: DEATH_CONFIG.toBlackMs, onComplete: onBlack,
+    });
+    if (this.deathDimTween && this.deathDimTween.isPlaying()) this.deathDimTween.once("complete", toBlack);
+    else toBlack();
+  }
+  clearDeathDim() {
+    const dim = this.deathDim;
+    if (!dim) return;
+    this.deathDim = null;
+    if (this.deathDimTween) this.deathDimTween.stop();
+    this.tweens.add({
+      targets: dim, alpha: 0, duration: DEATH_CONFIG.undimMs,
+      onComplete: () => {
+        dim.destroy();
+        this.player.setDepth(10);
+      },
+    });
   }
   // Hurt then down; onDown runs once the knight lies on the ground (held on
   // the last down frame). Shared with the Parry Death encounter.
@@ -808,6 +842,7 @@ class GameScene extends Phaser.Scene {
     p.anims.play("hurt");
     p.anims.chain("down");
     const onComplete = (anim) => {
+      if (anim.key === "hurt") this.startDeathDim(); // the dim starts with NEW_DOWN
       if (anim.key !== "down") return;
       p.off("animationcomplete", onComplete);
       if (onDown) onDown();

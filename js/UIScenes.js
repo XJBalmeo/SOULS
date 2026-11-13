@@ -21,8 +21,16 @@ const HURT_CONFIG = {
 
 // YOU DIED screen (sprites/HERO/YOU DIED.png: 15 frames of 512x288, scaled to fill the screen).
 const DEATH_CONFIG = {
-  downHoldMs: 1000, // knight lies on the ground (NEW_DOWN frame 2) this long before YOU DIED
-  frameRate: 10, // 15 frames -> 1.5 s
+  // Dim layer while the knight collapses: everything except the knight and
+  // Death goes dark (HUD and the parry prompt stay readable).
+  dimAlpha: 0.8, // 80 % dark
+  dimMs: 800, // fade-in time of the dim, starting with NEW_DOWN
+  dimDepth: 30, // above every world object (foreground tiles are 20); knight and Death go above it
+  toBlackMs: 1000, // on death: the knight lies on the last down frame while the dim goes 80 % -> black
+  undimMs: 300, // on a successful parry the dim fades away
+  firstFramesMs: 150, // YOU DIED frames 1-6 last this long each
+  firstFramesCount: 6,
+  frameRate: 10, // the remaining YOU DIED frames
   holdMs: 1500, // last frame stays up this long before respawning at the checkpoint
   backgroundColor: 0x000000, // behind the transparent parts of the sheet
 };

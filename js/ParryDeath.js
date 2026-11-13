@@ -185,7 +185,7 @@ class ParryDeathEncounter {
     if (scene.hasWallBetween(p.body.center.x, cy, p.x + side * (C.approachOffsetPx + 20), cy)) side = -side;
     this.side = side;
     const y = this.floorY - 57; // the robe's hem floats just above the floor
-    this.reaper = scene.add.sprite(p.x + side * C.approachStartPx, y, "reaper_float").setDepth(15).setAlpha(0);
+    this.reaper = scene.add.sprite(p.x + side * C.approachStartPx, y, "reaper_float").setDepth(DEATH_CONFIG.dimDepth + 2).setAlpha(0); // above the dim and the knight
     this.reaper.setFlipX(side > 0); // drawn facing right; face the knight
     this.reaper.anims.play("reaper_float");
     scene.tweens.add({ targets: this.reaper, x: p.x + side * C.approachOffsetPx, alpha: 1, duration: C.approachMs, ease: "Sine.easeOut" });
@@ -239,6 +239,7 @@ class ParryDeathEncounter {
       p.clearTint();
       p.setTintFill(0xffffff);
       p.anims.play("attack");
+      scene.clearDeathDim();
       p.setFlipX(this.side < 0);
       this.prompt.setText("DEATH IS DENIED").setFontSize(18).setColor(UI.COLORS.bone);
       this.setPhase("PARRY_SUCCESS");
@@ -247,8 +248,8 @@ class ParryDeathEncounter {
       this.track(Sfx.play(scene, "parry_fail"));
       this.prompt.setText("");
       this.setPhase("NORMAL_DEATH");
-      // Owner: a failed parry goes straight to YOU DIED (the knight is already down).
-      scene.die({ instant: true });
+      // Owner: a failed parry goes to YOU DIED; the dim goes to black first (1 s).
+      scene.die({ knightDown: true });
     }
   }
 
@@ -334,7 +335,7 @@ class ParryDeathEncounter {
     this.cleanupVisuals();
     this.state = "IDLE";
     scene.player.setData("hp", 0);
-    scene.die({ instant: true }); // no-op: YOU DIED already started in resolve()
+    scene.die({ knightDown: true }); // no-op: the death already started in resolve()
   }
 
   track(sound) {

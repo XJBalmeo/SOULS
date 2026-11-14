@@ -31,7 +31,7 @@ From the window there are two outcomes:
 | approachMs | 1200 | Death floats in |
 | delayMinMs / delayMaxMs | 600 / 2000 | Random hover before the warning |
 | telegraphMs | 500 | Scythe raised, amber glint and rising ring |
-| windowMs | 300 | The strike: the only moment a press counts |
+| windowMs | 500 (was 300; owner 2026-11-14) | The strike: the only moment a press counts |
 | earlyPressFails | true | A press during the approach or warning spends the attempt |
 | reviveInvulnerableMs | 1500 | Protection after revival |
 | successMs / reviveMs / failMs | 700 / 500 / 600 | Presentation |

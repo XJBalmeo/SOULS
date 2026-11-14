@@ -71,7 +71,7 @@ check("the strike opens the parry window", await inState("SINGLE_STRIKE", 2000))
 await rightClick(40);
 await shot("parry-03-parried");
 e = await enc();
-check("right click during the strike parries (default 300 ms window)", e.outcome === "success", JSON.stringify(e));
+check("right click during the strike parries (default 500 ms window)", e.outcome === "success", JSON.stringify(e));
 check("revival completes", await inState("IDLE", 4000));
 e = await enc();
 check("full HP and stamina after revival", e.hp === 100 && e.stamina === 100, JSON.stringify(e));

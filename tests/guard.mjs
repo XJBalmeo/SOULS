@@ -6,7 +6,7 @@
 import { openGame } from "./helpers.mjs";
 
 const T = await openGame("docs/builds/v0.3");
-const { page, check, wait, state, waitFor, rightClick, shot, newCampaign, arena } = T;
+const { page, check, wait, state, waitFor, rightClick, waitForStrike, moveToCanvas, rightClickHere, shot, newCampaign, arena } = T;
 
 const knight = () => state(() => {
   const s = game.scene.getScene("GameScene"), p = s.player;
@@ -176,8 +176,9 @@ await newCampaign();
 await state(() => Object.assign(PARRY_DEATH_CONFIG, { forcedDelayMs: 300 }));
 await state(() => game.scene.getScene("GameScene").takeDamage(999));
 check("right click is ignored by the guard while downed", await state(() => { const s = game.scene.getScene("GameScene"); Guard.press(s); return s.guard.state === "none"; }));
-await waitFor(() => game.scene.getScene("GameScene").parryDeath.state === "SINGLE_STRIKE", 6000);
-await rightClick(30);
+await moveToCanvas();
+await waitForStrike(6000);
+await rightClickHere(30);
 await wait(60);
 k = await knight();
 check("parrying Death plays the parry animation", k.anim === "parry", JSON.stringify(k));

@@ -50,6 +50,20 @@ export async function openGame(outDir) {
     await wait(hold);
     await page.mouse.up({ button: "right" });
   };
+  // Death's strike opens a short window: check every animation frame.
+  const waitForStrike = (timeout = 8000) =>
+    page.waitForFunction(() => game.scene.getScene("GameScene").parryDeath.state === "SINGLE_STRIKE",
+      { timeout, polling: "raf" }).then(() => true, () => false);
+  const moveToCanvas = async () => {
+    const box = await (await page.$("canvas")).boundingBox();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  };
+  // Right click where the mouse already is.
+  const rightClickHere = async (hold = 40) => {
+    await page.mouse.down({ button: "right" });
+    await wait(hold);
+    await page.mouse.up({ button: "right" });
+  };
   const shot = (name) => page.screenshot({ path: path.join(SHOTS, name + ".png") });
   const gameReady = () =>
     waitFor(() => game.scene.isActive("GameScene") && !!game.scene.getScene("GameScene").player &&
@@ -127,5 +141,5 @@ export async function openGame(outDir) {
 
   await page.goto(url, { waitUntil: "load" });
   await waitFor(() => game.scene.isActive("MenuScene"));
-  return { page, url, check, wait, state, waitFor, tap, rightClick, shot, gameReady, newCampaign, arena, finish, errors, warnings };
+  return { page, url, check, wait, state, waitFor, tap, rightClick, waitForStrike, moveToCanvas, rightClickHere, shot, gameReady, newCampaign, arena, finish, errors, warnings };
 }

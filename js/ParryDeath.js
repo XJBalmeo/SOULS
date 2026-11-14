@@ -11,7 +11,7 @@ const PARRY_DEATH_CONFIG = {
   delayMinMs: 600,       // random hover before the warning
   delayMaxMs: 2000,
   telegraphMs: 500,      // scythe raised, glint and sound
-  windowMs: 300,         // the strike: the only moment a parry counts
+  windowMs: 100,         // the strike: the only moment a parry counts (owner 2026-11-14: was 300)
   successMs: 700,
   failMs: 600,
   reviveMs: 500,

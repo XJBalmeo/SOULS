@@ -6,7 +6,7 @@
 import { openGame } from "./helpers.mjs";
 
 const T = await openGame("docs/builds/v0.3");
-const { page, check, wait, state, waitFor, tap, rightClick, shot, newCampaign, arena, gameReady, warnings } = T;
+const { page, check, wait, state, waitFor, tap, rightClick, waitForStrike, moveToCanvas, rightClickHere, shot, newCampaign, arena, gameReady, warnings } = T;
 
 const DEFAULTS = await state(() => ({ ...PARRY_DEATH_CONFIG }));
 const fast = (extra = {}) =>
@@ -67,11 +67,12 @@ check("exactly one Death's Shadow appears", (await enc()).reapers === 1, JSON.st
 check("its warning comes after a random wait", await inState("TELEGRAPH", 5000));
 await wait(250);
 await shot("parry-02-telegraph-glint");
-check("the strike opens the parry window", await inState("SINGLE_STRIKE", 2000));
-await rightClick(40);
+await moveToCanvas();
+check("the strike opens the parry window", await waitForStrike(2000));
+await rightClickHere(40);
 await shot("parry-03-parried");
 e = await enc();
-check("right click during the strike parries (default 300 ms window)", e.outcome === "success", JSON.stringify(e));
+check("right click during the strike parries (default 100 ms window)", e.outcome === "success", JSON.stringify(e));
 check("revival completes", await inState("IDLE", 4000));
 e = await enc();
 check("full HP and stamina after revival", e.hp === 100 && e.stamina === 100, JSON.stringify(e));

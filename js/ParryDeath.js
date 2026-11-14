@@ -233,8 +233,9 @@ class ParryDeathEncounter {
       scene.cameras.main.shake(120, 0.003);
       const p = scene.player;
       p.clearTint();
-      p.setTintFill(0xffffff);
-      p.anims.play("attack");
+      p.setTintFill(0xffffff); // a short flash, then the knight's own parry animation
+      scene.time.delayedCall(80, () => p.active && p.clearTint());
+      p.anims.play("parry");
       scene.clearDeathDim();
       p.setFlipX(this.side < 0);
       this.prompt.setText("DEATH IS DENIED").setFontSize(18).setColor(UI.COLORS.bone);
@@ -243,9 +244,9 @@ class ParryDeathEncounter {
       this.reaper.anims.play({ key: "reaper_strike", startFrame: 1 });
       this.track(Sfx.play(scene, "parry_fail"));
       this.prompt.setText("");
+      // Death finishes the swing (failMs); then Death, the knight and the world
+      // fade to black together and YOU DIED follows (finishFail).
       this.setPhase("NORMAL_DEATH");
-      // Owner: a failed parry goes to YOU DIED; the dim goes to black first (1 s).
-      scene.die({ knightDown: true });
     }
   }
 
@@ -322,16 +323,16 @@ class ParryDeathEncounter {
 
   finishFail() {
     const scene = this.scene;
-    if (this.reaper) {
-      this.reaper.anims.play("reaper_fade");
-      const r = this.reaper;
-      this.reaper = null;
-      r.once("animationcomplete", () => r.destroy());
+    const r = this.reaper;
+    this.reaper = null;
+    if (r) {
+      // Death stays on its finished swing and sinks into the black with the world.
+      scene.tweens.add({ targets: r, alpha: 0, duration: DEATH_CONFIG.toBlackMs, onComplete: () => r.destroy() });
     }
     this.cleanupVisuals();
     this.state = "IDLE";
     scene.player.setData("hp", 0);
-    scene.die({ knightDown: true }); // no-op: the death already started in resolve()
+    scene.die({ knightDown: true });
   }
 
   track(sound) {

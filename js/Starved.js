@@ -121,6 +121,7 @@ const Starved = {
             Phaser.Geom.Intersects.RectangleToRectangle(Starved.reachRect(s), player.body)) {
           s.setData("lungeHit", true);
           scene.hurtPlayer(C.lungeDamage, s.getData("dir"), s);
+          if (s.getData("state") === "stunned") return; // parried
         }
         const atLedge = s.body.blocked.down && !Starved.groundAhead(scene, s, s.getData("dir"));
         if (time >= s.getData("lungeUntil") || s.body.blocked.left || s.body.blocked.right || atLedge) {
@@ -128,6 +129,15 @@ const Starved = {
           s.setData("state", "ground");
           s.anims.play("starved_ground");
           Sfx.play(scene, "body_thud", 0.7);
+        }
+        return;
+      }
+      if (state === "stunned") {
+        if (s.body.blocked.down) s.setVelocityX(0);
+        if (!Guard.isStunned(s, time)) {
+          Guard.endStun(s);
+          s.setData({ state: "idle", nextLungeAt: time + 800 });
+          s.anims.play("starved_walk");
         }
         return;
       }

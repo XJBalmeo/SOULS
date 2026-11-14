@@ -1,7 +1,7 @@
 // QA: the owner's knight hurt/down/YOU DIED sheets.
 // - a non-lethal hit plays NEW_HURT with a smaller knockback, then normal animations resume;
 // - with Parry Death available, the fatal hit plays hurt -> down and holds the ground frame;
-// - a failed parry goes straight to the YOU DIED screen;
+// - a failed parry: Death finishes its swing, everything fades to black, then YOU DIED;
 // - a normal death plays hurt -> down -> YOU DIED, then respawns.
 import { openGame } from "../helpers.mjs";
 const g = await openGame("tests/qa-probes/out-v03");
@@ -43,10 +43,13 @@ const e = await anim();
 check("still on the ground frame at the strike", e.key === "down" && e.frame === 2, JSON.stringify(e));
 await waitFor(() => game.scene.getScene("GameScene").parryDeath.outcome === "fail", 2000);
 const dimInfo = () => state(() => { const s = game.scene.getScene("GameScene"); return { dim: s.deathDim && +s.deathDim.alpha.toFixed(2), dimDepth: s.deathDim && s.deathDim.depth, player: s.player.depth, reaper: s.parryDeath.reaper && s.parryDeath.reaper.depth }; });
-await wait(150);
-const k = await dimInfo();
-check("failed parry: dim heading to black, not YOU DIED yet", k.dim > 0.8 && !(await state(() => game.scene.isActive("DeathScene"))), JSON.stringify(k));
-check("failed parry: YOU DIED after the 1 s fade to black", await waitFor(() => game.scene.isActive("DeathScene"), 1500));
+await wait(300);
+const sw = await state(() => { const s = game.scene.getScene("GameScene"); const r = s.parryDeath.reaper; return { key: r && r.anims.currentAnim.key, alpha: r && r.alpha, dim: +s.deathDim.alpha.toFixed(2) }; });
+check("failed parry: Death keeps swinging, fully visible, dim still 80 %", sw.key === "reaper_strike" && sw.alpha === 1 && sw.dim === 0.8, JSON.stringify(sw));
+await wait(700);
+const fd = await state(() => { const s = game.scene.getScene("GameScene"); const r = s.children.list.find((c) => c.texture && c.texture.key.startsWith("reaper")); return { dim: +s.deathDim.alpha.toFixed(2), reaperAlpha: r ? +r.alpha.toFixed(2) : null, frame: r && r.anims.currentFrame.index }; });
+check("failed parry: then Death and the world fade to black together", fd.dim > 0.8 && fd.reaperAlpha !== null && fd.reaperAlpha < 1 && fd.frame === 3 && !(await state(() => game.scene.isActive("DeathScene"))), JSON.stringify(fd));
+check("failed parry: YOU DIED after the fade to black", await waitFor(() => game.scene.isActive("DeathScene"), 1500));
 await wait(100);
 const nk = await state(() => game.scene.getScene("DeathScene").children.list.find((c) => c.type === "Sprite").texture.key);
 check("facing right uses the normal YOU DIED", nk === "you_died", nk);

@@ -63,6 +63,8 @@ From the window there are two outcomes:
   - Parry: attack animation with a white flash.
   - Revive: back to idle.
 - **Death's Shadow:** original sprites in `sprites/ENEMIES/DEATHS_SHADOW/` (float, raise, strike, parried, fade), 128×128 frames.
+- **Knight parry** (owner 2026-11-14): a successful parry plays the knight's own parry animation (NEW_PARRY.png), the same one used against enemies (js/Guard.js).
+- **Failed parry** (owner 2026-11-14): Death finishes its swing (failMs), then Death, the knight and the world fade to black together, then YOU DIED.
 - **Prompt** (bottom of the screen): no instructions and no key hint (owner 2026-11-14). On success it shows "DEATH IS DENIED". On failure the game goes straight to the full-screen YOU DIED animation (owner 2026-11-14).
 - **Sounds:** reaper_arrive, reaper_telegraph, scythe_swing, parry_clang, parry_fail, revive. They pause with the scene.
 

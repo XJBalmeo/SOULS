@@ -35,6 +35,10 @@ class GameScene extends Phaser.Scene {
       frameWidth: 100,
       frameHeight: 100,
     });
+    this.load.spritesheet("hero_parry", "sprites/HERO/NEW_PARRY.png?v=" + Date.now(), {
+      frameWidth: 100,
+      frameHeight: 100,
+    });
     this.load.spritesheet("hero_down", "sprites/HERO/NEW_DOWN.png?v=" + Date.now(), {
       frameWidth: 100,
       frameHeight: 100,
@@ -358,6 +362,7 @@ class GameScene extends Phaser.Scene {
     Starved.setup(this);
     this.starvedSpawns.forEach((spawn) => Starved.spawn(this, spawn.x, spawn.y));
     this.parryDeath = new ParryDeathEncounter(this);
+    Guard.setup(this);
     this.setHitboxDebug(SoulsSettings.load().showHitboxes);
     this.input.keyboard.on("keydown-TAB", (event) => {
       event.preventDefault();
@@ -744,8 +749,17 @@ class GameScene extends Phaser.Scene {
   // hit was lethal (die() takes over from there).
   hurtPlayer(amount, knockbackDirection, source = null) {
     const player = this.player;
+    const guard = Guard.intercept(this, knockbackDirection, source);
+    if (guard === "parry") return true; // no damage; the attacker is stunned
+    if (guard === "block") amount = Math.max(1, Math.round(amount * GUARD_CONFIG.blockDamageTaken));
     this.takeDamage(amount, source);
     if (this.isDead || (this.parryDeath && this.parryDeath.isActive())) return false;
+    if (guard === "block") {
+      // The knight holds his ground: no hurt animation, no knockback.
+      Sfx.play(this, "enemy_hit", 0.7);
+      player.setData("hitInvulnerableUntil", this.time.now + GUARD_CONFIG.blockInvulnerableMs);
+      return true;
+    }
     Sfx.play(this, "player_hurt", 0.8);
     // The hurt sheet carries its own red flash, so no tint. Attack/roll still cut it short.
     if (!this.isAttacking && !this.isRolling) player.anims.play("hurt", true);
@@ -772,9 +786,10 @@ class GameScene extends Phaser.Scene {
     if (this.attackHitbox) this.attackHitbox.setVisible(on);
   }
   // Every sword hit on an enemy goes through here: one hit per enemy per swing.
-  damageEnemy(enemy, amount) {
-    if (enemy.getData("hp") <= 0 || enemy.getData("lastHitStrike") === this.strikeId) return;
-    enemy.setData("lastHitStrike", this.strikeId);
+  // hitKey: one hit per key (default: the current sword swing).
+  damageEnemy(enemy, amount, hitKey = this.strikeId) {
+    if (enemy.getData("hp") <= 0 || enemy.getData("lastHitStrike") === hitKey) return;
+    enemy.setData("lastHitStrike", hitKey);
     const hp = Math.max(0, enemy.getData("hp") - amount);
     enemy.setData("hp", hp);
     Sfx.play(this, "enemy_hit", 0.8);
@@ -1043,6 +1058,7 @@ class GameScene extends Phaser.Scene {
     if (!mouseAttack) this.ignorePointerUntilUp = false;
     if (
       (this.keys.attack.isDown || (mouseAttack && !this.ignorePointerUntilUp)) &&
+      !Guard.isGuarding(this) &&
       !this.isAttacking &&
       !this.isRolling
     ) {
@@ -1349,8 +1365,10 @@ class GameScene extends Phaser.Scene {
 
     this.player.setData("isClimbing", isClimbing);
 
+    const guardState = Guard.update(this); // "none", "block" or "parry"
     let isCrouching = false;
     if (
+      guardState === "none" &&
       isDown &&
       onGround &&
       !isClimbing &&
@@ -1403,6 +1421,13 @@ class GameScene extends Phaser.Scene {
         if (this.player.body.blocked.left || this.player.body.blocked.right) {
           this.player.setVelocityX(0);
         }
+      } else if (guardState !== "none") {
+        // Guarding roots the knight; while blocking he can still turn around.
+        if (onGround) this.player.setVelocityX(0);
+        if (guardState === "block") {
+          if (this.cursors.left.isDown || this.keys.a.isDown) this.player.setFlipX(true);
+          else if (this.cursors.right.isDown || this.keys.d.isDown) this.player.setFlipX(false);
+        }
       } else if (isCrouching) {
         this.player.setVelocityX(0);
       } else if (this.cursors.left.isDown || this.keys.a.isDown) {
@@ -1424,7 +1449,7 @@ class GameScene extends Phaser.Scene {
       }
     }
 
-    if (!this.isAttacking && !this.isRolling && !isVaulting) {
+    if (!this.isAttacking && !this.isRolling && !isVaulting && guardState === "none") {
       if (isClimbing && jumpPressed) {
         this.player.setData(
           "ropeRegrabBlockX",
@@ -1484,7 +1509,7 @@ class GameScene extends Phaser.Scene {
     }
 
     const hurtPlaying = this.player.anims.isPlaying && this.player.anims.currentAnim?.key === "hurt";
-    if (!this.isAttacking && !this.isRolling && !hurtPlaying) {
+    if (!this.isAttacking && !this.isRolling && !hurtPlaying && guardState === "none") {
       if (isVaulting) {
         if (this.player.getData("isVaultingDown")) {
           if (this.player.anims.currentAnim?.key !== "climb") {
@@ -1528,11 +1553,20 @@ class GameScene extends Phaser.Scene {
       }
     }
     HollowArcher.update(this, time);
+    Guard.updateDeflected(this);
     if (this.starved) Starved.update(this, time);
     if (this.rats) {
       this.rats.getChildren().forEach((rat) => {
         if (!rat.active || rat.getData("hp") <= 0) return;
         const state = rat.getData("state");
+        if (state === "stunned") {
+          if (rat.body.blocked.down) rat.setVelocityX(0);
+          if (!Guard.isStunned(rat, this.time.now)) {
+            Guard.endStun(rat);
+            rat.setData({ state: "recover", recoverUntil: this.time.now + 300 });
+          }
+          return;
+        }
         const vision = rat.getData("visionRange");
         const attackRange = rat.getData("attackRange");
         const attackCooldown = rat.getData("attackCooldown");

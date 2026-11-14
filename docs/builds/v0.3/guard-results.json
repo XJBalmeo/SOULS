@@ -1,0 +1,153 @@
+{
+  "date": "2026-11-14T01:16:13.106Z",
+  "passed": 29,
+  "failed": 0,
+  "results": [
+    {
+      "name": "parry animation uses all three NEW_PARRY frames",
+      "ok": true,
+      "detail": "{\"parry\":[\"hero_parry:0:60\",\"hero_parry:1:80\",\"hero_parry:2:160\"],\"block\":[\"hero_parry:0\"]}"
+    },
+    {
+      "name": "block holds NEW_PARRY frame 1",
+      "ok": true,
+      "detail": "{\"parry\":[\"hero_parry:0:60\",\"hero_parry:1:80\",\"hero_parry:2:160\"],\"block\":[\"hero_parry:0\"]}"
+    },
+    {
+      "name": "test arena found",
+      "ok": true,
+      "detail": "{\"ok\":true,\"floorTiles\":22,\"dx\":120}"
+    },
+    {
+      "name": "pressing right click plays the parry",
+      "ok": true,
+      "detail": "{\"hp\":100,\"x\":1816,\"anim\":\"parry\",\"frame\":1,\"guard\":\"parry\",\"flipX\":false}"
+    },
+    {
+      "name": "still holding: the knight blocks on frame 1",
+      "ok": true,
+      "detail": "{\"hp\":100,\"x\":1816,\"anim\":\"block\",\"frame\":1,\"guard\":\"block\",\"flipX\":false}"
+    },
+    {
+      "name": "blocking roots the knight",
+      "ok": true,
+      "detail": "{\"x0\":1816,\"x\":1816}"
+    },
+    {
+      "name": "while blocking he can turn around",
+      "ok": true,
+      "detail": "{\"hp\":100,\"x\":1816,\"anim\":\"block\",\"frame\":1,\"guard\":\"block\",\"flipX\":true}"
+    },
+    {
+      "name": "releasing ends the guard",
+      "ok": true,
+      "detail": "{\"hp\":100,\"x\":1816,\"anim\":\"idle\",\"frame\":1,\"guard\":\"none\",\"flipX\":false}"
+    },
+    {
+      "name": "a second press inside 0.4 s does not parry again",
+      "ok": true,
+      "detail": "{\"first\":3286.4,\"second\":3286.4}"
+    },
+    {
+      "name": "after 0.4 s the next press parries",
+      "ok": true,
+      "detail": "{\"first\":3286.4,\"third\":3919.2}"
+    },
+    {
+      "name": "a blocked 20 damage hit only does 4",
+      "ok": true,
+      "detail": "{\"hp\":96,\"x\":1816,\"anim\":\"block\",\"frame\":1,\"guard\":\"block\",\"flipX\":false}"
+    },
+    {
+      "name": "blocking: no hurt animation, still blocking",
+      "ok": true,
+      "detail": "{\"hp\":96,\"x\":1816,\"anim\":\"block\",\"frame\":1,\"guard\":\"block\",\"flipX\":false}"
+    },
+    {
+      "name": "a hit from behind is not blocked",
+      "ok": true,
+      "detail": "{\"hp\":76,\"x\":1816,\"anim\":\"hurt\",\"frame\":1,\"guard\":\"block\",\"flipX\":false}"
+    },
+    {
+      "name": "parried rat bite: no damage",
+      "ok": true,
+      "detail": "{\"hp\":100,\"x\":1816,\"anim\":\"parry\",\"frame\":1,\"guard\":\"parry\",\"flipX\":false}"
+    },
+    {
+      "name": "the rat is stunned",
+      "ok": true,
+      "detail": "{\"state\":\"stunned\",\"hp\":1,\"tinted\":true,\"active\":true}"
+    },
+    {
+      "name": "the stun wears off after about 1.5 s",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "the rat recovers untinted",
+      "ok": true,
+      "detail": "{\"state\":\"recover\",\"hp\":1,\"tinted\":false,\"active\":true}"
+    },
+    {
+      "name": "starved arena found",
+      "ok": true,
+      "detail": "{\"ok\":true,\"floorTiles\":22,\"dx\":70}"
+    },
+    {
+      "name": "parried Starved lunge: no damage, the Starved is stunned",
+      "ok": true,
+      "detail": "{\"state\":\"stunned\",\"hp\":100}"
+    },
+    {
+      "name": "the Starved gets up after the stun",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "archer arena found",
+      "ok": true,
+      "detail": "{\"ok\":true,\"floorTiles\":22,\"dx\":200}"
+    },
+    {
+      "name": "a parried arrow is deflected back",
+      "ok": true,
+      "detail": "{\"pressed\":true,\"seenBack\":true,\"hp\":100,\"archerHp\":1}"
+    },
+    {
+      "name": "the knight takes no damage",
+      "ok": true,
+      "detail": "{\"pressed\":true,\"seenBack\":true,\"hp\":100,\"archerHp\":1}"
+    },
+    {
+      "name": "the deflected arrow hurts the archer",
+      "ok": true,
+      "detail": "{\"pressed\":true,\"seenBack\":true,\"hp\":100,\"archerHp\":1}"
+    },
+    {
+      "name": "blocked arrow does 3 of 15",
+      "ok": true,
+      "detail": "{\"hp\":97,\"x\":1816,\"anim\":\"block\",\"frame\":1,\"guard\":\"block\",\"flipX\":false}"
+    },
+    {
+      "name": "right click is ignored by the guard while downed",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "parrying Death plays the parry animation",
+      "ok": true,
+      "detail": "{\"hp\":0,\"x\":160,\"anim\":\"parry\",\"frame\":2,\"guard\":\"none\",\"flipX\":false}"
+    },
+    {
+      "name": "the revive completes",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "no console errors, page errors or failed requests",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "warnings": []
+}

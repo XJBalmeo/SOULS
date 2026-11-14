@@ -56,8 +56,9 @@ const HollowArcher = {
       arrow.destroy();
     }, (arrow, block) => !block.isPlatform && !block.isRope);
     scene.physics.add.overlap(scene.player, scene.arrows, (player, arrow) => {
-      if (!arrow.active || scene.isPlayerInvulnerable()) return; // a roll passes straight through
+      if (!arrow.active || arrow.getData("deflected") || scene.isPlayerInvulnerable()) return; // a roll passes straight through
       const direction = Math.sign(arrow.body.velocity.x) || 1;
+      if (Guard.deflectArrow(scene, arrow, direction)) return; // parried: it flies back
       arrow.destroy();
       Sfx.play(scene, "arrow_hit", 0.8);
       scene.hurtPlayer(ARCHER_CONFIG.arrowDamage, direction, { kind: "arrow" });

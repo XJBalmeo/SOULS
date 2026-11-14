@@ -118,7 +118,7 @@ class ParryDeathEncounter {
 
     scene.input.on("pointerdown", this.onPointer);
     this.prompt = UI.text(scene, scene.viewport.x + scene.viewport.w / 2, scene.viewport.y + scene.viewport.h - 30,
-      "", 13, UI.COLORS.bone).setScrollFactor(0).setDepth(DEATH_CONFIG.hudDimDepth + 1);
+      "", 13, UI.COLORS.bone).setScrollFactor(0).setDepth(1004); // above the HUD
     scene.cameras.main.shake(180, 0.004);
     Sfx.play(scene, "player_hurt");
   }

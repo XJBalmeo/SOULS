@@ -103,7 +103,6 @@ class GameScene extends Phaser.Scene {
     this.vaultTween = null;
     this.isDead = false;
     this.deathDim = null;
-    this.deathDimHud = null;
     this.strikeId = 0; // increments per sword swing; enemies take one hit per strike
     // Normally created by the menu; covers starting GameScene directly (tests).
     if (!SaveManager.campaign) SaveManager.startNewCampaign();
@@ -824,40 +823,47 @@ class GameScene extends Phaser.Scene {
     this.playCollapse(toYouDied);
   }
   // Dim layer between the world and the knight (and Death, see ParryDeath).
+  // The HUD bars are darkened by tint at the same strength, so nothing covers
+  // the knight or Death.
   startDeathDim() {
     if (this.deathDim) return;
     const p = this.player;
     this.deathDim = this.add.rectangle(p.x, p.y, 20000, 20000, 0x000000).setDepth(DEATH_CONFIG.dimDepth).setAlpha(0);
-    // A second layer over the HUD (health and stamina bars dim too).
-    this.deathDimHud = this.add.rectangle(0, 0, 20000, 20000, 0x000000)
-      .setScrollFactor(0).setDepth(DEATH_CONFIG.hudDimDepth).setAlpha(0);
     p.setDepth(DEATH_CONFIG.dimDepth + 1);
-    this.deathDimTween = this.tweens.add({ targets: this.dimLayers(), alpha: DEATH_CONFIG.dimAlpha, duration: DEATH_CONFIG.dimMs });
+    this.deathDimTween = this.tweenDim(this.deathDim, DEATH_CONFIG.dimAlpha, DEATH_CONFIG.dimMs);
   }
-  dimLayers() {
-    return [this.deathDim, this.deathDimHud].filter(Boolean);
+  tweenDim(dim, alpha, duration, onComplete) {
+    return this.tweens.add({
+      targets: dim, alpha, duration, onComplete,
+      onUpdate: () => this.setHudDim(dim.alpha),
+    });
+  }
+  // 0 = normal HUD, 1 = black.
+  setHudDim(amount) {
+    const v = Math.round(255 * (1 - amount));
+    [this.hudBar, this.hudDelay, this.hudStamDelay, this.hudHp, this.hudStamina].forEach((o) => {
+      if (!o) return;
+      if (amount <= 0) o.clearTint();
+      else o.setTint(Phaser.Display.Color.GetColor(v, v, v));
+    });
   }
   // Waits for the dim to reach 80 %, then takes it to black, then onBlack.
   fadeDimToBlack(onBlack) {
     this.startDeathDim();
-    const toBlack = () => this.tweens.add({
-      targets: this.dimLayers(), alpha: 1, duration: DEATH_CONFIG.toBlackMs, onComplete: onBlack,
-    });
+    const dim = this.deathDim;
+    const toBlack = () => this.tweenDim(dim, 1, DEATH_CONFIG.toBlackMs, onBlack);
     if (this.deathDimTween && this.deathDimTween.isPlaying()) this.deathDimTween.once("complete", toBlack);
     else toBlack();
   }
   clearDeathDim() {
-    const layers = this.dimLayers();
-    if (!layers.length) return;
+    const dim = this.deathDim;
+    if (!dim) return;
     this.deathDim = null;
-    this.deathDimHud = null;
     if (this.deathDimTween) this.deathDimTween.stop();
-    this.tweens.add({
-      targets: layers, alpha: 0, duration: DEATH_CONFIG.undimMs,
-      onComplete: () => {
-        layers.forEach((l) => l.destroy());
-        this.player.setDepth(10);
-      },
+    this.tweenDim(dim, 0, DEATH_CONFIG.undimMs, () => {
+      dim.destroy();
+      this.setHudDim(0);
+      this.player.setDepth(10);
     });
   }
   // Hurt then down; onDown runs once the knight lies on the ground (held on

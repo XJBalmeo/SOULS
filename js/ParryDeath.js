@@ -117,6 +117,7 @@ class ParryDeathEncounter {
     this.snapToGround();
 
     scene.input.on("pointerdown", this.onPointer);
+    scene.input.on("pointerdownoutside", this.onPointer); // clicks on the black bars count too
     this.prompt = UI.text(scene, scene.viewport.x + scene.viewport.w / 2, scene.viewport.y + scene.viewport.h - 30,
       "", 13, UI.COLORS.bone).setScrollFactor(0).setDepth(1004); // above the HUD
     scene.cameras.main.shake(180, 0.004);
@@ -224,6 +225,7 @@ class ParryDeathEncounter {
     this.failReason = reason || null;
     const scene = this.scene;
     scene.input.off("pointerdown", this.onPointer);
+    scene.input.off("pointerdownoutside", this.onPointer);
     if (!this.reaper) this.startApproach(); // early press before Death arrived
     this.reaper.anims.resume();
     if (outcome === "success") {
@@ -356,6 +358,7 @@ class ParryDeathEncounter {
   destroy() {
     const scene = this.scene;
     scene.input.off("pointerdown", this.onPointer);
+    scene.input.off("pointerdownoutside", this.onPointer);
     scene.events.off("pause", this.onPause);
     scene.events.off("resume", this.onResume);
     this.sounds.forEach((s) => {

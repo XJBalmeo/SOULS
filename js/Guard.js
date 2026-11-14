@@ -38,8 +38,14 @@ const Guard = {
     const onPointer = (pointer) => {
       if (pointer.rightButtonDown()) Guard.press(scene);
     };
+    // The cursor is hidden in play, so a click on the black bars beside the
+    // game (Phaser's "pointerdownoutside") must count too.
     scene.input.on("pointerdown", onPointer);
-    scene.events.once("shutdown", () => scene.input.off("pointerdown", onPointer));
+    scene.input.on("pointerdownoutside", onPointer);
+    scene.events.once("shutdown", () => {
+      scene.input.off("pointerdown", onPointer);
+      scene.input.off("pointerdownoutside", onPointer);
+    });
   },
 
   canGuard(scene) {

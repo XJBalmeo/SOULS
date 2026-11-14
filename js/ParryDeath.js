@@ -24,8 +24,8 @@ const PARRY_DEATH_CONFIG = {
   pushbackVelocityX: 220,
   calmExtraMs: 1000,     // enemies near the knight stay calm this long after the protection ends
   // After a successful parry: one of the owner's full-screen images
-  // (sprites/DEATHS/1.png "DEATH DEFIED", 2.png "HELL YEAH"), picked at random.
-  victoryImages: ["death_defied_1", "death_defied_2"],
+  // (sprites/DEATHS/1.png to 5.png), picked at random.
+  victoryImages: [1, 2, 3, 4, 5].map((n) => "death_defied_" + n),
   victoryDelayMs: 500,   // from the parry until the image appears
   victoryHoldMs: 1000,   // fully visible
   victoryFadeMs: 500,    // then fades to fully transparent and is removed
@@ -40,8 +40,8 @@ const ParryDeath = {
     ["FLOAT", "RAISE", "STRIKE", "PARRIED", "FADE"].forEach((name) => {
       scene.load.spritesheet("reaper_" + name.toLowerCase(), dir + "REAPER_" + name + ".png", frame);
     });
-    scene.load.image("death_defied_1", "sprites/DEATHS/1.png");
-    scene.load.image("death_defied_2", "sprites/DEATHS/2.png");
+    PARRY_DEATH_CONFIG.victoryImages.forEach((key) =>
+      scene.load.image(key, "sprites/DEATHS/" + key.replace("death_defied_", "") + ".png"));
   },
 };
 

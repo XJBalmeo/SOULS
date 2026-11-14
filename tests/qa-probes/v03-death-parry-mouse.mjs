@@ -28,7 +28,9 @@ await run("strike window, mouse on the black bar: parried", "SINGLE_STRIKE", 40,
 await run("strike window, wide window, mouse on the game: parried", "SINGLE_STRIKE", 800, 360, "success");
 // Victory image after a successful parry: random 1.png / 2.png, 0.5 s later,
 // above the dim, below the knight, 1 s visible, 0.5 s fade to nothing.
-for (const [rng, want] of [[0.1, "death_defied_1"], [0.9, "death_defied_2"]]) {
+const loaded = await state(() => PARRY_DEATH_CONFIG.victoryImages.map((k) => game.textures.exists(k) && game.textures.get(k).getSourceImage().width + "x" + game.textures.get(k).getSourceImage().height));
+check("all five victory images load at 512x288", loaded.length === 5 && loaded.every((d) => d === "512x288"), JSON.stringify(loaded));
+for (const [rng, want] of [[0.1, "death_defied_1"], [0.5, "death_defied_3"], [0.9, "death_defied_5"]]) {
   await newCampaign(); await wait(500);
   await state((r) => { PARRY_DEATH_CONFIG.rng = () => r; PARRY_DEATH_CONFIG.forcedDelayMs = 300; }, rng);
   await state(() => game.scene.getScene("GameScene").takeDamage(999));

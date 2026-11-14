@@ -12,7 +12,8 @@ const PARRY_DEATH_CONFIG = {
   delayMaxMs: 2000,
   telegraphMs: 500,      // scythe raised, glint and sound
   windowMs: 100,         // the strike: the only moment a parry counts (owner 2026-11-14: was 300)
-  successMs: 700,
+  successMs: 1000,       // freeze on the last parry frame (crack screen) before the white flash
+  successFlashMs: 300,   // the white flash that clears the crack screen
   failMs: 600,
   reviveMs: 500,
   reviveInvulnerableMs: 1500,
@@ -26,7 +27,7 @@ const PARRY_DEATH_CONFIG = {
   // After a successful parry: one of the owner's full-screen images
   // (sprites/DEATHS/1.png to 5.png), picked at random.
   victoryImages: [1, 2, 3, 4, 5].map((n) => "death_defied_" + n),
-  victoryDelayMs: 500,   // from the parry until the image appears
+  // It appears with the white flash at the end of the success freeze.
   victoryHoldMs: 1000,   // fully visible
   victoryFadeMs: 500,    // then fades to fully transparent and is removed
   forcedDelayMs: null,   // test seam: fixed hover delay
@@ -40,6 +41,7 @@ const ParryDeath = {
     ["FLOAT", "RAISE", "STRIKE", "PARRIED", "FADE"].forEach((name) => {
       scene.load.spritesheet("reaper_" + name.toLowerCase(), dir + "REAPER_" + name + ".png", frame);
     });
+    scene.load.image("death_crack", "sprites/DEATHS/crack.png"); // 80 % black with glass cracks
     PARRY_DEATH_CONFIG.victoryImages.forEach((key) =>
       scene.load.image(key, "sprites/DEATHS/" + key.replace("death_defied_", "") + ".png"));
   },
@@ -172,9 +174,17 @@ class ParryDeathEncounter {
       case "SINGLE_STRIKE":
         if (t >= C.windowMs) this.resolve("fail", "late");
         break;
-      case "PARRY_SUCCESS":
-        if (t >= C.successMs) this.startRevive();
+      case "PARRY_SUCCESS": {
+        // The parry animation plays out, then everything holds still on its
+        // last frame (successMs), then a white flash clears the screen.
+        const parryMs = GUARD_CONFIG.parryFrameMs.reduce((a, b) => a + b, 0);
+        if (!this.frozen && t >= parryMs) {
+          this.frozen = true;
+          if (this.reaper) this.reaper.anims.pause();
+        }
+        if (t >= parryMs + C.successMs) this.endSuccessFreeze();
         break;
+      }
       case "REVIVE":
         if (t >= C.reviveMs) this.finishRevive();
         break;
@@ -237,18 +247,16 @@ class ParryDeathEncounter {
     if (!this.reaper) this.startApproach(); // early press before Death arrived
     this.reaper.anims.resume();
     if (outcome === "success") {
+      // Owner 2026-11-14: the dim becomes the crack screen at once, the parry
+      // plays and freezes on its last frame; the flash comes in endSuccessFreeze.
       this.reaper.anims.play("reaper_parried");
       this.track(Sfx.play(scene, "parry_clang"));
-      scene.cameras.main.flash(120, 255, 255, 255);
-      scene.cameras.main.shake(120, 0.003);
       const p = scene.player;
       p.clearTint();
-      p.setTintFill(0xffffff); // a short flash, then the knight's own parry animation
-      scene.time.delayedCall(80, () => p.active && p.clearTint());
       p.anims.play("parry");
-      scene.clearDeathDim();
       p.setFlipX(this.side < 0);
-      scene.time.delayedCall(PARRY_DEATH_CONFIG.victoryDelayMs, () => this.showVictoryImage());
+      scene.replaceDimWithCrack();
+      this.frozen = false;
       this.setPhase("PARRY_SUCCESS");
     } else {
       this.reaper.anims.play({ key: "reaper_strike", startFrame: 1 });
@@ -281,6 +289,16 @@ class ParryDeathEncounter {
         p.setDepth(10);
       },
     });
+  }
+
+  // White flash: the crack screen and every dim are gone, the text image shows.
+  endSuccessFreeze() {
+    const scene = this.scene;
+    scene.cameras.main.flash(PARRY_DEATH_CONFIG.successFlashMs, 255, 255, 255);
+    scene.clearDeathDimNow();
+    if (this.reaper) this.reaper.anims.resume();
+    this.showVictoryImage();
+    this.startRevive();
   }
 
   startRevive() {

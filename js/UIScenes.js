@@ -27,7 +27,6 @@ const DEATH_CONFIG = {
   dimMs: 800, // fade-in time of the dim, starting with NEW_DOWN
   dimDepth: 30, // above every world object (foreground tiles are 20); knight and Death go above it
   toBlackMs: 1000, // on death: the knight lies on the last down frame while the dim goes 80 % -> black
-  undimMs: 300, // on a successful parry the dim fades away
   firstFramesMs: 150, // YOU DIED frames 1-6 last this long each
   firstFramesCount: 6,
   otherFramesMs: 80, // YOU DIED frames 7-15 last this long each

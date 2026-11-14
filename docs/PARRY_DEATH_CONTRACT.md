@@ -65,7 +65,7 @@ From the window there are two outcomes:
 - **Death's Shadow:** original sprites in `sprites/ENEMIES/DEATHS_SHADOW/` (float, raise, strike, parried, fade), 128×128 frames.
 - **Knight parry** (owner 2026-11-14): a successful parry plays the knight's own parry animation (NEW_PARRY.png), the same one used against enemies (js/Guard.js).
 - **Failed parry** (owner 2026-11-14): Death finishes its swing (failMs), then Death, the knight and the world fade to black together, then YOU DIED.
-- **Prompt** (bottom of the screen): no instructions and no key hint (owner 2026-11-14). On success, 0.5 s later, one of the owner's full-screen images (sprites/DEATHS/1.png to 5.png, random) shows for 1 s above the dim and below the knight, then fades out over 0.5 s (owner 2026-11-14). On failure the game goes straight to the full-screen YOU DIED animation (owner 2026-11-14).
+- **Prompt** (bottom of the screen): no instructions and no key hint (owner 2026-11-14). On success (owner 2026-11-14): the dim is replaced at once by sprites/DEATHS/crack.png (80 % black with glass cracks); the knight's parry plays and everything holds on its last frame for 1 s (successMs); then a white flash removes the crack screen and the HUD dim, and one of sprites/DEATHS/1.png to 5.png (random) shows for 1 s above the world and below the knight, then fades out over 0.5 s. On failure the game goes straight to the full-screen YOU DIED animation (owner 2026-11-14).
 - **Sounds:** reaper_arrive, reaper_telegraph, scythe_swing, parry_clang, parry_fail, revive. They pause with the scene.
 
 ## Cleanup

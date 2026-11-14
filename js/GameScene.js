@@ -114,6 +114,7 @@ class GameScene extends Phaser.Scene {
     this.vaultTween = null;
     this.isDead = false;
     this.deathDim = null;
+    this.deathCrack = null;
     this.strikeId = 0; // increments per sword swing; enemies take one hit per strike
     // Normally created by the menu; covers starting GameScene directly (tests).
     if (!SaveManager.campaign) SaveManager.startNewCampaign();
@@ -883,16 +884,27 @@ class GameScene extends Phaser.Scene {
     if (this.deathDimTween && this.deathDimTween.isPlaying()) this.deathDimTween.once("complete", toBlack);
     else toBlack();
   }
-  clearDeathDim() {
-    const dim = this.deathDim;
-    if (!dim) return;
-    this.deathDim = null;
+  // Death parried: the dim is swapped for the owner's crack screen
+  // (sprites/DEATHS/crack.png, already 80 % black) over the visible area.
+  replaceDimWithCrack() {
     if (this.deathDimTween) this.deathDimTween.stop();
-    this.tweenDim(dim, 0, DEATH_CONFIG.undimMs, () => {
-      dim.destroy();
-      this.setHudDim(0);
-      this.player.setDepth(10);
-    });
+    if (this.deathDim) this.deathDim.destroy();
+    this.deathDim = null;
+    if (this.deathCrack) return;
+    const v = this.viewport;
+    this.deathCrack = this.add.image(v.x + v.w / 2, v.y + v.h / 2, "death_crack")
+      .setScrollFactor(0).setDisplaySize(v.w, v.h).setDepth(DEATH_CONFIG.dimDepth);
+    this.player.setDepth(DEATH_CONFIG.dimDepth + 1);
+    this.setHudDim(DEATH_CONFIG.dimAlpha);
+  }
+  // Removes the dim, the crack screen and the HUD dim at once.
+  clearDeathDimNow() {
+    if (this.deathDimTween) this.deathDimTween.stop();
+    [this.deathDim, this.deathCrack].forEach((o) => o && o.destroy());
+    this.deathDim = null;
+    this.deathCrack = null;
+    this.setHudDim(0);
+    this.player.setDepth(10);
   }
   // Hurt then down; onDown runs once the knight lies on the ground (held on
   // the last down frame). Shared with the Parry Death encounter.

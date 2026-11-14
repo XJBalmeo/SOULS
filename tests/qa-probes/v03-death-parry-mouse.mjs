@@ -26,10 +26,23 @@ const box = await (await page.$("canvas")).boundingBox();
 check("the wide window leaves black bars", box.x > 100, JSON.stringify(box));
 await run("strike window, mouse on the black bar: parried", "SINGLE_STRIKE", 40, 360, "success");
 await run("strike window, wide window, mouse on the game: parried", "SINGLE_STRIKE", 800, 360, "success");
-// Victory image after a successful parry: random 1.png / 2.png, 0.5 s later,
-// above the dim, below the knight, 1 s visible, 0.5 s fade to nothing.
-const loaded = await state(() => PARRY_DEATH_CONFIG.victoryImages.map((k) => game.textures.exists(k) && game.textures.get(k).getSourceImage().width + "x" + game.textures.get(k).getSourceImage().height));
-check("all five victory images load at 512x288", loaded.length === 5 && loaded.every((d) => d === "512x288"), JSON.stringify(loaded));
+// Successful parry (owner 2026-11-14): the dim becomes crack.png at once, the
+// parry plays and everything freezes on its last frame for 1 s, then a white
+// flash clears the crack and the HUD dim and one of 1-5.png shows (random),
+// 1 s fully visible, 0.5 s fade to nothing.
+const loaded = await state(() => ["death_crack", ...PARRY_DEATH_CONFIG.victoryImages].map((k) => game.textures.exists(k) && game.textures.get(k).getSourceImage().width + "x" + game.textures.get(k).getSourceImage().height));
+check("crack.png and the five text images load at 512x288", loaded.length === 6 && loaded.every((d) => d === "512x288"), JSON.stringify(loaded));
+const look = () => state(() => {
+  const s = game.scene.getScene("GameScene"), d = s.parryDeath, p = s.player, i = d.victoryImage, c = s.deathCrack;
+  return {
+    phase: d.state, anim: p.anims.currentAnim?.key, frame: p.anims.currentFrame?.index, knightDepth: p.depth,
+    dim: !!s.deathDim, crack: c && c.active ? { depth: c.depth, w: c.displayWidth, h: c.displayHeight } : null,
+    hudTint: s.hudHp.isTinted ? s.hudHp.tintTopLeft : null,
+    reaperPlaying: d.reaper ? d.reaper.anims.isPlaying : null,
+    flash: s.cameras.main.flashEffect.isRunning,
+    image: i && i.active ? { key: i.texture.key, alpha: +i.alpha.toFixed(2), depth: i.depth } : null,
+  };
+});
 for (const [rng, want] of [[0.1, "death_defied_1"], [0.5, "death_defied_3"], [0.9, "death_defied_5"]]) {
   await newCampaign(); await wait(500);
   await state((r) => { PARRY_DEATH_CONFIG.rng = () => r; PARRY_DEATH_CONFIG.forcedDelayMs = 300; }, rng);
@@ -37,23 +50,27 @@ for (const [rng, want] of [[0.1, "death_defied_1"], [0.5, "death_defied_3"], [0.
   await page.mouse.move(640, 360);
   await waitForStrike(8000);
   await rightClickHere(30);
-  const img = () => state(() => { const s = game.scene.getScene("GameScene"); const i = s.parryDeath.victoryImage;
-    return i && i.active ? { key: i.texture.key, alpha: +i.alpha.toFixed(2), depth: i.depth, dim: DEATH_CONFIG.dimDepth, knight: s.player.depth, w: i.displayWidth, h: i.displayHeight } : null; });
-  await wait(300);
-  check(want + ": nothing yet at 0.3 s", (await img()) === null);
-  await wait(400);
-  let v = await img();
-  check(want + ": shown at 0.5 s, full screen, above the dim, below the knight", v && v.key === want && v.alpha === 1 && v.depth > v.dim && v.knight > v.depth && v.w === 512 && v.h === 288, JSON.stringify(v));
-  // Timings below are counted from the parry (about 0.7 s so far).
-  await wait(400);
-  v = await img();
-  check(want + ": still fully visible at about 1.1 s", v && v.alpha === 1, JSON.stringify(v));
-  if (rng < 0.5) await shot("parry-05-death-defied-image");
-  await waitFor(() => { const i = game.scene.getScene("GameScene").parryDeath.victoryImage; return i && i.active && i.alpha < 0.9; }, 1500);
-  v = await img();
-  check(want + ": then fades out", v && v.alpha < 1 && v.alpha > 0, JSON.stringify(v));
+  await wait(100);
+  let v = await look();
+  check(want + ": at once the dim is replaced by crack.png (full screen, under the knight), HUD stays dimmed",
+    v.phase === "PARRY_SUCCESS" && !v.dim && v.crack && v.crack.w === 512 && v.crack.h === 288 && v.knightDepth > v.crack.depth && v.hudTint === 0x333333 && !v.image, JSON.stringify(v));
+  await wait(500);
+  v = await look();
+  check(want + ": frozen on the last parry frame, Death paused, no flash yet", v.anim === "parry" && v.frame === 3 && v.reaperPlaying === false && !v.flash && v.crack && !v.image, JSON.stringify(v));
+  if (rng < 0.5) await shot("parry-05a-crack-freeze");
+  const flashed = await waitFor(() => game.scene.getScene("GameScene").cameras.main.flashEffect.isRunning, 1500);
+  v = await look();
+  check(want + ": then a white flash clears the crack and the HUD dim, and the text image shows", flashed && !v.crack && !v.dim && v.hudTint === null && v.image && v.image.key === want && v.image.alpha === 1, JSON.stringify(v));
   await wait(600);
-  check(want + ": gone after the fade, knight back to normal depth", (await img()) === null && (await state(() => game.scene.getScene("GameScene").player.depth)) === 10);
+  if (rng < 0.5) await shot("parry-05b-death-defied-image");
+  v = await look();
+  check(want + ": still fully visible 0.6 s after the flash", v.image && v.image.alpha === 1, JSON.stringify(v));
+  await waitFor(() => { const i = game.scene.getScene("GameScene").parryDeath.victoryImage; return i && i.active && i.alpha < 0.9; }, 1500);
+  v = await look();
+  check(want + ": then fades out", v.image && v.image.alpha < 1 && v.image.alpha > 0, JSON.stringify(v));
+  await wait(600);
+  v = await look();
+  check(want + ": gone after the fade, knight back to normal depth", !v.image && v.knightDepth === 10, JSON.stringify(v));
   await state(() => { PARRY_DEATH_CONFIG.rng = null; PARRY_DEATH_CONFIG.forcedDelayMs = null; });
 }
 // TEMPORARY debug key: P kills at once and gives the Death parry back each time.

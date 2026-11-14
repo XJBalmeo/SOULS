@@ -96,6 +96,9 @@ await g.rightClick();
 await waitFor(() => game.scene.getScene("GameScene").parryDeath.state === "IDLE", 4000);
 await wait(500);
 const z = await state(() => { const s = game.scene.getScene("GameScene"); return { dim: !!s.deathDim, rects: s.children.list.filter((c) => c.type === "Rectangle" && c.depth === DEATH_CONFIG.dimDepth).length, player: s.player.depth, outcome: s.parryDeath.outcome }; });
+await waitFor(() => !game.scene.getScene("GameScene").parryDeath.victoryImage || !game.scene.getScene("GameScene").parryDeath.victoryImage.active, 4000); // the text image keeps the knight in front until it fades
+const z2 = await state(() => game.scene.getScene("GameScene").player.depth);
+z.player = z2;
 const hudLeft = await state(() => { const s = game.scene.getScene("GameScene"); return [s.hudBar, s.hudHp, s.hudStamina].filter((o) => o.isTinted).length; });
 check("parry success: dim removed, HUD untinted, knight back at depth 10", z.outcome === "success" && !z.dim && z.rects === 0 && hudLeft === 0 && z.player === 10, JSON.stringify({ ...z, hudLeft }));
 const durs = await state(() => ["you_died", "you_died_mirror"].map((k) => game.anims.get(k).frames.map((f) => f.duration).join(",")));

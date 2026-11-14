@@ -1,3 +1,10 @@
+// TEMPORARY debug (owner 2026-11-14): P kills the knight at once so the Death
+// parry can be practised. Each press gives the Parry Death opportunity back.
+// Esc still pauses. Set to false (or delete) before release.
+const DEBUG_CONFIG = {
+  instantDeathKey: true,
+};
+
 class GameScene extends Phaser.Scene {
   constructor() {
     super("GameScene");
@@ -372,7 +379,13 @@ class GameScene extends Phaser.Scene {
       if (!event.repeat) this.requestPause();
     };
     this.input.keyboard.on("keydown-ESC", openPause);
-    this.input.keyboard.on("keydown-P", openPause);
+    if (DEBUG_CONFIG.instantDeathKey) {
+      this.input.keyboard.on("keydown-P", (event) => {
+        if (!event.repeat) this.debugInstantDeath();
+      });
+    } else {
+      this.input.keyboard.on("keydown-P", openPause);
+    }
     // Keys held when the game was paused never see their keyup; clear them.
     this.input.mouse.disableContextMenu(); // right click is the Death parry
     // No mouse cursor during play; it comes back for the pause menu and when leaving the game.
@@ -896,6 +909,16 @@ class GameScene extends Phaser.Scene {
     };
     p.on("animationcomplete", onComplete);
     this.events.once("shutdown", () => p.off("animationcomplete", onComplete));
+  }
+  // TEMPORARY (DEBUG_CONFIG.instantDeathKey): fatal hit with the Death parry
+  // made available again, so every press starts the encounter.
+  debugInstantDeath() {
+    if (this.isDead || (this.parryDeath && this.parryDeath.isActive()) || !this.sys.isActive()) return;
+    // In memory only: SaveManager.write() never lets a stored "used" flag go
+    // back to false (anti-exploit), and the encounter saves it again anyway.
+    if (SaveManager.campaign) SaveManager.campaign.parryDeathUsed = false;
+    this.player.setData("hitInvulnerableUntil", 0);
+    this.takeDamage(this.player.getData("hp"));
   }
   // Opens the pause menu (which also leaves fullscreen). scene.pause() is
   // queued, so isActive() stays true for the rest of this frame; the flag

@@ -25,4 +25,16 @@ const box = await (await page.$("canvas")).boundingBox();
 check("the wide window leaves black bars", box.x > 100, JSON.stringify(box));
 await run("strike window, mouse on the black bar: parried", "SINGLE_STRIKE", 40, 360, "success");
 await run("strike window, wide window, mouse on the game: parried", "SINGLE_STRIKE", 800, 360, "success");
+// TEMPORARY debug key: P kills at once and gives the Death parry back each time.
+await page.setViewport({ width: 1280, height: 720 });
+await newCampaign(); await wait(500);
+for (let i = 1; i <= 2; i++) {
+  await page.keyboard.press("KeyP");
+  check("P #" + i + ": instant death starts the Death encounter", await waitFor(() => game.scene.getScene("GameScene").parryDeath.state !== "IDLE", 1000));
+  await waitFor(() => game.scene.getScene("GameScene").parryDeath.state === "SINGLE_STRIKE", 8000);
+  await wait(60);
+  await clickAt(640, 360);
+  check("P #" + i + ": parried", await waitFor(() => game.scene.getScene("GameScene").parryDeath.state === "IDLE", 4000) && (await pd()).outcome === "success");
+  await wait(1700);
+}
 await g.finish("v03-death-parry-mouse");

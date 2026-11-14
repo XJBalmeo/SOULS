@@ -22,7 +22,7 @@ const config = {
 const game = new Phaser.Game(config);
 
 // Fullscreen is mandatory during play: New Game and Continue enter it, the
-// pause menu (P / Esc) leaves it, and Resume enters it again. Leaving
+// pause menu (Esc; P while DEBUG_CONFIG.instantDeathKey is off) leaves it, and Resume enters it again. Leaving
 // fullscreen any other way mid-run opens the pause menu; if that is not
 // possible (the death screen), the "game paused" overlay is shown instead.
 // Clicking the overlay re-enters fullscreen and resumes.

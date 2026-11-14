@@ -183,8 +183,8 @@ try {
   check("roll (X)", p.rolling || p.stamina < 100, `rolling=${p.rolling} stamina=${p.stamina}`);
   await wait(1500);
 
-  await press("KeyP");
-  check("P opens pause menu", await waitFor(() => game.scene.isActive("PauseScene")));
+  await press("Escape");
+  check("Esc opens pause menu", await waitFor(() => game.scene.isActive("PauseScene")));
   check("gameplay paused under menu", (await sceneStatus()).GameScene === "paused");
   check("pause menu leaves fullscreen", await waitFor(() => !document.fullscreenElement));
   await shot("08-pause");
@@ -231,7 +231,7 @@ try {
     game.scene.isActive("GameScene") && !!document.fullscreenElement &&
     getComputedStyle(document.getElementById("fullscreen-overlay")).display === "none"));
 
-  await press("KeyP");
+  await press("Escape");
   await waitFor(() => game.scene.isActive("PauseScene"));
   for (let i = 0; i < 3; i++) await press("ArrowDown"); // Quit
   await press("Enter");

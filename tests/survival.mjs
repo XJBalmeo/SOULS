@@ -158,7 +158,7 @@ try {
   }
   let r = await run();
   check("death locks the knight: HP 0, physics paused", r.dead && r.hp === 0 && r.physicsPaused, JSON.stringify(r));
-  await press("KeyP");
+  await press("Escape");
   check("pause is blocked while dead", !(await state(() => game.scene.isActive("PauseScene"))));
   check("death screen appears", await waitFor(() => game.scene.isActive("DeathScene"), 3000));
   await wait(600);
@@ -184,7 +184,7 @@ try {
     s.takeDamage(40);
     s.consumeStamina(50);
   });
-  await press("KeyP");
+  await press("Escape");
   await waitFor(() => game.scene.isActive("PauseScene"));
   await press("ArrowDown");
   await press("ArrowDown"); // Retry from Checkpoint

@@ -23,6 +23,12 @@ const PARRY_DEATH_CONFIG = {
   clearRadiusPx: 96,
   pushbackVelocityX: 220,
   calmExtraMs: 1000,     // enemies near the knight stay calm this long after the protection ends
+  // After a successful parry: one of the owner's full-screen images
+  // (sprites/DEATHS/1.png "DEATH DEFIED", 2.png "HELL YEAH"), picked at random.
+  victoryImages: ["death_defied_1", "death_defied_2"],
+  victoryDelayMs: 500,   // from the parry until the image appears
+  victoryHoldMs: 1000,   // fully visible
+  victoryFadeMs: 500,    // then fades to fully transparent and is removed
   forcedDelayMs: null,   // test seam: fixed hover delay
   rng: null,             // test seam: () => number in [0, 1)
 };
@@ -34,6 +40,8 @@ const ParryDeath = {
     ["FLOAT", "RAISE", "STRIKE", "PARRIED", "FADE"].forEach((name) => {
       scene.load.spritesheet("reaper_" + name.toLowerCase(), dir + "REAPER_" + name + ".png", frame);
     });
+    scene.load.image("death_defied_1", "sprites/DEATHS/1.png");
+    scene.load.image("death_defied_2", "sprites/DEATHS/2.png");
   },
 };
 
@@ -240,7 +248,7 @@ class ParryDeathEncounter {
       p.anims.play("parry");
       scene.clearDeathDim();
       p.setFlipX(this.side < 0);
-      this.prompt.setText("DEATH IS DENIED").setFontSize(18).setColor(UI.COLORS.bone);
+      scene.time.delayedCall(PARRY_DEATH_CONFIG.victoryDelayMs, () => this.showVictoryImage());
       this.setPhase("PARRY_SUCCESS");
     } else {
       this.reaper.anims.play({ key: "reaper_strike", startFrame: 1 });
@@ -250,6 +258,29 @@ class ParryDeathEncounter {
       // fade to black together and YOU DIED follows (finishFail).
       this.setPhase("NORMAL_DEATH");
     }
+  }
+
+  // Full-screen image over the visible area: above the dim, below the knight
+  // (and Death). Not tied to the encounter: it outlives the revive.
+  showVictoryImage() {
+    const C = PARRY_DEATH_CONFIG;
+    const scene = this.scene;
+    const keys = C.victoryImages;
+    const key = keys[Math.floor((C.rng || Math.random)() * keys.length) % keys.length];
+    const v = scene.viewport;
+    const img = scene.add.image(v.x + v.w / 2, v.y + v.h / 2, key)
+      .setScrollFactor(0).setDisplaySize(v.w, v.h).setDepth(DEATH_CONFIG.dimDepth + 0.5);
+    this.victoryImage = img;
+    const p = scene.player;
+    p.setDepth(DEATH_CONFIG.dimDepth + 1); // the knight stays in front of the image
+    scene.tweens.add({
+      targets: img, alpha: 0, delay: C.victoryHoldMs, duration: C.victoryFadeMs,
+      onComplete: () => {
+        img.destroy();
+        if (this.victoryImage === img) this.victoryImage = null;
+        p.setDepth(10);
+      },
+    });
   }
 
   startRevive() {

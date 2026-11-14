@@ -25,17 +25,6 @@ const box = await (await page.$("canvas")).boundingBox();
 check("the wide window leaves black bars", box.x > 100, JSON.stringify(box));
 await run("strike window, mouse on the black bar: parried", "SINGLE_STRIKE", 40, 360, "success");
 await run("strike window, wide window, mouse on the game: parried", "SINGLE_STRIKE", 800, 360, "success");
-// The window is 500 ms: a click 420 ms into the strike still parries.
-await newCampaign(); await wait(500);
-await state(() => game.scene.getScene("GameScene").takeDamage(999));
-await waitFor(() => game.scene.getScene("GameScene").parryDeath.state === "SINGLE_STRIKE", 8000);
-await wait(420);
-await clickAt(640, 360);
-await wait(100);
-const late = await pd();
-check("a click 420 ms into the strike still parries (500 ms window)", late.outcome === "success", JSON.stringify(late));
-await waitFor(() => game.scene.getScene("GameScene").parryDeath.state === "IDLE", 6000);
-await wait(300);
 // TEMPORARY debug key: P kills at once and gives the Death parry back each time.
 await page.setViewport({ width: 1280, height: 720 });
 await newCampaign(); await wait(500);

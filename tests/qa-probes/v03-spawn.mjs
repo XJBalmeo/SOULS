@@ -81,6 +81,12 @@ const watch = state(() => new Promise((resolve) => {
     if (gs.spawnBeam) log.beamSeen = true;
     if (anim) log.respawnSeen = true;
     if (gs.respawnCover && gs.respawnCover.active) log.coverAlphas.push(+gs.respawnCover.alpha.toFixed(2));
+    if (anim) {
+      const idx = gs.respawnAnim.anims.currentFrame.index, now = performance.now();
+      if (idx === 24 && log.f24 === undefined) log.f24 = now;
+      if (idx === 25 && log.f25 === undefined) { log.f25 = now; log.alphaAt25 = gs.respawnCover.active ? +gs.respawnCover.alpha.toFixed(2) : 0; }
+      if (log.f24 !== undefined && log.fadeStart === undefined && gs.respawnCover.alpha < 0.99) log.fadeStart = now;
+    }
     const knight = gs.player && gs.player.visible && gs.sys.isActive();
     if (log.deathSeen && !death && !anim && !knight) log.gapFrames++;
     if (log.respawnSeen && !anim && knight && !log.cut) {
@@ -103,9 +109,12 @@ check("no uncovered frame between YOU DIED and the respawn animation", r.deathSe
 check("the cut lands the knight exactly on the respawn's last frame, in idle", r.cut && r.cut.anim === "idle" && r.cut.frameLeft === 110 && r.cut.frameTop === 94, JSON.stringify(r.cut));
 const fades = r.coverAlphas.filter((x) => x > 0.05 && x < 0.95);
 check("the black fades away gradually (no hard cut)", fades.length >= 5, JSON.stringify({ steps: fades.length, sample: fades.slice(0, 8) }));
+const fadeTiming = { frame24ms: Math.round(r.f25 - r.f24), fadeStartsAfter: Math.round(r.fadeStart - r.f24), alphaWhenLastFrameStarts: r.alphaAt25 };
+check("frame 24 lasts 500 ms and the fade runs in its last 300 ms (gone when frame 25 starts)",
+  Math.abs(fadeTiming.frame24ms - 500) <= 50 && Math.abs(fadeTiming.fadeStartsAfter - 200) <= 50 && fadeTiming.alphaWhenLastFrameStarts <= 0.05, JSON.stringify(fadeTiming));
 const durs = await state(() => game.anims.get("respawn").frames.map((f) => f.duration));
 const downFirst = await state(() => game.anims.get("down").frames[0].duration || Math.round(1000 / game.anims.get("down").frameRate));
-check("respawn frames: 100 ms each, second-to-last 200 ms, last as long as NEW_DOWN frame 1", durs.length === 25 && durs.slice(0, 23).every((d) => d === 100) && durs[23] === 200 && durs[24] === downFirst, JSON.stringify({ durs, downFirst }));
+check("respawn frames: 100 ms each, second-to-last 500 ms, last as long as NEW_DOWN frame 1", durs.length === 25 && durs.slice(0, 23).every((d) => d === 100) && durs[23] === 500 && durs[24] === downFirst, JSON.stringify({ durs, downFirst }));
 check("control and the centre pan come after the respawn", await waitFor(() => !game.scene.getScene("GameScene").isSpawning && game.scene.getScene("GameScene").cameras.main.followOffset.x === 0, 3000));
 // Retry from Checkpoint (pause menu) is not a death: the beam again.
 await state(() => game.scene.getScene("GameScene").restartFromCheckpoint());

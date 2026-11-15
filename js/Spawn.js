@@ -15,8 +15,8 @@ const SPAWN_CONFIG = {
   // respawnFrameMs, the second-to-last respawnSecondLastMs, the last as long
   // as frame 1 of NEW_DOWN (1000 / HURT_CONFIG.downFrameRate).
   respawnFrameMs: 100,
-  respawnSecondLastMs: 200,
-  respawnUndimMs: 600,  // then the black fades away to the game (no hard cut)
+  respawnSecondLastMs: 500,
+  respawnUndimMs: 300,  // the black fades away during the last 300 ms of the second-to-last frame
   // Camera during the spawn: it looks this many px to the right of the
   // knight (positive = knight left of centre). Adjustable.
   cameraLookRightPx: 96,
@@ -82,23 +82,29 @@ const Spawn = {
   playRespawn(scene) {
     const p = scene.player;
     const a = scene.respawnAnim;
+    const C = SPAWN_CONFIG;
+    const cover = scene.respawnCover;
     a.play("respawn");
-    a.once("animationcomplete", () => {
-      // Its last frame is the knight's spawn pose at his on-screen spot. The
-      // frame stays on top while the black fades away to the game; then the
-      // real knight takes over (same pixels) in idle and control returns.
-      scene.tweens.add({
-        targets: scene.respawnCover, alpha: 0, duration: SPAWN_CONFIG.respawnUndimMs, ease: "Sine.easeInOut",
-        onComplete: () => {
-          scene.respawnCover.destroy();
-          a.destroy();
-          scene.respawnCover = null;
-          scene.respawnAnim = null;
-          p.setVisible(true);
-          p.anims.play("idle", true);
-          Spawn.finish(scene);
-        },
+    // The black fades away to the game in the last respawnUndimMs of the
+    // second-to-last frame, so it is gone exactly when the last frame starts.
+    const onFrame = (anim, frame) => {
+      if (frame.index !== a.anims.currentAnim.frames.length - 1) return;
+      a.off("animationupdate", onFrame);
+      scene.time.delayedCall(C.respawnSecondLastMs - C.respawnUndimMs, () => {
+        scene.tweens.add({ targets: cover, alpha: 0, duration: C.respawnUndimMs, ease: "Sine.easeInOut" });
       });
+    };
+    a.on("animationupdate", onFrame);
+    a.once("animationcomplete", () => {
+      // The last frame is the knight's spawn pose at his on-screen spot: the
+      // real knight takes over (same pixels) in idle and control returns.
+      cover.destroy();
+      a.destroy();
+      scene.respawnCover = null;
+      scene.respawnAnim = null;
+      p.setVisible(true);
+      p.anims.play("idle", true);
+      Spawn.finish(scene);
     });
   },
 

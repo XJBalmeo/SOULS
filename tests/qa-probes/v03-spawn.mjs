@@ -108,8 +108,8 @@ await shot("spawn-04-respawn-anim");
 const r = await watch;
 check("after a death the respawn animation plays, not the beam", r.respawnSeen && !r.beamSeen, JSON.stringify(r));
 check("no uncovered frame between YOU DIED and the respawn animation", r.deathSeen && r.gapFrames === 0, JSON.stringify(r));
-// The respawn's last frame draws the knight's 100x100 frame at (110, 94) in the 512x288 view.
-check("the cut lands the knight exactly on the respawn's last frame, in idle", r.cut && r.cut.anim === "idle" && r.cut.frameLeft === 110 && r.cut.frameTop === 94, JSON.stringify(r.cut));
+// The respawn's last frame draws the knight's 100x100 frame at (151, 94) in the 512x288 view (55 px left of centre).
+check("the cut lands the knight exactly on the respawn's last frame, in idle", r.cut && r.cut.anim === "idle" && r.cut.frameLeft === 151 && r.cut.frameTop === 94, JSON.stringify(r.cut));
 const fades = r.coverAlphas.filter((x) => x > 0.05 && x < 0.95);
 check("the black fades away gradually (no hard cut)", fades.length >= 5, JSON.stringify({ steps: fades.length, sample: fades.slice(0, 8) }));
 const fadeTiming = { frame24ms: Math.round(r.f25 - r.f24), fadeStartsAfter: Math.round(r.fadeStart - r.f24), alphaWhenLastFrameStarts: r.alphaAt25 };

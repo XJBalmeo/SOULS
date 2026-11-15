@@ -16,16 +16,21 @@
 
     <div id="game-container"></div>
     
-    <!-- Load Game Scripts -->
-    <script src="js/SaveManager.js?v=100"></script>
-    <script src="js/Sfx.js?v=100"></script>
-    <script src="js/HollowArcher.js?v=100"></script>
-    <script src="js/Starved.js?v=100"></script>
-    <script src="js/ParryDeath.js?v=100"></script>
-    <script src="js/Guard.js?v=100"></script>
-    <script src="js/Spawn.js?v=100"></script>
-    <script src="js/GameScene.js?v=100"></script>
-    <script src="js/UIScenes.js?v=100"></script>
-    <script src="js/main.js?v=100"></script>
+    <!-- Load Game Scripts. Each page load asks for fresh copies (?v=time):
+         simple servers such as "python -m http.server" send no cache rules,
+         so the browser could otherwise keep running an old script.
+         async = false keeps them running in this order. -->
+    <script>
+      (function () {
+        var v = Date.now();
+        ["SaveManager", "Sfx", "HollowArcher", "Starved", "ParryDeath", "Guard", "Spawn",
+         "GameScene", "UIScenes", "main"].forEach(function (name) {
+          var s = document.createElement("script");
+          s.src = "js/" + name + ".js?v=" + v;
+          s.async = false;
+          document.body.appendChild(s);
+        });
+      })();
+    </script>
 </body>
 </html>

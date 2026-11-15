@@ -41,9 +41,9 @@ const ParryDeath = {
     ["FLOAT", "RAISE", "STRIKE", "PARRIED", "FADE"].forEach((name) => {
       scene.load.spritesheet("reaper_" + name.toLowerCase(), dir + "REAPER_" + name + ".png", frame);
     });
-    scene.load.image("death_crack", "sprites/DEATHS/crack.png"); // 80 % black with glass cracks
+    scene.load.image("death_crack", "sprites/DEATHS/crack.png?v=" + Date.now()); // 80 % black with glass cracks
     PARRY_DEATH_CONFIG.victoryImages.forEach((key) =>
-      scene.load.image(key, "sprites/DEATHS/" + key.replace("death_defied_", "") + ".png"));
+      scene.load.image(key, "sprites/DEATHS/" + key.replace("death_defied_", "") + ".png?v=" + Date.now()));
   },
 };
 

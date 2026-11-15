@@ -30,7 +30,7 @@ const DEATH_CONFIG = {
   firstFramesMs: 150, // YOU DIED frames 1-6 last this long each
   firstFramesCount: 6,
   otherFramesMs: 80, // YOU DIED frames 7-15 last this long each
-  holdMs: 3000, // last frame stays up this long before respawning at the checkpoint
+  holdMs: 1000, // last frame stays up this long before the respawn (owner 2026-11-15: 3 s was too long)
   backgroundColor: 0x000000, // behind the transparent parts of the sheet
 };
 

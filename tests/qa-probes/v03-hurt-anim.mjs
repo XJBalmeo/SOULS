@@ -104,5 +104,5 @@ check("parry success: dim removed, HUD untinted, knight back at depth 10", z.out
 const durs = await state(() => ["you_died", "you_died_mirror"].map((k) => game.anims.get(k).frames.map((f) => f.duration).join(",")));
 const want = "150,150,150,150,150,150,80,80,80,80,80,80,80,80,80";
 check("YOU DIED timing: frames 1-6 150 ms, 7-15 80 ms (both sheets)", durs.every((d) => d === want), JSON.stringify(durs));
-check("last frame held 3 s", (await state(() => DEATH_CONFIG.holdMs)) === 3000);
+check("last frame held 1 s", (await state(() => DEATH_CONFIG.holdMs)) === 1000);
 await g.finish("hurt-anim");

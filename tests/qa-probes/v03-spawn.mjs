@@ -104,7 +104,8 @@ check("the cut lands the knight exactly on the respawn's last frame, in idle", r
 const fades = r.coverAlphas.filter((x) => x > 0.05 && x < 0.95);
 check("the black fades away gradually (no hard cut)", fades.length >= 5, JSON.stringify({ steps: fades.length, sample: fades.slice(0, 8) }));
 const durs = await state(() => game.anims.get("respawn").frames.map((f) => f.duration));
-check("respawn frame times mirror YOU DIED: 80 ms, last 6 frames 150 ms", durs.length === 25 && durs.slice(0, 19).every((d) => d === 80) && durs.slice(19).every((d) => d === 150), JSON.stringify(durs));
+const downFirst = await state(() => game.anims.get("down").frames[0].duration || Math.round(1000 / game.anims.get("down").frameRate));
+check("respawn frames: 100 ms each, second-to-last 200 ms, last as long as NEW_DOWN frame 1", durs.length === 25 && durs.slice(0, 23).every((d) => d === 100) && durs[23] === 200 && durs[24] === downFirst, JSON.stringify({ durs, downFirst }));
 check("control and the centre pan come after the respawn", await waitFor(() => !game.scene.getScene("GameScene").isSpawning && game.scene.getScene("GameScene").cameras.main.followOffset.x === 0, 3000));
 // Retry from Checkpoint (pause menu) is not a death: the beam again.
 await state(() => game.scene.getScene("GameScene").restartFromCheckpoint());

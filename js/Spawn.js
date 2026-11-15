@@ -11,10 +11,11 @@
 const SPAWN_CONFIG = {
   beamFrameMs: 60,      // BEAM.png, 7 frames
   spawnFrameMs: 100,    // NEW_SPAWN.png, 6 frames
-  // NEW_RESPAWN.png (25 full-screen frames) mirrors the YOU DIED timing
-  // (DEATH_CONFIG): text and particle frames at otherFramesMs (80 ms), the
-  // last firstFramesCount frames - the knight re-forming - at firstFramesMs
-  // (150 ms), like the knight dissolving at the start of YOU DIED.
+  // NEW_RESPAWN.png, 25 full-screen frames (owner 2026-11-15): every frame
+  // respawnFrameMs, the second-to-last respawnSecondLastMs, the last as long
+  // as frame 1 of NEW_DOWN (1000 / HURT_CONFIG.downFrameRate).
+  respawnFrameMs: 100,
+  respawnSecondLastMs: 200,
   respawnUndimMs: 600,  // then the black fades away to the game (no hard cut)
   // Camera during the spawn: it looks this many px to the right of the
   // knight (positive = knight left of centre). Adjustable.
@@ -37,10 +38,14 @@ const Spawn = {
     const C = SPAWN_CONFIG;
     scene.createAnimOnce({ key: "beam", frames: scene.anims.generateFrameNumbers("hero_beam"), frameRate: 1000 / C.beamFrameMs, repeat: 0 });
     const respawnFrames = scene.anims.generateFrameNumbers("hero_respawn");
-    const slowFrom = respawnFrames.length - DEATH_CONFIG.firstFramesCount;
+    const n = respawnFrames.length;
+    const lastMs = Math.round(1000 / HURT_CONFIG.downFrameRate); // NEW_DOWN frame 1
     scene.createAnimOnce({
       key: "respawn",
-      frames: respawnFrames.map((f, i) => ({ ...f, duration: i >= slowFrom ? DEATH_CONFIG.firstFramesMs : DEATH_CONFIG.otherFramesMs })),
+      frames: respawnFrames.map((f, i) => ({
+        ...f,
+        duration: i === n - 1 ? lastMs : i === n - 2 ? C.respawnSecondLastMs : C.respawnFrameMs,
+      })),
       repeat: 0,
     });
     scene.createAnimOnce({ key: "spawn", frames: scene.anims.generateFrameNumbers("hero_spawn"), frameRate: 1000 / C.spawnFrameMs, repeat: 0 });

@@ -9,7 +9,7 @@ await page.goto("http://127.0.0.1:" + server.address().port + "/", { waitUntil: 
 await page.evaluate(() => localStorage.clear());
 await page.waitForFunction(() => game.scene.isActive("MenuScene"));
 await page.evaluate(() => { game.scene.stop("MenuScene"); SaveManager.startNewCampaign(); game.scene.start("GameScene"); });
-const ready = () => page.waitForFunction(() => game.scene.isActive("GameScene") && game.scene.getScene("GameScene").player && !game.scene.getScene("GameScene").isDead);
+const ready = () => page.waitForFunction(() => game.scene.isActive("GameScene") && game.scene.getScene("GameScene").player && !game.scene.getScene("GameScene").isDead && !game.scene.getScene("GameScene").isSpawning);
 const heap = async () => { await page.evaluate(() => { window.gc(); window.gc(); }); await new Promise(r => setTimeout(r, 300)); return Math.round((await page.evaluate(() => performance.memory.usedJSHeapSize)) / 1e5) / 10; };
 await ready(); await new Promise(r => setTimeout(r, 500));
 const samples = [await heap()];

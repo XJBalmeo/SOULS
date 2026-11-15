@@ -36,7 +36,8 @@ const waitFor = async (fn, timeout = 8000, arg) => {
 };
 const shot = (name) => page.screenshot({ path: path.join(SHOTS, name + ".png") });
 const gameReady = () =>
-  waitFor(() => game.scene.isActive("GameScene") && !!game.scene.getScene("GameScene").player && !game.scene.getScene("GameScene").isDead);
+  waitFor(() => game.scene.isActive("GameScene") && !!game.scene.getScene("GameScene").player && !game.scene.getScene("GameScene").isDead &&
+    !game.scene.getScene("GameScene").isSpawning);
 
 // Arena: removes rats, then moves one archer onto the knight's floor at the
 // given distance (trying both sides) with a clear line of sight. The archer

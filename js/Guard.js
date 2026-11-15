@@ -51,7 +51,7 @@ const Guard = {
   canGuard(scene) {
     const p = scene.player;
     const hurtPlaying = p.anims.isPlaying && p.anims.currentAnim?.key === "hurt";
-    return !scene.isDead && !(scene.parryDeath && scene.parryDeath.isActive()) &&
+    return !scene.isDead && !scene.isSpawning && !(scene.parryDeath && scene.parryDeath.isActive()) &&
       !scene.isAttacking && !scene.isRolling && !hurtPlaying &&
       !p.getData("isClimbing") && !p.getData("isVaulting") &&
       scene.time.now >= (p.getData("knockbackUntil") || 0);

@@ -42,6 +42,7 @@ class GameScene extends Phaser.Scene {
       frameWidth: 100,
       frameHeight: 100,
     });
+    Spawn.preload(this);
     this.load.spritesheet("hero_parry", "sprites/HERO/NEW_PARRY.png?v=" + Date.now(), {
       frameWidth: 100,
       frameHeight: 100,
@@ -115,6 +116,8 @@ class GameScene extends Phaser.Scene {
     this.isDead = false;
     this.deathDim = null;
     this.deathCrack = null;
+    this.isSpawning = false;
+    this.spawnBeam = null;
     this.strikeId = 0; // increments per sword swing; enemies take one hit per strike
     // Normally created by the menu; covers starting GameScene directly (tests).
     if (!SaveManager.campaign) SaveManager.startNewCampaign();
@@ -482,6 +485,7 @@ class GameScene extends Phaser.Scene {
     this.cameras.main.setZoom(2.5);
     this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
     this.player.setCollideWorldBounds(true);
+    Spawn.start(this); // beam -> NEW_SPAWN -> idle, then control and the camera centres
     if (UI.overlayVisible()) this.scene.pause();
   }
   generateWorld(ldtkData) {
@@ -548,10 +552,13 @@ class GameScene extends Phaser.Scene {
         );
       }
     }
+    // Wider than the map on the left and right so the camera can centre the
+    // knight next to a room edge (owner 2026-11-15).
+    const camMargin = SPAWN_CONFIG.cameraEdgeMarginPx;
     this.cameras.main.setBounds(
-      bounds.minX,
+      bounds.minX - camMargin,
       bounds.minY,
-      bounds.maxX - bounds.minX,
+      bounds.maxX - bounds.minX + camMargin * 2,
       bounds.maxY - bounds.minY,
     );
     this.physics.world.setBounds(
@@ -925,7 +932,7 @@ class GameScene extends Phaser.Scene {
   // TEMPORARY (DEBUG_CONFIG.instantDeathKey): fatal hit with the Death parry
   // made available again, so every press starts the encounter.
   debugInstantDeath() {
-    if (this.isDead || (this.parryDeath && this.parryDeath.isActive()) || !this.sys.isActive()) return;
+    if (this.isSpawning || this.isDead || (this.parryDeath && this.parryDeath.isActive()) || !this.sys.isActive()) return;
     // In memory only: SaveManager.write() never lets a stored "used" flag go
     // back to false (anti-exploit), and the encounter saves it again anyway.
     if (SaveManager.campaign) SaveManager.campaign.parryDeathUsed = false;
@@ -1089,6 +1096,10 @@ class GameScene extends Phaser.Scene {
       return;
     }
     if (this.isDead) return;
+    if (this.isSpawning) {
+      Spawn.update(this); // no control until the spawn animation reaches idle
+      return;
+    }
     const mouseAttack = this.input.activePointer.leftButtonDown();
     if (!mouseAttack) this.ignorePointerUntilUp = false;
     if (

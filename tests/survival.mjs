@@ -64,7 +64,8 @@ const run = () =>
     };
   });
 const gameReady = () =>
-  waitFor(() => game.scene.isActive("GameScene") && !!game.scene.getScene("GameScene").player && !game.scene.getScene("GameScene").isDead);
+  waitFor(() => game.scene.isActive("GameScene") && !!game.scene.getScene("GameScene").player && !game.scene.getScene("GameScene").isDead &&
+    !game.scene.getScene("GameScene").isSpawning);
 // Pins a rat right in front of the knight and stops its AI from moving it.
 const pinRatInFront = (hp) =>
   state((hp) => {

@@ -67,7 +67,7 @@ export async function openGame(outDir) {
   const shot = (name) => page.screenshot({ path: path.join(SHOTS, name + ".png") });
   const gameReady = () =>
     waitFor(() => game.scene.isActive("GameScene") && !!game.scene.getScene("GameScene").player &&
-      !game.scene.getScene("GameScene").isDead);
+      !game.scene.getScene("GameScene").isDead && !game.scene.getScene("GameScene").isSpawning);
 
   // Fresh campaign with a fixed layout (Level_2's long hall is room 1).
   const newCampaign = async (rooms = ["Level_0", "Level_2", "Level_1", "Level_3", "Level_4"]) => {

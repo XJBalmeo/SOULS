@@ -147,6 +147,7 @@ try {
   const elapsed = Date.now() - pressedAt;
   check("menu-to-game delay matches TITLE_CONFIG.startDelayMs", elapsed >= delayMs - 100, `${elapsed} ms (config ${delayMs})`);
   await wait(1500); // settle onto the floor
+  check("the spawn animation hands over control", await waitFor(() => !game.scene.getScene("GameScene").isSpawning, 4000));
   let p = await player();
   check("hero spawned with full HP/stamina", p.hp === 100 && p.stamina === 100, JSON.stringify(p));
   check("rats spawned", p.ratsAlive > 0, `rats=${p.ratsAlive}`);

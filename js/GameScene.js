@@ -106,6 +106,9 @@ class GameScene extends Phaser.Scene {
   // data.respawn: restarted after a death (YOU DIED) -> NEW_RESPAWN instead of the beam.
   create(data = {}) {
     this.respawnAfterDeath = !!data.respawn;
+    // Phaser hands the last data to the next scene.start() that passes none
+    // (New Game / Continue from the menu): clear it so only a death respawns.
+    this.sys.settings.data = {};
     window.gameScene = this;
     // The scene instance is reused when a new game starts from the menu, so
     // clear per-run objects that are created lazily or read before assignment.

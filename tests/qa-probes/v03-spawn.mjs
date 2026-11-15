@@ -57,7 +57,11 @@ v = await look();
 check("pan in progress (smooth, not a jump)", v.offsetX > -96 && v.offsetX < 0, JSON.stringify(v));
 await wait(1500);
 v = await look();
-check("camera centred on the knight, next to the room's left edge", v.offsetX === 0 && Math.abs(v.knightFromCentre) < 1, JSON.stringify(v));
+check("camera centred on the knight", v.offsetX === 0 && Math.abs(v.knightFromCentre) < 1, JSON.stringify(v));
+const view = await state(() => { const s = game.scene.getScene("GameScene"), w = s.cameras.main.worldView, b = s.physics.world.bounds;
+  return { left: w.x, right: w.right, top: w.y, bottom: w.bottom, mapLeft: b.x, mapRight: b.right, mapTop: b.y, mapBottom: b.bottom }; });
+check("after the centre pan the view stays inside the map (no outside background)",
+  view.left >= view.mapLeft && view.right <= view.mapRight && view.top >= view.mapTop && view.bottom <= view.mapBottom, JSON.stringify(view));
 await shot("spawn-03-centred");
 await page.keyboard.down("KeyD");
 await wait(300);

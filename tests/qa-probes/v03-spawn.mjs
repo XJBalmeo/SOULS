@@ -71,7 +71,7 @@ check("the knight can move after the spawn", (await look()).px > x0 + 10);
 await state(() => { SaveManager.campaign.parryDeathUsed = true; });
 // Watch every frame from the death to the end of the respawn.
 const watch = state(() => new Promise((resolve) => {
-  const log = { gapFrames: 0, beamSeen: false, respawnSeen: false, cut: null, deathSeen: false };
+  const log = { gapFrames: 0, beamSeen: false, respawnSeen: false, cut: null, deathSeen: false, coverAlphas: [] };
   const t0 = performance.now();
   const tick = () => {
     const gs = game.scene.getScene("GameScene");
@@ -80,6 +80,7 @@ const watch = state(() => new Promise((resolve) => {
     if (death) log.deathSeen = true;
     if (gs.spawnBeam) log.beamSeen = true;
     if (anim) log.respawnSeen = true;
+    if (gs.respawnCover && gs.respawnCover.active) log.coverAlphas.push(+gs.respawnCover.alpha.toFixed(2));
     const knight = gs.player && gs.player.visible && gs.sys.isActive();
     if (log.deathSeen && !death && !anim && !knight) log.gapFrames++;
     if (log.respawnSeen && !anim && knight && !log.cut) {
@@ -100,6 +101,10 @@ check("after a death the respawn animation plays, not the beam", r.respawnSeen &
 check("no uncovered frame between YOU DIED and the respawn animation", r.deathSeen && r.gapFrames === 0, JSON.stringify(r));
 // The respawn's last frame draws the knight's 100x100 frame at (110, 94) in the 512x288 view.
 check("the cut lands the knight exactly on the respawn's last frame, in idle", r.cut && r.cut.anim === "idle" && r.cut.frameLeft === 110 && r.cut.frameTop === 94, JSON.stringify(r.cut));
+const fades = r.coverAlphas.filter((x) => x > 0.05 && x < 0.95);
+check("the black fades away gradually (no hard cut)", fades.length >= 5, JSON.stringify({ steps: fades.length, sample: fades.slice(0, 8) }));
+const durs = await state(() => game.anims.get("respawn").frames.map((f) => f.duration));
+check("respawn frame times mirror YOU DIED: 80 ms, last 6 frames 150 ms", durs.length === 25 && durs.slice(0, 19).every((d) => d === 80) && durs.slice(19).every((d) => d === 150), JSON.stringify(durs));
 check("control and the centre pan come after the respawn", await waitFor(() => !game.scene.getScene("GameScene").isSpawning && game.scene.getScene("GameScene").cameras.main.followOffset.x === 0, 3000));
 // Retry from Checkpoint (pause menu) is not a death: the beam again.
 await state(() => game.scene.getScene("GameScene").restartFromCheckpoint());

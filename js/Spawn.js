@@ -11,7 +11,11 @@
 const SPAWN_CONFIG = {
   beamFrameMs: 60,      // BEAM.png, 7 frames
   spawnFrameMs: 100,    // NEW_SPAWN.png, 6 frames
-  respawnFrameMs: 80,   // NEW_RESPAWN.png, 25 full-screen frames (2 s)
+  // NEW_RESPAWN.png (25 full-screen frames) mirrors the YOU DIED timing
+  // (DEATH_CONFIG): text and particle frames at otherFramesMs (80 ms), the
+  // last firstFramesCount frames - the knight re-forming - at firstFramesMs
+  // (150 ms), like the knight dissolving at the start of YOU DIED.
+  respawnUndimMs: 600,  // then the black fades away to the game (no hard cut)
   // Camera during the spawn: it looks this many px to the right of the
   // knight (positive = knight left of centre). Adjustable.
   cameraLookRightPx: 96,
@@ -32,7 +36,13 @@ const Spawn = {
   createAnims(scene) {
     const C = SPAWN_CONFIG;
     scene.createAnimOnce({ key: "beam", frames: scene.anims.generateFrameNumbers("hero_beam"), frameRate: 1000 / C.beamFrameMs, repeat: 0 });
-    scene.createAnimOnce({ key: "respawn", frames: scene.anims.generateFrameNumbers("hero_respawn"), frameRate: 1000 / C.respawnFrameMs, repeat: 0 });
+    const respawnFrames = scene.anims.generateFrameNumbers("hero_respawn");
+    const slowFrom = respawnFrames.length - DEATH_CONFIG.firstFramesCount;
+    scene.createAnimOnce({
+      key: "respawn",
+      frames: respawnFrames.map((f, i) => ({ ...f, duration: i >= slowFrom ? DEATH_CONFIG.firstFramesMs : DEATH_CONFIG.otherFramesMs })),
+      repeat: 0,
+    });
     scene.createAnimOnce({ key: "spawn", frames: scene.anims.generateFrameNumbers("hero_spawn"), frameRate: 1000 / C.spawnFrameMs, repeat: 0 });
   },
 
@@ -69,14 +79,21 @@ const Spawn = {
     const a = scene.respawnAnim;
     a.play("respawn");
     a.once("animationcomplete", () => {
-      // Its last frame is the knight's spawn pose at his on-screen spot: cut to the game.
-      scene.respawnCover.destroy();
-      a.destroy();
-      scene.respawnCover = null;
-      scene.respawnAnim = null;
-      p.setVisible(true);
-      p.anims.play("idle", true);
-      Spawn.finish(scene);
+      // Its last frame is the knight's spawn pose at his on-screen spot. The
+      // frame stays on top while the black fades away to the game; then the
+      // real knight takes over (same pixels) in idle and control returns.
+      scene.tweens.add({
+        targets: scene.respawnCover, alpha: 0, duration: SPAWN_CONFIG.respawnUndimMs, ease: "Sine.easeInOut",
+        onComplete: () => {
+          scene.respawnCover.destroy();
+          a.destroy();
+          scene.respawnCover = null;
+          scene.respawnAnim = null;
+          p.setVisible(true);
+          p.anims.play("idle", true);
+          Spawn.finish(scene);
+        },
+      });
     });
   },
 

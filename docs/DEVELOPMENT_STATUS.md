@@ -162,3 +162,9 @@ The owner said "lets proceed with the full plan in v0.3" after the menu/fullscre
   - Boss coexistence (v0.5).
   - Enemy hurt animations.
 - **Next:** owner review of v0.3. After approval, v0.4: the 2–3 remaining Famine enemies (Carrion Crow, Rot Carrier, Gut Crawler proposals) and M1.7 maps.
+
+## Session log — 2026-11-14 to 2026-11-16 — Lead — v0.3 polish from owner playtest — still REVIEW
+- **Owner-directed changes:** knight hurt/down/YOU DIED (with mirror) and the death dim; right-click guard (js/Guard.js: block 80 %, parry stuns melee and deflects arrows, 0.4 s cooldown); Parry Death on right click with a 100 ms window, crack screen, freeze, white flash and random DEATHS/1-5.png; Death finishes the kill on a failure; menu_beam start sequence; in-game BEAM + NEW_SPAWN spawn and full-screen NEW_RESPAWN after a death (js/Spawn.js); camera spawn framing 55 px, then a smooth pan to centre; hidden cursor; temporary P instant-death debug key.
+- **Fixes:** HUD dim covering Death; parry clicks on the black bars ignored; New Game/Continue after a death reusing the respawn (Phaser scene data); stale scripts under `python -m http.server` (index.html now cache-busts scripts).
+- **Tests:** `npm test` 214 (guard suite new); QA probes v03-hurt-anim, v03-death-parry-mouse, v03-spawn, v03-respawn-paths.
+- **Details and open decisions:** docs/SESSION_HANDOFF.md.

@@ -4,9 +4,14 @@
 // turns into NEW_SPAWN.png, then idle. Only then does the player get control,
 // and at that moment the camera pans smoothly from its spawn framing to the
 // knight's centre.
+// After a death (not New Game / Continue / Retry) NEW_RESPAWN.png is used
+// instead: 25 full-screen frames of 512x288 that continue from the last YOU
+// DIED frame and end on the knight's spawn pose, drawn where the spawn camera
+// framing puts him, so the cut to the game and idle is seamless.
 const SPAWN_CONFIG = {
   beamFrameMs: 60,      // BEAM.png, 7 frames
   spawnFrameMs: 100,    // NEW_SPAWN.png, 6 frames
+  respawnFrameMs: 80,   // NEW_RESPAWN.png, 25 full-screen frames (2 s)
   // Camera during the spawn: it looks this many px to the right of the
   // knight (positive = knight left of centre). Adjustable.
   cameraLookRightPx: 96,
@@ -20,12 +25,14 @@ const SPAWN_CONFIG = {
 const Spawn = {
   preload(scene) {
     scene.load.spritesheet("hero_beam", "sprites/HERO/BEAM.png?v=" + Date.now(), { frameWidth: 100, frameHeight: 300 });
+    scene.load.spritesheet("hero_respawn", "sprites/HERO/NEW_RESPAWN.png?v=" + Date.now(), { frameWidth: 512, frameHeight: 288 });
     scene.load.spritesheet("hero_spawn", "sprites/HERO/NEW_SPAWN.png?v=" + Date.now(), { frameWidth: 100, frameHeight: 100 });
   },
 
   createAnims(scene) {
     const C = SPAWN_CONFIG;
     scene.createAnimOnce({ key: "beam", frames: scene.anims.generateFrameNumbers("hero_beam"), frameRate: 1000 / C.beamFrameMs, repeat: 0 });
+    scene.createAnimOnce({ key: "respawn", frames: scene.anims.generateFrameNumbers("hero_respawn"), frameRate: 1000 / C.respawnFrameMs, repeat: 0 });
     scene.createAnimOnce({ key: "spawn", frames: scene.anims.generateFrameNumbers("hero_spawn"), frameRate: 1000 / C.spawnFrameMs, repeat: 0 });
   },
 
@@ -36,21 +43,52 @@ const Spawn = {
     const cam = scene.cameras.main;
     Spawn.createAnims(scene);
     scene.isSpawning = true;
-    // Locked framing from the first frame: the knight sits cameraLookRightPx
+    // Locked framing from the first frame (rigid follow): the knight sits cameraLookRightPx
     // left of centre (startFollow again snaps the camera there).
-    cam.startFollow(p, true, 0.08, 0.08, -C.cameraLookRightPx, 0);
+    cam.startFollow(p, true, 1, 1, -C.cameraLookRightPx, 0);
     p.setVisible(false);
     p.anims.stop();
+    if (scene.respawnAfterDeath) Spawn.coverScreen(scene);
     // The LDtk spawn point overlaps the wall and is in the air: let one physics
     // step push the knight out, then put him on the floor (update) and start the beam.
     scene.spawnSettling = true;
+  },
+
+  // Respawn: black over the whole view (HUD included) from the first frame,
+  // then the YOU DIED screen can go.
+  coverScreen(scene) {
+    const v = scene.viewport;
+    scene.respawnCover = scene.add.rectangle(v.x, v.y, v.w, v.h, 0x000000).setOrigin(0).setScrollFactor(0).setDepth(2000);
+    scene.respawnAnim = scene.add.sprite(v.x + v.w / 2, v.y + v.h / 2, "hero_respawn", 0)
+      .setScrollFactor(0).setDisplaySize(v.w, v.h).setDepth(2001);
+    scene.scene.stop("DeathScene");
+  },
+
+  playRespawn(scene) {
+    const p = scene.player;
+    const a = scene.respawnAnim;
+    a.play("respawn");
+    a.once("animationcomplete", () => {
+      // Its last frame is the knight's spawn pose at his on-screen spot: cut to the game.
+      scene.respawnCover.destroy();
+      a.destroy();
+      scene.respawnCover = null;
+      scene.respawnAnim = null;
+      p.setVisible(true);
+      p.anims.play("idle", true);
+      Spawn.finish(scene);
+    });
   },
 
   startBeam(scene) {
     const C = SPAWN_CONFIG;
     const p = scene.player;
     Spawn.snapToFloor(scene);
-    scene.cameras.main.startFollow(p, true, 0.08, 0.08, -C.cameraLookRightPx, 0); // re-lock on the final spot
+    scene.cameras.main.startFollow(p, true, 1, 1, -C.cameraLookRightPx, 0); // re-lock on the final spot
+    if (scene.respawnAfterDeath) {
+      Spawn.playRespawn(scene);
+      return;
+    }
     scene.spawnBeam = scene.add.sprite(0, 0, "hero_beam", 0).setOrigin(0.5, 1).setDepth(p.depth + 1);
     Spawn.alignBeam(scene);
     scene.spawnBeam.play("beam");
@@ -98,6 +136,7 @@ const Spawn = {
     const C = SPAWN_CONFIG;
     const cam = scene.cameras.main;
     scene.isSpawning = false;
+    cam.setLerp(0.08, 0.08); // the normal smooth follow (rigid during the spawn)
     scene.tweens.add({
       targets: cam.followOffset, x: 0, y: 0, duration: C.centerPanMs, ease: C.centerPanEase,
     });

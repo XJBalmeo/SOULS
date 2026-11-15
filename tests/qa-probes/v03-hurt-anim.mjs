@@ -57,7 +57,7 @@ await wait(700);
 await shot("hurt-02-you-died-mid");
 await wait(1200);
 await shot("hurt-03-you-died-end");
-check("respawns after YOU DIED", await waitFor(() => !game.scene.isActive("DeathScene") && game.scene.isActive("GameScene"), 6000));
+check("respawns after YOU DIED", await waitFor(() => !game.scene.isActive("DeathScene") && game.scene.isActive("GameScene") && !game.scene.getScene("GameScene").isSpawning, 9000));
 
 // Mouse cursor hidden in play, back for the pause menu.
 const cursor = () => state(() => game.canvas.style.cursor);

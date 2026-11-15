@@ -67,4 +67,41 @@ await page.keyboard.down("KeyD");
 await wait(300);
 await page.keyboard.up("KeyD");
 check("the knight can move after the spawn", (await look()).px > x0 + 10);
+// ---- Respawn after a death: NEW_RESPAWN.png instead of beam + NEW_SPAWN ----
+await state(() => { SaveManager.campaign.parryDeathUsed = true; });
+// Watch every frame from the death to the end of the respawn.
+const watch = state(() => new Promise((resolve) => {
+  const log = { gapFrames: 0, beamSeen: false, respawnSeen: false, cut: null, deathSeen: false };
+  const t0 = performance.now();
+  const tick = () => {
+    const gs = game.scene.getScene("GameScene");
+    const death = game.scene.isActive("DeathScene");
+    const anim = gs.respawnAnim && gs.respawnAnim.active;
+    if (death) log.deathSeen = true;
+    if (gs.spawnBeam) log.beamSeen = true;
+    if (anim) log.respawnSeen = true;
+    const knight = gs.player && gs.player.visible && gs.sys.isActive();
+    if (log.deathSeen && !death && !anim && !knight) log.gapFrames++;
+    if (log.respawnSeen && !anim && knight && !log.cut) {
+      const p = gs.player, w = gs.cameras.main.worldView;
+      log.cut = { anim: p.anims.currentAnim?.key, frameLeft: +(p.x - p.displayOriginX - w.x).toFixed(1), frameTop: +(p.y - p.displayOriginY - w.y).toFixed(1), spawning: gs.isSpawning };
+    }
+    if ((log.cut && !gs.isSpawning) || performance.now() - t0 > 15000) return resolve(log);
+    requestAnimationFrame(tick);
+  };
+  tick();
+}));
+await state(() => game.scene.getScene("GameScene").takeDamage(999));
+await waitFor(() => game.scene.getScene("GameScene").respawnAnim && game.scene.getScene("GameScene").respawnAnim.active, 10000);
+await wait(500);
+await shot("spawn-04-respawn-anim");
+const r = await watch;
+check("after a death the respawn animation plays, not the beam", r.respawnSeen && !r.beamSeen, JSON.stringify(r));
+check("no uncovered frame between YOU DIED and the respawn animation", r.deathSeen && r.gapFrames === 0, JSON.stringify(r));
+// The respawn's last frame draws the knight's 100x100 frame at (110, 94) in the 512x288 view.
+check("the cut lands the knight exactly on the respawn's last frame, in idle", r.cut && r.cut.anim === "idle" && r.cut.frameLeft === 110 && r.cut.frameTop === 94, JSON.stringify(r.cut));
+check("control and the centre pan come after the respawn", await waitFor(() => !game.scene.getScene("GameScene").isSpawning && game.scene.getScene("GameScene").cameras.main.followOffset.x === 0, 3000));
+// Retry from Checkpoint (pause menu) is not a death: the beam again.
+await state(() => game.scene.getScene("GameScene").restartFromCheckpoint());
+check("Retry from Checkpoint still uses the beam", await waitFor(() => { const s = game.scene.getScene("GameScene"); return s.sys.isActive() && s.spawnBeam && s.spawnBeam.active && !s.respawnAnim; }, 8000));
 await g.finish("v03-spawn");

@@ -103,7 +103,9 @@ class GameScene extends Phaser.Scene {
     this.load.image("hud_delay", "sprites/HERO/DELAY.png?v=" + Date.now());
     this.load.image("hud_stamina", "sprites/HERO/STAMINA.png?v=" + Date.now());
   }
-  create() {
+  // data.respawn: restarted after a death (YOU DIED) -> NEW_RESPAWN instead of the beam.
+  create(data = {}) {
+    this.respawnAfterDeath = !!data.respawn;
     window.gameScene = this;
     // The scene instance is reused when a new game starts from the menu, so
     // clear per-run objects that are created lazily or read before assignment.
@@ -760,6 +762,7 @@ class GameScene extends Phaser.Scene {
   isPlayerInvulnerable() {
     return (
       this.isDead ||
+      this.isSpawning || // no control yet, so nothing can hurt him
       (this.parryDeath && this.parryDeath.isActive()) ||
       this.player.getData("isRollInvulnerable") ||
       this.time.now < (this.player.getData("hitInvulnerableUntil") || 0)
@@ -951,10 +954,12 @@ class GameScene extends Phaser.Scene {
   }
   // Checkpoint restore: rebuilds the saved map with full HP/stamina and all
   // regular enemies reset. Used by death and by Retry from Checkpoint.
-  restartFromCheckpoint() {
+  // afterDeath: the YOU DIED screen stays up until the respawn animation has
+  // covered the screen (Spawn stops it), so there is no gap between the two.
+  restartFromCheckpoint({ afterDeath = false } = {}) {
     this.scene.stop("PauseScene");
-    this.scene.stop("DeathScene");
-    this.scene.restart();
+    if (!afterDeath) this.scene.stop("DeathScene");
+    this.scene.restart({ respawn: afterDeath });
   }
   takeDamage(amount, source = null) {
     if (this.player.getData("hp") <= 0) return;

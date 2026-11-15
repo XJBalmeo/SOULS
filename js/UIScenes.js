@@ -385,7 +385,7 @@ class DeathScene extends Phaser.Scene {
     anim.setScale(width / 512, height / 288);
     anim.play(key);
     anim.once("animationcomplete", () => {
-      this.time.delayedCall(DEATH_CONFIG.holdMs, () => this.scene.get("GameScene").restartFromCheckpoint());
+      this.time.delayedCall(DEATH_CONFIG.holdMs, () => this.scene.get("GameScene").restartFromCheckpoint({ afterDeath: true }));
     });
   }
 }

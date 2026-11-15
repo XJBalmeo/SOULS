@@ -26,7 +26,8 @@ const game = new Phaser.Game(config);
 // fullscreen any other way mid-run opens the pause menu; if that is not
 // possible (the death screen), the "game paused" overlay is shown instead.
 // Clicking the overlay re-enters fullscreen and resumes.
-document.addEventListener("DOMContentLoaded", () => {
+// index.html loads this script after the page is parsed, so run at once then.
+const setupFullscreenOverlay = () => {
   const overlay = document.getElementById("fullscreen-overlay");
   const inRun = () => game.scene.isActive("GameScene") || game.scene.isPaused("GameScene");
 
@@ -48,4 +49,6 @@ document.addEventListener("DOMContentLoaded", () => {
     overlay.style.display = "flex";
     if (game.scene.isActive("GameScene")) game.scene.pause("GameScene");
   });
-});
+};
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", setupFullscreenOverlay);
+else setupFullscreenOverlay();

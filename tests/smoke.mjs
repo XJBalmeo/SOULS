@@ -131,21 +131,29 @@ try {
   check("Credits back to menu", await waitFor(() => game.scene.isActive("MenuScene")));
 
   await wait(300);
-  const delayMs = await state(() => TITLE_CONFIG.startDelayMs);
+  // Press -> beamDelayMs -> menu_beam (8 frames) -> title frames 4-5 -> hold -> game.
+  const delayMs = await state(() => TITLE_CONFIG.beamDelayMs + 8 * SPAWN_CONFIG.beamFrameMs + 2 * TITLE_CONFIG.startFrameMs + TITLE_CONFIG.lastFrameHoldMs);
   const pressedAt = Date.now();
   await press("Enter"); // menu restarted, New Game selected
-  await wait(250);
+  check("New Game: the menu beam plays after the short wait", await waitFor(() => {
+    const m = game.scene.getScene("MenuScene");
+    return m.menuBeam && m.menuBeam.anims.isPlaying && m.title.anims.currentAnim.key === "title_idle";
+  }, 2000));
+  const beamSeenAfter = Date.now() - pressedAt;
+  check("menu beam starts after beamDelayMs", beamSeenAfter >= 250, beamSeenAfter + " ms");
+  await waitFor(() => game.scene.getScene("MenuScene").title.anims.currentAnim.key === "title_start", 2000);
+  await waitFor(() => game.scene.getScene("MenuScene").title.frame.name === 4, 1000);
   const titleAfterPress = await state(() => {
     const t = game.scene.getScene("MenuScene").title;
-    return { anim: t.anims.currentAnim.key, frame: t.frame.name, game: game.scene.isActive("GameScene") };
+    return { anim: t.anims.currentAnim.key, frame: t.frame.name, game: game.scene.isActive("GameScene"), beamDone: !game.scene.getScene("MenuScene").menuBeam.visible };
   });
-  check("New Game plays title frames 4-5 and holds 5", titleAfterPress.anim === "title_start" && titleAfterPress.frame === 4 && !titleAfterPress.game,
+  check("after the beam, title frames 4-5 play and hold on 5", titleAfterPress.anim === "title_start" && titleAfterPress.frame === 4 && !titleAfterPress.game && titleAfterPress.beamDone,
     JSON.stringify(titleAfterPress));
   await shot("05b-title-start");
   check("New Game enters fullscreen", await state(() => !!document.fullscreenElement));
   check("New Game starts GameScene", await waitFor(() => game.scene.isActive("GameScene") && !!game.scene.getScene("GameScene").player));
   const elapsed = Date.now() - pressedAt;
-  check("menu-to-game delay matches TITLE_CONFIG.startDelayMs", elapsed >= delayMs - 100, `${elapsed} ms (config ${delayMs})`);
+  check("menu-to-game time matches the menu beam sequence", elapsed >= delayMs - 100, `${elapsed} ms (config ${delayMs})`);
   await wait(1500); // settle onto the floor
   check("the spawn animation hands over control", await waitFor(() => !game.scene.getScene("GameScene").isSpawning, 4000));
   let p = await player();

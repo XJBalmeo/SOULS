@@ -1,12 +1,16 @@
 // Menu, pause, settings and credits scenes for SOULS (Famine v0.1 Foundation).
 
 // Animated title logo: sprites/title.png, 5 frames of 177x39.
-// Frames 1-3 loop on the menu; New Game plays frames 4-5 once and holds 5.
+// Frames 1-3 loop on the menu. New Game / Continue (owner 2026-11-15):
+// fullscreen, wait beamDelayMs, sprites/menu_beam.png plays over the whole
+// screen, then title frames 4-5, a pause of lastFrameHoldMs on frame 5, then
+// the game starts (where the beam comes down on the same screen column).
 const TITLE_CONFIG = {
   idleFrameMs: 200, // duration of each looping frame 1-3
-  startFrameMs: 80, // duration of frames 4 and 5 after New Game
-  startDelayMs: 1500, // time from pressing New Game until the game starts
-  fadeMs: 250, // fade to black at the end of that delay
+  startFrameMs: 80, // duration of frames 4 and 5 after the menu beam
+  beamDelayMs: 300, // from the press (fullscreen) until menu_beam starts
+  // menu_beam frames use SPAWN_CONFIG.beamFrameMs, like the in-game beam
+  lastFrameHoldMs: 300, // title frame 5 holds this long, then the game starts
   scale: 4, // on-screen size multiplier (177x39 -> 708x156)
   backgroundDim: 0.5892, // black over the menu background: 0 = no dim, 1 = full black
 };
@@ -249,6 +253,7 @@ class MenuScene extends Phaser.Scene {
   preload() {
     this.load.image("menu_bg", "levels/famine/FARBACKGROUND_LEVEL1.png");
     this.load.spritesheet("title", "sprites/title.png", { frameWidth: 177, frameHeight: 39 });
+    this.load.spritesheet("menu_beam", "sprites/menu_beam.png?v=" + Date.now(), { frameWidth: 512, frameHeight: 288 });
   }
   create() {
     const { width, height } = this.scale;
@@ -274,6 +279,14 @@ class MenuScene extends Phaser.Scene {
         key: "title_start",
         frames: [3, 4].map((frame) => ({ key: "title", frame, duration: TITLE_CONFIG.startFrameMs })),
         repeat: 0, // holds on frame 5 when finished
+      });
+    }
+    if (!this.anims.exists("menu_beam")) {
+      this.anims.create({
+        key: "menu_beam",
+        frames: this.anims.generateFrameNumbers("menu_beam"),
+        frameRate: 1000 / SPAWN_CONFIG.beamFrameMs,
+        repeat: 0,
       });
     }
     this.title = this.add.sprite(width / 2, 170, "title").setScale(TITLE_CONFIG.scale).play("title_idle");
@@ -327,10 +340,19 @@ class MenuScene extends Phaser.Scene {
     this.input.keyboard.enabled = false;
     // Requested now, while the key press/click still counts as a user gesture.
     UI.enterFullscreen();
-    this.title.play("title_start");
-    const { startDelayMs, fadeMs } = TITLE_CONFIG;
-    this.time.delayedCall(Math.max(0, startDelayMs - fadeMs), () => this.cameras.main.fadeOut(fadeMs, 0, 0, 0));
-    this.time.delayedCall(startDelayMs, () => this.scene.start("GameScene"));
+    const { width, height } = this.scale;
+    this.time.delayedCall(TITLE_CONFIG.beamDelayMs, () => {
+      // Full-screen 512x288 frames, scaled like the game view (x2.5).
+      this.menuBeam = this.add.sprite(width / 2, height / 2, "menu_beam", 0)
+        .setScale(width / 512, height / 288).setDepth(100).play("menu_beam");
+      this.menuBeam.once("animationcomplete", () => {
+        this.menuBeam.setVisible(false);
+        this.title.play("title_start");
+        this.title.once("animationcomplete", () => {
+          this.time.delayedCall(TITLE_CONFIG.lastFrameHoldMs, () => this.scene.start("GameScene"));
+        });
+      });
+    });
   }
 }
 

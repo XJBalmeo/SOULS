@@ -31,7 +31,10 @@ await wait(120);
 let v = await look();
 check("the beam plays first, the knight is hidden, no control", v.spawning && !v.visible && v.beam && v.beam.anim === "beam", JSON.stringify(v));
 check("beam bottom row = knight frame bottom row, same column", v.beam && Math.abs(v.beam.bottom - v.frameBottom) < 0.01 && Math.abs(v.beam.x - v.frameCenterX) < 0.01, JSON.stringify(v));
-check("camera locked: knight " + "left of centre by the spawn offset", v.offsetX === -96, JSON.stringify(v));
+check("camera locked: knight left of centre by the spawn offset (55 px)", v.offsetX === -55, JSON.stringify(v));
+// The in-game beam column (BEAM.png x 30-67) must sit on menu_beam's column (x 181-218 of the 512 view).
+const col = await state(() => { const s = game.scene.getScene("GameScene"), b = s.spawnBeam, w = s.cameras.main.worldView; return +(b.x - b.width / 2 + 30 - w.x).toFixed(1); });
+check("in-game beam on the same screen column as menu_beam (x 181)", col === 181, String(col));
 await shot("spawn-01-beam");
 check("the beam hands over to NEW_SPAWN", await waitFor(() => { const p = game.scene.getScene("GameScene").player; return p.visible && p.anims.currentAnim?.key === "spawn"; }, 2000));
 v = await look();
@@ -54,7 +57,7 @@ const handover = await state(() => new Promise((resolve) => {
 check("control returns exactly when idle starts, and the camera pan starts then", handover.anim === "idle" && handover.panning, JSON.stringify(handover));
 await wait(300);
 v = await look();
-check("pan in progress (smooth, not a jump)", v.offsetX > -96 && v.offsetX < 0, JSON.stringify(v));
+check("pan in progress (smooth, not a jump)", v.offsetX > -55 && v.offsetX < 0, JSON.stringify(v));
 await wait(1500);
 v = await look();
 check("camera centred on the knight", v.offsetX === 0 && Math.abs(v.knightFromCentre) < 1, JSON.stringify(v));

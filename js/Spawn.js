@@ -19,7 +19,11 @@ const SPAWN_CONFIG = {
   respawnUndimMs: 300,  // the black fades away during the last 300 ms of the second-to-last frame
   // Camera during the spawn: it looks this many px to the right of the
   // knight (positive = knight left of centre). Adjustable.
-  cameraLookRightPx: 96,
+  // 55 puts the in-game beam (BEAM.png column x 30-67 of the knight frame) on
+  // the same screen column as sprites/menu_beam.png (x 181-218 of 512).
+  cameraLookRightPx: 55,
+  // After a death: NEW_RESPAWN.png's last frame draws the knight 96 px left of centre.
+  respawnLookRightPx: 96,
   centerPanMs: 800,     // smooth pan to the knight's centre after the spawn
   centerPanEase: "Sine.easeInOut",
   // The camera may go this far past a room's left/right edge, so it can
@@ -60,13 +64,17 @@ const Spawn = {
     scene.isSpawning = true;
     // Locked framing from the first frame (rigid follow): the knight sits cameraLookRightPx
     // left of centre (startFollow again snaps the camera there).
-    cam.startFollow(p, true, 1, 1, -C.cameraLookRightPx, 0);
+    cam.startFollow(p, true, 1, 1, -Spawn.lookRight(scene), 0);
     p.setVisible(false);
     p.anims.stop();
     if (scene.respawnAfterDeath) Spawn.coverScreen(scene);
     // The LDtk spawn point overlaps the wall and is in the air: let one physics
     // step push the knight out, then put him on the floor (update) and start the beam.
     scene.spawnSettling = true;
+  },
+
+  lookRight(scene) {
+    return scene.respawnAfterDeath ? SPAWN_CONFIG.respawnLookRightPx : SPAWN_CONFIG.cameraLookRightPx;
   },
 
   // Respawn: black over the whole view (HUD included) from the first frame,
@@ -112,7 +120,7 @@ const Spawn = {
     const C = SPAWN_CONFIG;
     const p = scene.player;
     Spawn.snapToFloor(scene);
-    scene.cameras.main.startFollow(p, true, 1, 1, -C.cameraLookRightPx, 0); // re-lock on the final spot
+    scene.cameras.main.startFollow(p, true, 1, 1, -Spawn.lookRight(scene), 0); // re-lock on the final spot
     if (scene.respawnAfterDeath) {
       Spawn.playRespawn(scene);
       return;

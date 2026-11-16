@@ -5,6 +5,7 @@ import puppeteer from "puppeteer";
 import fs from "node:fs";
 import path from "node:path";
 import { startServer } from "./serve.mjs";
+import { autoFullscreen } from "./helpers.mjs";
 
 const OUT = path.resolve("docs/builds/v0.3-archer-demo");
 const SHOTS = path.join(OUT, "screenshots");
@@ -14,6 +15,7 @@ const server = await startServer(0);
 const browser = await puppeteer.launch({ headless: true });
 const page = await browser.newPage();
 await page.setViewport({ width: 1280, height: 720 });
+await autoFullscreen(page);
 const errors = [];
 page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
 page.on("pageerror", (e) => errors.push("pageerror: " + e.message));
@@ -104,7 +106,7 @@ const knight = () =>
 const faceArcher = () => state(() => game.scene.getScene("GameScene").player.setFlipX(window.__archer.x < game.scene.getScene("GameScene").player.x));
 
 await page.goto("http://127.0.0.1:" + server.address().port + "/", { waitUntil: "load" });
-await waitFor(() => game.scene.isActive("MenuScene"));
+await waitFor(() => game.scene.isActive("MenuScene") && !!document.fullscreenElement);
 await state(() => {
   localStorage.clear();
   SaveManager.startNewCampaign();

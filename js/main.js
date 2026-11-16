@@ -21,34 +21,35 @@ const config = {
 };
 const game = new Phaser.Game(config);
 
-// Fullscreen is mandatory during play: New Game and Continue enter it, the
-// pause menu (Esc; P while DEBUG_CONFIG.instantDeathKey is off) leaves it, and Resume enters it again. Leaving
-// fullscreen any other way mid-run opens the pause menu; if that is not
-// possible (the death screen), the "game paused" overlay is shown instead.
-// Clicking the overlay re-enters fullscreen and resumes.
+// The game is only played in fullscreen. Whenever the window is not
+// fullscreen (at load, on the menu, in a run, on the death screen) the
+// sprites/pause.png overlay covers the page; clicking it enters fullscreen.
+// Leaving fullscreen mid-run opens the pause menu under the overlay (or just
+// pauses the game when the menu can't open, for example while dying); the
+// click then returns to the pause menu, or resumes if no menu was opened.
 // index.html loads this script after the page is parsed, so run at once then.
 const setupFullscreenOverlay = () => {
   const overlay = document.getElementById("fullscreen-overlay");
   const inRun = () => game.scene.isActive("GameScene") || game.scene.isPaused("GameScene");
+  const pauseMenuOpen = () => game.scene.isActive("PauseScene") || game.scene.isSleeping("PauseScene");
+  const syncOverlay = () => {
+    overlay.style.display = document.fullscreenElement ? "none" : "flex";
+  };
 
   overlay.addEventListener("click", () => {
-    overlay.style.display = "none";
-    UI.enterFullscreen();
-    const pauseMenuOpen = game.scene.isActive("PauseScene") || game.scene.isSleeping("PauseScene");
-    if (game.scene.isPaused("GameScene") && !pauseMenuOpen) {
-      game.scene.resume("GameScene");
-    }
+    UI.enterFullscreen().then((ok) => {
+      if (ok && game.scene.isPaused("GameScene") && !pauseMenuOpen()) game.scene.resume("GameScene");
+    });
   });
 
   document.addEventListener("fullscreenchange", () => {
-    if (document.fullscreenElement || !inRun()) return;
-    const pauseMenuOpen = game.scene.isActive("PauseScene") || game.scene.isSleeping("PauseScene");
-    if (pauseMenuOpen) return;
+    syncOverlay();
+    if (document.fullscreenElement || !inRun() || pauseMenuOpen()) return;
     const gameScene = game.scene.getScene("GameScene");
     if (game.scene.isActive("GameScene") && gameScene.requestPause()) return;
-    overlay.style.display = "flex";
     if (game.scene.isActive("GameScene")) game.scene.pause("GameScene");
   });
+  syncOverlay();
 };
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", setupFullscreenOverlay);
 else setupFullscreenOverlay();

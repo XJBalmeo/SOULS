@@ -26,6 +26,7 @@ body {
     align-items: center;
     z-index: 10000;
     cursor: pointer;
-    /* Hidden until fullscreen is left mid-run (see js/main.js). */
-    display: none;
+    background: #000;
+    /* Shown whenever the window is not fullscreen (see js/main.js). */
+    display: flex;
 }

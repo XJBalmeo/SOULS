@@ -203,8 +203,10 @@ await newCampaign();
 await fast({ approachMs: 1500 });
 await fatal();
 await inState("DEATH_APPROACH", 2000);
-await state(() => document.dispatchEvent(new Event("fullscreenchange")));
+await state(() => document.exitFullscreen());
 check("leaving fullscreen during the encounter opens the pause menu", await waitFor(() => game.scene.isActive("PauseScene"), 2000));
+await page.mouse.click(5, 5); // the pause.png overlay: back to fullscreen
+await waitFor(() => !!document.fullscreenElement);
 // ---- 7. Retry from Checkpoint mid-encounter cleans everything up. ----
 await state(() => game.scene.getScene("GameScene").restartFromCheckpoint());
 await wait(300);
@@ -222,7 +224,7 @@ await fast({ approachMs: 3000 });
 await fatal();
 await inState("DEATH_APPROACH", 2000);
 await page.reload({ waitUntil: "load" });
-await waitFor(() => game.scene.isActive("MenuScene"));
+await waitFor(() => game.scene.isActive("MenuScene") && !!document.fullscreenElement);
 const cont = await state(() => SaveManager.inspect().status === "ok" && SaveManager.continueCampaign());
 await state(() => {
   game.scene.stop("MenuScene");

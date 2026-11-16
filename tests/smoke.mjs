@@ -84,8 +84,17 @@ try {
   check("boots into MenuScene", await waitFor(() => game.scene.isActive("MenuScene")));
   await wait(400);
   const overlayAtBoot = await state(() => getComputedStyle(document.getElementById("fullscreen-overlay")).display);
-  check("no paused overlay at boot, only the menu", overlayAtBoot === "none", overlayAtBoot);
-  check("not fullscreen on the menu", await state(() => !document.fullscreenElement));
+  check("pause.png overlay covers the menu while not fullscreen", overlayAtBoot === "flex", overlayAtBoot);
+  check("overlay image is pause.png", await state(() =>
+    document.querySelector("#fullscreen-overlay img").getAttribute("src") === "sprites/pause.png"));
+  check("site icon is logo.png", await state(() => document.querySelector("link[rel=icon]").getAttribute("href") === "sprites/logo.png"));
+  await press("ArrowDown");
+  check("menu ignores keys behind the overlay", await state(() =>
+    game.scene.getScene("MenuScene").children.list.every((c) => !(c.text && c.text.startsWith("No saved journey")))));
+  await shot("01b-overlay-on-menu");
+  await page.click("#fullscreen-overlay");
+  check("clicking the overlay on the menu enters fullscreen and hides it", await waitFor(() =>
+    !!document.fullscreenElement && getComputedStyle(document.getElementById("fullscreen-overlay")).display === "none"));
   const titleFrames = new Set();
   for (let i = 0; i < 12; i++) {
     titleFrames.add(await state(() => game.scene.getScene("MenuScene").title.frame.name));
@@ -195,7 +204,7 @@ try {
   await press("Escape");
   check("Esc opens pause menu", await waitFor(() => game.scene.isActive("PauseScene")));
   check("gameplay paused under menu", (await sceneStatus()).GameScene === "paused");
-  check("pause menu leaves fullscreen", await waitFor(() => !document.fullscreenElement));
+  check("pause menu stays in fullscreen", await state(() => !!document.fullscreenElement));
   await shot("08-pause");
   const pausedX = (await player()).x;
   await press("KeyD", 300);
@@ -221,23 +230,40 @@ try {
   check("controls work after resume", (await player()).x > resumeX + 10);
 
   await state(() => document.exitFullscreen());
-  check("leaving fullscreen mid-run opens the pause menu", await waitFor(() =>
+  check("leaving fullscreen mid-run opens the pause menu under the overlay", await waitFor(() =>
     game.scene.isActive("PauseScene") && game.scene.isPaused("GameScene") &&
+    getComputedStyle(document.getElementById("fullscreen-overlay")).display === "flex"));
+  await page.click("#fullscreen-overlay");
+  check("clicking the overlay returns to the pause menu in fullscreen", await waitFor(() =>
+    !!document.fullscreenElement && game.scene.isActive("PauseScene") && game.scene.isPaused("GameScene") &&
     getComputedStyle(document.getElementById("fullscreen-overlay")).display === "none"));
-  // Real browsers refuse fullscreen on Esc (not a user gesture); headless
-  // Chrome allows it, so the refusal is simulated once here.
+  await state(() => document.exitFullscreen());
+  await waitFor(() => !document.fullscreenElement);
+  await press("Escape");
+  await wait(300);
+  check("the pause menu ignores keys behind the overlay", await state(() =>
+    game.scene.isActive("PauseScene") && game.scene.isPaused("GameScene")));
+  // If the browser refuses fullscreen, the overlay simply stays up.
   await state(() => {
     const el = document.documentElement, real = el.requestFullscreen;
     el.requestFullscreen = function () { el.requestFullscreen = real; return Promise.reject(new Error("simulated refusal")); };
   });
-  await press("Escape");
-  check("Esc in the pause menu falls back to the click-to-continue overlay when fullscreen is refused", await waitFor(() =>
-    !game.scene.isActive("PauseScene") && game.scene.isPaused("GameScene") &&
+  await page.click("#fullscreen-overlay");
+  await wait(200);
+  check("a refused fullscreen keeps the overlay and the pause menu", await state(() =>
+    !document.fullscreenElement && game.scene.isActive("PauseScene") &&
     getComputedStyle(document.getElementById("fullscreen-overlay")).display === "flex"));
   await shot("09b-fullscreen-exit-overlay");
   await page.click("#fullscreen-overlay");
-  check("clicking overlay resumes in fullscreen", await waitFor(() =>
-    game.scene.isActive("GameScene") && !!document.fullscreenElement &&
+  await waitFor(() => !!document.fullscreenElement &&
+    getComputedStyle(document.getElementById("fullscreen-overlay")).display === "none");
+  // The click leaves the pointer over the menu's middle line (hover selects
+  // it); move it away and pick Resume with the keys.
+  await page.mouse.move(5, 5);
+  await press("ArrowUp");
+  await press("Enter"); // Resume
+  check("Resume after the overlay returns to the game in fullscreen", await waitFor(() =>
+    game.scene.isActive("GameScene") && !game.scene.isActive("PauseScene") && !!document.fullscreenElement &&
     getComputedStyle(document.getElementById("fullscreen-overlay")).display === "none"));
 
   await press("Escape");
@@ -247,8 +273,10 @@ try {
   check("Quit returns to main menu", await waitFor(() => game.scene.isActive("MenuScene") && !game.scene.isActive("GameScene")));
   await state(() => document.fullscreenElement && document.exitFullscreen());
   await wait(300);
-  check("leaving fullscreen on the menu shows no overlay", await state(() =>
-    getComputedStyle(document.getElementById("fullscreen-overlay")).display === "none"));
+  check("leaving fullscreen on the menu shows the overlay", await state(() =>
+    getComputedStyle(document.getElementById("fullscreen-overlay")).display === "flex"));
+  await page.click("#fullscreen-overlay");
+  await waitFor(() => !!document.fullscreenElement);
 
   await wait(300);
   const savedRooms = await state(() => JSON.parse(localStorage.getItem("souls.save.v1")).chapters.famine.rooms.map((r) => r.template).join(","));

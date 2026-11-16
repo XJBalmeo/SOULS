@@ -4,6 +4,15 @@ import fs from "node:fs";
 import path from "node:path";
 import { startServer } from "./serve.mjs";
 
+// The game shows the pause.png overlay whenever the window is not fullscreen,
+// and menus and play wait behind it. Suites that are not testing the overlay
+// click it after every load (fullscreen needs a real click). The click is in
+// the top-left corner so the pointer does not hover a menu line.
+// Callers wait for document.fullscreenElement before playing.
+export async function autoFullscreen(page) {
+  page.on("load", () => page.mouse.click(5, 5).catch(() => {}));
+}
+
 export async function openGame(outDir) {
   const OUT = path.resolve(outDir);
   const SHOTS = path.join(OUT, "screenshots");
@@ -12,6 +21,7 @@ export async function openGame(outDir) {
   const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
   await page.setViewport({ width: 1280, height: 720 });
+  await autoFullscreen(page);
   const errors = [];
   const warnings = [];
   page.on("console", (m) => {
@@ -140,6 +150,6 @@ export async function openGame(outDir) {
   };
 
   await page.goto(url, { waitUntil: "load" });
-  await waitFor(() => game.scene.isActive("MenuScene"));
+  await waitFor(() => game.scene.isActive("MenuScene") && !!document.fullscreenElement);
   return { page, url, check, wait, state, waitFor, tap, rightClick, waitForStrike, moveToCanvas, rightClickHere, shot, gameReady, newCampaign, arena, finish, errors, warnings };
 }

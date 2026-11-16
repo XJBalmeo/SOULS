@@ -945,7 +945,7 @@ class GameScene extends Phaser.Scene {
     this.player.setData("hitInvulnerableUntil", 0);
     this.takeDamage(this.player.getData("hp"));
   }
-  // Opens the pause menu (which also leaves fullscreen). scene.pause() is
+  // Opens the pause menu. scene.pause() is
   // queued, so isActive() stays true for the rest of this frame; the flag
   // stops a second request (Esc+P, or a fullscreen exit) launching twice.
   requestPause() {

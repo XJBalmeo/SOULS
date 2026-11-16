@@ -123,10 +123,6 @@ const UI = {
     );
   },
 
-  exitFullscreen() {
-    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-  },
-
   showFullscreenOverlay() {
     const overlay = document.getElementById("fullscreen-overlay");
     if (overlay) overlay.style.display = "flex";
@@ -418,8 +414,6 @@ class PauseScene extends Phaser.Scene {
   }
   create() {
     const { width, height } = this.scale;
-    // The pause menu is played windowed; Resume and Retry return to fullscreen.
-    UI.exitFullscreen();
     this.add.rectangle(0, 0, width, height, 0x050805, 0.72).setOrigin(0);
     UI.text(this, width / 2, 200, "PAUSED", 64);
     this.menu = UI.menu(
@@ -443,9 +437,9 @@ class PauseScene extends Phaser.Scene {
     );
   }
   resumeGame() {
-    // The game resumes once fullscreen is back. If the browser refuses (Esc
-    // does not count as a user gesture), it waits behind the click-to-continue
-    // overlay, whose click re-enters fullscreen and resumes.
+    // The game resumes in fullscreen. If the window left fullscreen and the
+    // browser refuses to re-enter (Esc is not a user gesture), it waits behind
+    // the pause.png overlay, whose click re-enters fullscreen and resumes.
     this.scene.stop();
     UI.enterFullscreen().then((ok) => {
       if (!game.scene.isPaused("GameScene")) return;

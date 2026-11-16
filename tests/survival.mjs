@@ -5,6 +5,7 @@ import puppeteer from "puppeteer";
 import fs from "node:fs";
 import path from "node:path";
 import { startServer } from "./serve.mjs";
+import { autoFullscreen } from "./helpers.mjs";
 
 const OUT = path.resolve("docs/builds/v0.2");
 const SHOTS = path.join(OUT, "screenshots");
@@ -14,6 +15,7 @@ const server = await startServer(0);
 const browser = await puppeteer.launch({ headless: true });
 const page = await browser.newPage();
 await page.setViewport({ width: 1280, height: 720 });
+await autoFullscreen(page);
 
 const errors = [];
 const warnings = [];
@@ -84,7 +86,7 @@ const pinRatInFront = (hp) =>
 const ratHp = () => state(() => (window.__testRat.active ? window.__testRat.getData("hp") : "destroyed"));
 const goToMenu = async () => {
   await page.goto("http://127.0.0.1:" + server.address().port + "/", { waitUntil: "load" });
-  await waitFor(() => game.scene.isActive("MenuScene"));
+  await waitFor(() => game.scene.isActive("MenuScene") && !!document.fullscreenElement);
   await wait(400);
 };
 

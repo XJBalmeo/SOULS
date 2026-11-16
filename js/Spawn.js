@@ -11,6 +11,12 @@
 const SPAWN_CONFIG = {
   beamFrameMs: 60,      // BEAM.png, 7 frames
   spawnFrameMs: 100,    // NEW_SPAWN.png, 6 frames
+  // The screen shakes while NEW_SPAWN shows frames spawnShakeFrom to
+  // spawnShakeTo (1-based, owner 2026-11-16: frames 2-4). Intensity is a
+  // fraction of the screen size (0.004 of 1280 px = about 5 screen px).
+  spawnShakeFrom: 2,
+  spawnShakeTo: 4,
+  spawnShakeIntensity: 0.004,
   // NEW_RESPAWN.png, 25 full-screen frames (owner 2026-11-15): every frame
   // respawnFrameMs, the second-to-last respawnSecondLastMs, the last as long
   // as frame 1 of NEW_DOWN (1000 / HURT_CONFIG.downFrameRate).
@@ -129,11 +135,31 @@ const Spawn = {
       scene.spawnBeam = null;
       p.setVisible(true);
       p.anims.play("spawn");
+      Spawn.shakeDuringSpawn(scene);
       p.once("animationcomplete", () => {
         p.anims.play("idle", true);
         Spawn.finish(scene);
       });
     });
+  },
+
+  // Shakes the camera from the moment NEW_SPAWN shows frame spawnShakeFrom
+  // until it leaves frame spawnShakeTo (tied to the frames, not a timer).
+  shakeDuringSpawn(scene) {
+    const C = SPAWN_CONFIG;
+    const p = scene.player;
+    const cam = scene.cameras.main;
+    const stop = () => {
+      p.off("animationupdate", onFrame);
+      cam.shakeEffect.reset();
+    };
+    const onFrame = (anim, frame) => {
+      if (anim.key !== "spawn") return;
+      if (frame.index === C.spawnShakeFrom) cam.shake(60000, C.spawnShakeIntensity, true);
+      else if (frame.index > C.spawnShakeTo) stop();
+    };
+    p.on("animationupdate", onFrame);
+    p.once("animationcomplete", stop);
   },
 
   // Puts the knight straight onto the floor below the spawn point.

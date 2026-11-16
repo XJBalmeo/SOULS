@@ -32,7 +32,7 @@ Knight art is the owner's (sprites/HERO/NEW_*.png). Config values are in the nam
 - **Strike window `windowMs` = 100 ms** (owner tried 500, then 300, settled on 100). Early click still fails.
 - **Success:** the dim is replaced at once by `sprites/DEATHS/crack.png` (80 % black with glass cracks). The knight plays the parry animation, then everything freezes on its last frame for 1 s (`successMs`). Then a white flash (`successFlashMs` 300 ms) clears the crack and the HUD dim, and one of `sprites/DEATHS/1.png`–`5.png` (random) shows full screen for 1 s and fades over 0.5 s, above the world and below the knight.
 - **Failure:** Death finishes its swing (`failMs` 600 ms) and stays visible; then Death, the knight and the world fade to black together, then YOU DIED.
-- **TEMPORARY debug key P** (`DEBUG_CONFIG.instantDeathKey` at the top of js/GameScene.js): instant death with the Death parry made available again (in memory only). **Esc is now the only pause key** while this is on. Turn it off before release.
+- **TEMPORARY debug key O** (`DEBUG_CONFIG.instantDeathKey` at the top of js/GameScene.js): instant death with the Death parry made available again (in memory only). Turn it off before release. **P pauses** (Esc too, but in a real browser Esc leaves fullscreen first).
 
 ### Spawn and respawn (js/Spawn.js, new; `SPAWN_CONFIG`)
 - **New Game / Continue from the menu** (js/UIScenes.js `TITLE_CONFIG`): fullscreen → `beamDelayMs` 300 → `sprites/menu_beam.png` (8 full-screen frames at the beam speed, 60 ms) → title frames 4–5 → `lastFrameHoldMs` 300 on frame 5 → the game. The old fade to black is gone.
@@ -52,7 +52,7 @@ Knight art is the owner's (sprites/HERO/NEW_*.png). Config values are in the nam
 1. **Is v0.3 approved?** (Then record it in BUILD_REVIEW, FAMINE_PLAYABLE_BUILDS and DEVELOPMENT_STATUS and branch `famine/v0.4-famine-expanded`.)
 2. Guard: front-only, rooted, no stamina cost, stun tint look, timings.
 3. The 100 ms Death window is very tight for humans.
-4. Remove the P debug key before release (P then pauses again).
+4. Remove the O debug key before release.
 5. Still open from before: SFX need listening, credits names, `sprites/dim.png`.
 6. `docs/builds/v0.3/BUILD_REVIEW.md` doesn't describe this session's changes yet (only the window value is updated); refresh it before asking for approval.
 

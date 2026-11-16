@@ -1,6 +1,6 @@
-// TEMPORARY debug (owner 2026-11-14): P kills the knight at once so the Death
-// parry can be practised. Each press gives the Parry Death opportunity back.
-// Esc still pauses. Set to false (or delete) before release.
+// TEMPORARY debug (owner 2026-11-14, key moved to O on 2026-11-16): O kills
+// the knight at once so the Death parry can be practised. Each press gives the
+// Parry Death opportunity back. Set to false (or delete) before release.
 const DEBUG_CONFIG = {
   instantDeathKey: true,
 };
@@ -387,13 +387,14 @@ class GameScene extends Phaser.Scene {
     const openPause = (event) => {
       if (!event.repeat) this.requestPause();
     };
+    // P pauses (owner 2026-11-16). Esc also leaves fullscreen in a real
+    // browser, which opens the pause menu behind the pause.png overlay.
+    this.input.keyboard.on("keydown-P", openPause);
     this.input.keyboard.on("keydown-ESC", openPause);
     if (DEBUG_CONFIG.instantDeathKey) {
-      this.input.keyboard.on("keydown-P", (event) => {
+      this.input.keyboard.on("keydown-O", (event) => {
         if (!event.repeat) this.debugInstantDeath();
       });
-    } else {
-      this.input.keyboard.on("keydown-P", openPause);
     }
     // Keys held when the game was paused never see their keyup; clear them.
     this.input.mouse.disableContextMenu(); // right click is the Death parry
@@ -947,7 +948,7 @@ class GameScene extends Phaser.Scene {
   }
   // Opens the pause menu. scene.pause() is
   // queued, so isActive() stays true for the rest of this frame; the flag
-  // stops a second request (Esc+P, or a fullscreen exit) launching twice.
+  // stops a second request (Esc and P together, or a fullscreen exit) launching twice.
   requestPause() {
     if (this.pauseRequested || this.isDead) return false;
     this.pauseRequested = true;

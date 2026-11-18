@@ -173,7 +173,7 @@ await wait(300);
 
 // ---- 9. Parrying Death uses the parry animation ----
 await newCampaign();
-await state(() => Object.assign(PARRY_DEATH_CONFIG, { forcedDelayMs: 300 }));
+await state(() => Object.assign(PARRY_DEATH_CONFIG, { forcedSpinFrames: 4 }));
 await state(() => game.scene.getScene("GameScene").takeDamage(999));
 check("right click is ignored by the guard while downed", await state(() => { const s = game.scene.getScene("GameScene"); Guard.press(s); return s.guard.state === "none"; }));
 await moveToCanvas();

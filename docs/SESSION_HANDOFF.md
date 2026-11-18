@@ -34,6 +34,9 @@ Knight art is the owner's (sprites/HERO/NEW_*.png). Config values are in the nam
 - **Failure:** Death finishes its swing (`failMs` 600 ms) and stays visible; then Death, the knight and the world fade to black together, then YOU DIED.
 - **TEMPORARY debug key O** (`DEBUG_CONFIG.instantDeathKey` at the top of js/GameScene.js): instant death with the Death parry made available again (in memory only). Turn it off before release. **P pauses** (Esc too, but in a real browser Esc leaves fullscreen first).
 
+### Death art (2026-11-18, `PARRY_DEATH_CONFIG`)
+- The owner's `sprites/DEATHS/DEATH.png` (19 frames of 512x288, centred on the knight) replaces Death's Shadow. Frames 1-13 at 100 ms; the 14-15-16 spin at 80 ms, looped a random 3-30 frames and able to stop on any of the three; frame 17 (warning) 100 ms; frame 18 is the only parryable frame (100 ms window); frame 19 (the kill) is drawn above the knight, frames 1-18 below. Details in docs/PARRY_DEATH_CONTRACT.md.
+
 ### Spawn and respawn (js/Spawn.js, new; `SPAWN_CONFIG`)
 - **New Game / Continue from the menu** (js/UIScenes.js `TITLE_CONFIG`): fullscreen → `beamDelayMs` 300 → `sprites/menu_beam.png` (8 full-screen frames at the beam speed, 60 ms) → title frames 4–5 → `lastFrameHoldMs` 300 on frame 5 → the game. The old fade to black is gone.
 - **In the game after the menu (and Pause → Retry from Checkpoint):** `BEAM.png` (7 frames of 100x300, 60 ms, bottom row on the knight's frame bottom) → `NEW_SPAWN.png` (6 frames, 100 ms) → idle. No control (and no damage) until idle. The knight is first snapped to the floor (the LDtk spawn point is in the air and overlaps the wall).
@@ -43,7 +46,7 @@ Knight art is the owner's (sprites/HERO/NEW_*.png). Config values are in the nam
 - **Bug fixed:** Phaser re-uses the last `scene.start` data, so New Game/Continue after a death used to play the respawn. GameScene now clears `sys.settings.data` after reading it.
 
 ## Tests
-- `npm test`: smoke 53, survival 47, archer 20, starved 21, parrydeath 44, **guard 29 (new)** = 214. Last full run green (before the last NEW_RESPAWN edit, which only touches Spawn timing; the spawn and arrival-path probes were rerun green after it).
+- `npm test` (2026-11-18): smoke 58, survival 47, archer 20, starved 21, parrydeath 46, guard 29 = 221. Last full run green (before the last NEW_RESPAWN edit, which only touches Spawn timing; the spawn and arrival-path probes were rerun green after it).
 - QA probes (run with `node tests/qa-probes/<name>.mjs`): `v03-hurt-anim` 26, `v03-death-parry-mouse` 29, `v03-spawn` 21, `v03-respawn-paths` 9.
 - `tests/helpers.mjs` adds `rightClick`, `waitForStrike` (frame-exact, needed for the 100 ms window), `moveToCanvas`, `rightClickHere`; `gameReady` now also waits for `!isSpawning`.
 - **Known flake:** once per few full runs the headless browser crashes ("Target closed") or a wall-clock timing check stalls (e.g. Starved wind-up read 1592 ms). Rerunning the single suite passes. Not caused by game code as far as verified.

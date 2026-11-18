@@ -15,7 +15,7 @@ The design is by `souls-architect` (Opus 5.5, 2026-11-13). The Lead implemented 
 - **Enemy list:** `GameScene.getEnemySprites()` is the single list used to freeze and resume rats, archers and the Starved. New enemy types register there.
 
 ## States
-`IDLE → DOWNED → DEATH_APPROACH (float in + random hover) → TELEGRAPH → SINGLE_STRIKE (parry window)`
+`IDLE → DOWNED → DEATH_APPROACH (DEATH.png frames 1-13, then the 14-15-16 spin looped a random number of frames) → TELEGRAPH (frame 17) → SINGLE_STRIKE (frame 18, the parry window) → frame 19 on a failure`
 
 From the window there are two outcomes:
 - `PARRY_SUCCESS → REVIVE → IDLE`
@@ -28,15 +28,16 @@ From the window there are two outcomes:
 |---|---|---|
 | parry input | Right mouse button | Owner 2026-11-14 (was the C key). Not the attack button: someone mashing attack at the moment of death would trip the early-press rule |
 | downedMs | 600 | Knight collapses; presses are ignored |
-| approachMs | 1200 | Death floats in |
-| delayMinMs / delayMaxMs | 600 / 2000 | Random hover before the warning |
-| telegraphMs | 500 | Scythe raised, amber glint and rising ring |
-| windowMs | 100 (was 300; owner 2026-11-14) | The strike: the only moment a press counts |
-| earlyPressFails | true | A press during the approach or warning spends the attempt |
+| frameMs | 100 | DEATH.png frames 1-13, 17 and 19 (owner 2026-11-18) |
+| spinFrames / spinFrameMs | 14, 15, 16 / 80 | The spin loop (owner 2026-11-18) |
+| spinMinFrames / spinMaxFrames | 3 / 30 | Random spin length in frames (0.24-2.4 s); it can stop on any of the three, then frame 17 |
+| windowMs | 100 (owner 2026-11-14 and 2026-11-18) | Frame 18, the strike: the only moment a press counts |
+| earlyPressFails | true | A press on frames 1-17 spends the attempt; Death then ends the spin and goes on to frame 19 |
+| offsetX / offsetY | 0 / 0 | Where the 512x288 frame's centre sits relative to the knight (0, 0 = knight in the middle of the screen) |
 | reviveInvulnerableMs | 1500 | Protection after revival |
 | successMs / reviveMs / failMs | 700 / 500 / 600 | Presentation |
 | clearRadiusPx / pushbackVelocityX | 96 / 220 | Enemies close by are pushed back and calmed |
-| forcedDelayMs / rng | null | Test seams |
+| forcedSpinFrames / rng | null | Test seams |
 
 **Anti-hold:** only fresh `keydown` events count, and `event.repeat` is ignored. A key held from before the window can never win.
 
@@ -62,9 +63,9 @@ From the window there are two outcomes:
   - Downed: the owner's NEW_HURT then NEW_DOWN sheets, held on the second down frame (owner 2026-11-14).
   - Parry: attack animation with a white flash.
   - Revive: back to idle.
-- **Death's Shadow:** original sprites in `sprites/ENEMIES/DEATHS_SHADOW/` (float, raise, strike, parried, fade), 128×128 frames.
+- **Death** (owner 2026-11-18): the owner's `sprites/DEATHS/DEATH.png`, 19 full-screen frames of 512x288, centred on the knight. Frames 1-18 are drawn below the knight (above the dim), frame 19 above him. On a parry Death holds frame 18 through the freeze and disappears in the white flash. The old Death's Shadow sprites in `sprites/ENEMIES/DEATHS_SHADOW/` are no longer loaded.
 - **Knight parry** (owner 2026-11-14): a successful parry plays the knight's own parry animation (NEW_PARRY.png), the same one used against enemies (js/Guard.js).
-- **Failed parry** (owner 2026-11-14): Death finishes its swing (failMs), then Death, the knight and the world fade to black together, then YOU DIED.
+- **Failed parry** (owner 2026-11-14): Death shows frame 19 (failMs), then Death, the knight and the world fade to black together, then YOU DIED.
 - **Prompt** (bottom of the screen): no instructions and no key hint (owner 2026-11-14). On success (owner 2026-11-14): the dim is replaced at once by sprites/DEATHS/crack.png (80 % black with glass cracks); the knight's parry plays and everything holds on its last frame for 1 s (successMs); then a white flash removes the crack screen and the HUD dim, and one of sprites/DEATHS/1.png to 5.png (random) shows for 1 s above the world and below the knight, then fades out over 0.5 s. On failure the game goes straight to the full-screen YOU DIED animation (owner 2026-11-14).
 - **Sounds:** reaper_arrive, reaper_telegraph, scythe_swing, parry_clang, parry_fail, revive. They pause with the scene.
 

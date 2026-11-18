@@ -1,25 +1,38 @@
 // Parry Death (M1.4A): the once-per-campaign encounter on the first fatal hit.
-// The knight is downed; Death's Shadow floats in, waits a random moment, raises
-// its scythe (warning) and strikes once. Press the parry key during the strike
-// to revive with full HP and stamina in the same fight; otherwise normal death.
-// Contract: docs/PARRY_DEATH_CONTRACT.md. All timings are proposals for owner review.
+// The knight is downed, then Death plays (owner's sprites/DEATHS/DEATH.png,
+// owner 2026-11-18): 19 full-screen frames of 512x288 centred on the knight.
+//   frames 1-13   100 ms   skeletal hands summon the scythe   DEATH_APPROACH
+//   frames 14-16   80 ms   the spin, looped a random number of frames,
+//                          stopping on any of the three        DEATH_APPROACH
+//   frame 17      100 ms   the scythe stands up (warning)      TELEGRAPH
+//   frame 18      100 ms   the strike: the only parryable frame SINGLE_STRIKE
+//   frame 19              the kill, drawn above the knight     NORMAL_DEATH
+// Frames 1-18 are drawn below the knight, frame 19 above him. A parry
+// (right click) during frame 18 revives with full HP and stamina in the same
+// fight; a click before it, or none, is a normal death.
+// Contract: docs/PARRY_DEATH_CONTRACT.md.
 const PARRY_DEATH_CONFIG = {
   enabled: true,
   // Parry is the right mouse button (owner 2026-11-14). No on-screen hint.
   downedMs: 900,         // hurt (7 frames) + collapse to the ground before Death appears
-  approachMs: 1200,
-  delayMinMs: 600,       // random hover before the warning
-  delayMaxMs: 2000,
-  telegraphMs: 500,      // scythe raised, glint and sound
-  windowMs: 100,         // the strike: the only moment a parry counts (owner 2026-11-14: was 300)
+  frameMs: 100,          // frames 1-13, 17 and 19
+  spinFrames: [14, 15, 16], // 1-based frames of the spin loop
+  spinFrameMs: 80,
+  // The spin runs this many frames (random, inclusive) before frame 17, so it
+  // can stop on any of its three frames. 3-30 frames = 0.24-2.4 s.
+  spinMinFrames: 3,
+  spinMaxFrames: 30,
+  windowMs: 100,         // frame 18, the strike: the only moment a parry counts
   successMs: 1000,       // freeze on the last parry frame (crack screen) before the white flash
   successFlashMs: 300,   // the white flash that clears the crack screen
-  failMs: 600,
+  failMs: 600,           // frame 19 stays this long before the fade to black
   reviveMs: 500,
   reviveInvulnerableMs: 1500,
-  earlyPressFails: true, // pressing before the strike spends the attempt
-  approachOffsetPx: 46,
-  approachStartPx: 150,
+  earlyPressFails: true, // pressing before frame 18 spends the attempt
+  // Where the 512x288 frame's centre sits relative to the knight's sprite
+  // centre (world px). 0, 0 = the knight in the middle of the screen.
+  offsetX: 0,
+  offsetY: 0,
   snapToGroundMaxPx: 300,
   clearRadiusPx: 96,
   pushbackVelocityX: 220,
@@ -30,17 +43,13 @@ const PARRY_DEATH_CONFIG = {
   // It appears with the white flash at the end of the success freeze.
   victoryHoldMs: 1000,   // fully visible
   victoryFadeMs: 500,    // then fades to fully transparent and is removed
-  forcedDelayMs: null,   // test seam: fixed hover delay
+  forcedSpinFrames: null, // test seam: fixed spin length
   rng: null,             // test seam: () => number in [0, 1)
 };
 
 const ParryDeath = {
   preload(scene) {
-    const frame = { frameWidth: 128, frameHeight: 128 };
-    const dir = "sprites/ENEMIES/DEATHS_SHADOW/";
-    ["FLOAT", "RAISE", "STRIKE", "PARRIED", "FADE"].forEach((name) => {
-      scene.load.spritesheet("reaper_" + name.toLowerCase(), dir + "REAPER_" + name + ".png", frame);
-    });
+    scene.load.spritesheet("death_scythe", "sprites/DEATHS/DEATH.png?v=" + Date.now(), { frameWidth: 512, frameHeight: 288 });
     scene.load.image("death_crack", "sprites/DEATHS/crack.png?v=" + Date.now()); // 80 % black with glass cracks
     PARRY_DEATH_CONFIG.victoryImages.forEach((key) =>
       scene.load.image(key, "sprites/DEATHS/" + key.replace("death_defied_", "") + ".png?v=" + Date.now()));
@@ -59,18 +68,6 @@ class ParryDeathEncounter {
     scene.events.on("pause", this.onPause);
     scene.events.on("resume", this.onResume);
     scene.events.once("shutdown", () => this.destroy());
-    this.createAnims();
-  }
-
-  createAnims() {
-    const s = this.scene;
-    const C = PARRY_DEATH_CONFIG;
-    const timed = (key, durations) => durations.map((duration, frame) => ({ key, frame, duration }));
-    s.createAnimOnce({ key: "reaper_float", frames: s.anims.generateFrameNumbers("reaper_float"), frameRate: 5, repeat: -1 });
-    s.createAnimOnce({ key: "reaper_raise", frames: timed("reaper_raise", [140, 140, 4000]), repeat: 0 });
-    s.createAnimOnce({ key: "reaper_strike", frames: timed("reaper_strike", [C.windowMs, 160, 400]), repeat: 0 });
-    s.createAnimOnce({ key: "reaper_parried", frames: timed("reaper_parried", [220, 140, 140, 140]), repeat: 0 });
-    s.createAnimOnce({ key: "reaper_fade", frames: timed("reaper_fade", [100, 100, 100, 100]), repeat: 0 });
   }
 
   isActive() {
@@ -83,11 +80,28 @@ class ParryDeathEncounter {
       !!campaign && !campaign.parryDeathUsed;
   }
 
-  rollDelay() {
+  // How many 80 ms spin frames play before frame 17.
+  rollSpinFrames() {
     const C = PARRY_DEATH_CONFIG;
-    if (C.forcedDelayMs !== null && C.forcedDelayMs !== undefined) return C.forcedDelayMs;
+    if (C.forcedSpinFrames !== null && C.forcedSpinFrames !== undefined) return C.forcedSpinFrames;
     const r = (C.rng || Math.random)();
-    return C.delayMinMs + r * (C.delayMaxMs - C.delayMinMs);
+    return C.spinMinFrames + Math.min(Math.floor(r * (C.spinMaxFrames - C.spinMinFrames + 1)), C.spinMaxFrames - C.spinMinFrames);
+  }
+
+  // The frame-by-frame plan: { frame (0-based), ms, state }.
+  buildTimeline() {
+    const C = PARRY_DEATH_CONFIG;
+    const t = [];
+    const spinStart = C.spinFrames[0] - 1;
+    for (let f = 0; f < spinStart; f++) t.push({ frame: f, ms: C.frameMs, state: "DEATH_APPROACH" });
+    this.spinCount = this.rollSpinFrames();
+    for (let i = 0; i < this.spinCount; i++) {
+      t.push({ frame: C.spinFrames[i % C.spinFrames.length] - 1, ms: C.spinFrameMs, state: "DEATH_APPROACH", spin: true });
+    }
+    t.push({ frame: 16, ms: C.frameMs, state: "TELEGRAPH" });
+    t.push({ frame: 17, ms: C.windowMs, state: "SINGLE_STRIKE" });
+    t.push({ frame: 18, ms: Infinity, state: "NORMAL_DEATH" });
+    return t;
   }
 
   // The fatal hit: freeze the world, spend the opportunity, down the knight.
@@ -99,7 +113,7 @@ class ParryDeathEncounter {
     this.source = source || null;
     this.elapsedMs = 0;
     this.phaseStart = 0;
-    this.delayMs = this.rollDelay();
+    this.timeline = null;
     this.windowOpenAt = null;
     // Spend it before any input is possible, and save that now.
     SaveManager.campaign.parryDeathUsed = true;
@@ -158,30 +172,21 @@ class ParryDeathEncounter {
   // Driven by GameScene.update, so the normal pause menu freezes it.
   update(delta) {
     const C = PARRY_DEATH_CONFIG;
-    const scene = this.scene;
     this.elapsedMs += delta;
     const t = this.elapsedMs - this.phaseStart;
     switch (this.state) {
       case "DOWNED":
-        if (t >= C.downedMs) this.startApproach();
+        if (t >= C.downedMs) this.startDeath();
         break;
       case "DEATH_APPROACH":
-        if (t >= C.approachMs + this.delayMs) this.startTelegraph();
-        break;
       case "TELEGRAPH":
-        if (t >= C.telegraphMs) this.startStrike();
-        break;
       case "SINGLE_STRIKE":
-        if (t >= C.windowMs) this.resolve("fail", "late");
+        this.advanceFrames(delta);
         break;
       case "PARRY_SUCCESS": {
         // The parry animation plays out, then everything holds still on its
         // last frame (successMs), then a white flash clears the screen.
         const parryMs = GUARD_CONFIG.parryFrameMs.reduce((a, b) => a + b, 0);
-        if (!this.frozen && t >= parryMs) {
-          this.frozen = true;
-          if (this.reaper) this.reaper.anims.pause();
-        }
         if (t >= parryMs + C.successMs) this.endSuccessFreeze();
         break;
       }
@@ -194,38 +199,47 @@ class ParryDeathEncounter {
     }
   }
 
-  startApproach() {
+  // Death appears: frame 1, below the knight and above the dim.
+  startDeath() {
     const C = PARRY_DEATH_CONFIG;
     const scene = this.scene;
     const p = scene.player;
-    let side = p.flipX ? -1 : 1;
-    const cy = p.body.center.y;
-    if (scene.hasWallBetween(p.body.center.x, cy, p.x + side * (C.approachOffsetPx + 20), cy)) side = -side;
-    this.side = side;
-    const y = this.floorY - 57; // the robe's hem floats just above the floor
-    this.reaper = scene.add.sprite(p.x + side * C.approachStartPx, y, "reaper_float").setDepth(DEATH_CONFIG.dimDepth + 2).setAlpha(0); // above the dim and the knight
-    this.reaper.setFlipX(side > 0); // drawn facing right; face the knight
-    this.reaper.anims.play("reaper_float");
-    scene.tweens.add({ targets: this.reaper, x: p.x + side * C.approachOffsetPx, alpha: 1, duration: C.approachMs, ease: "Sine.easeOut" });
+    this.timeline = this.buildTimeline();
+    this.step = 0;
+    this.stepMs = 0;
+    this.reaper = scene.add.sprite(p.x + C.offsetX, p.y + C.offsetY, "death_scythe", 0)
+      .setDepth(DEATH_CONFIG.dimDepth + 0.6);
     this.track(Sfx.play(scene, "reaper_arrive", 0.9));
     this.setPhase("DEATH_APPROACH");
   }
 
-  startTelegraph() {
-    this.reaper.anims.play("reaper_raise");
-    // Amber is the game's "danger now" colour: flash Death with it as the scythe rises.
-    this.reaper.setTintFill(0xe8b04a);
-    this.scene.time.delayedCall(90, () => this.reaper && this.reaper.clearTint());
-    this.track(Sfx.play(this.scene, "reaper_telegraph"));
-    this.setPhase("TELEGRAPH");
+  // Steps through the timeline by game time (frozen while paused).
+  advanceFrames(delta) {
+    this.stepMs += delta;
+    while (this.state !== "NORMAL_DEATH" && this.stepMs >= this.timeline[this.step].ms) {
+      this.stepMs -= this.timeline[this.step].ms;
+      this.enterStep(this.step + 1);
+    }
   }
 
-  startStrike() {
-    this.reaper.anims.play("reaper_strike");
-    this.reaper.anims.pause(); // hold the mid-swing frame for the whole window
-    this.track(Sfx.play(this.scene, "scythe_swing"));
-    this.windowOpenAt = this.elapsedMs;
-    this.setPhase("SINGLE_STRIKE");
+  enterStep(i) {
+    const scene = this.scene;
+    const step = this.timeline[i];
+    this.step = i;
+    this.reaper.setFrame(step.frame);
+    if (step.state === this.state) return;
+    if (step.state === "TELEGRAPH") {
+      this.track(Sfx.play(scene, "reaper_telegraph"));
+      this.setPhase("TELEGRAPH");
+    } else if (step.state === "SINGLE_STRIKE") {
+      this.track(Sfx.play(scene, "scythe_swing"));
+      this.windowOpenAt = this.elapsedMs;
+      this.setPhase("SINGLE_STRIKE");
+    } else if (step.state === "NORMAL_DEATH") {
+      this.reaper.setDepth(DEATH_CONFIG.dimDepth + 2); // frame 19: the scythe in front of the knight
+      if (this.outcome === null) this.resolve("fail", "late");
+      else this.setPhase("NORMAL_DEATH");
+    }
   }
 
   handleParryPress() {
@@ -244,28 +258,28 @@ class ParryDeathEncounter {
     const scene = this.scene;
     scene.input.off("pointerdown", this.onPointer);
     scene.input.off("pointerdownoutside", this.onPointer);
-    if (!this.reaper) this.startApproach(); // early press before Death arrived
-    this.reaper.anims.resume();
     if (outcome === "success") {
       // Owner 2026-11-14: the dim becomes the crack screen at once, the parry
       // plays and freezes on its last frame; the flash comes in endSuccessFreeze.
-      this.reaper.anims.play("reaper_parried");
+      // Death holds frame 18 (the blocked strike).
       this.track(Sfx.play(scene, "parry_clang"));
       const p = scene.player;
       p.clearTint();
       p.anims.play("parry");
-      p.setFlipX(this.side < 0);
       scene.replaceDimWithCrack();
-      this.frozen = false;
       this.setPhase("PARRY_SUCCESS");
-    } else {
-      this.reaper.anims.play({ key: "reaper_strike", startFrame: 1 });
-      this.track(Sfx.play(scene, "parry_fail"));
-      this.prompt.setText("");
-      // Death finishes the swing (failMs); then Death, the knight and the world
-      // fade to black together and YOU DIED follows (finishFail).
-      this.setPhase("NORMAL_DEATH");
+      return;
     }
+    this.track(Sfx.play(scene, "parry_fail"));
+    if (this.prompt) this.prompt.setText("");
+    if (this.state === "NORMAL_DEATH" || this.timeline[this.step].state === "NORMAL_DEATH") {
+      this.setPhase("NORMAL_DEATH"); // late: frame 19 is already showing
+      return;
+    }
+    // Early: Death goes on to the kill without parryable frames; the spin
+    // ends after the frame it is on. Frame 19 then leads to the death (failMs).
+    const rest = this.timeline.slice(this.step + 1).filter((s) => !s.spin);
+    this.timeline = this.timeline.slice(0, this.step + 1).concat(rest);
   }
 
   // Full-screen image over the visible area: above the dim, below the knight
@@ -296,7 +310,8 @@ class ParryDeathEncounter {
     const scene = this.scene;
     scene.cameras.main.flash(PARRY_DEATH_CONFIG.successFlashMs, 255, 255, 255);
     scene.clearDeathDimNow();
-    if (this.reaper) this.reaper.anims.resume();
+    if (this.reaper) this.reaper.destroy(); // gone in the flash
+    this.reaper = null;
     this.showVictoryImage();
     this.startRevive();
   }

@@ -22,7 +22,7 @@ const b = await anim();
 check("animation returns to normal after the hurt", b.key !== "hurt", JSON.stringify(b));
 
 // Fatal hit with Parry Death available.
-await state(() => { PARRY_DEATH_CONFIG.forcedDelayMs = 1500; });
+await state(() => { PARRY_DEATH_CONFIG.forcedSpinFrames = 19; });
 await state(() => game.scene.getScene("GameScene").takeDamage(999));
 await wait(100);
 const c = await anim();
@@ -44,11 +44,11 @@ check("still on the ground frame at the strike", e.key === "down" && e.frame ===
 await waitFor(() => game.scene.getScene("GameScene").parryDeath.outcome === "fail", 2000);
 const dimInfo = () => state(() => { const s = game.scene.getScene("GameScene"); return { dim: s.deathDim && +s.deathDim.alpha.toFixed(2), dimDepth: s.deathDim && s.deathDim.depth, player: s.player.depth, reaper: s.parryDeath.reaper && s.parryDeath.reaper.depth }; });
 await wait(300);
-const sw = await state(() => { const s = game.scene.getScene("GameScene"); const r = s.parryDeath.reaper; return { key: r && r.anims.currentAnim.key, alpha: r && r.alpha, dim: +s.deathDim.alpha.toFixed(2) }; });
-check("failed parry: Death keeps swinging, fully visible, dim still 80 %", sw.key === "reaper_strike" && sw.alpha === 1 && sw.dim === 0.8, JSON.stringify(sw));
+const sw = await state(() => { const s = game.scene.getScene("GameScene"); const r = s.parryDeath.reaper; return { frame: r && r.frame.name, alpha: r && r.alpha, above: r && r.depth > s.player.depth, dim: +s.deathDim.alpha.toFixed(2) }; });
+check("failed parry: Death shows frame 19 above the knight, fully visible, dim still 80 %", sw.frame === 18 && sw.above && sw.alpha === 1 && sw.dim === 0.8, JSON.stringify(sw));
 await wait(700);
-const fd = await state(() => { const s = game.scene.getScene("GameScene"); const r = s.children.list.find((c) => c.texture && c.texture.key.startsWith("reaper")); return { dim: +s.deathDim.alpha.toFixed(2), reaperAlpha: r ? +r.alpha.toFixed(2) : null, frame: r && r.anims.currentFrame.index }; });
-check("failed parry: then Death and the world fade to black together", fd.dim > 0.8 && fd.reaperAlpha !== null && fd.reaperAlpha < 1 && fd.frame === 3 && !(await state(() => game.scene.isActive("DeathScene"))), JSON.stringify(fd));
+const fd = await state(() => { const s = game.scene.getScene("GameScene"); const r = s.children.list.find((c) => c.texture && c.texture.key === "death_scythe"); return { dim: +s.deathDim.alpha.toFixed(2), reaperAlpha: r ? +r.alpha.toFixed(2) : null, frame: r && r.frame.name }; });
+check("failed parry: then Death and the world fade to black together", fd.dim > 0.8 && fd.reaperAlpha !== null && fd.reaperAlpha < 1 && fd.frame === 18 && !(await state(() => game.scene.isActive("DeathScene"))), JSON.stringify(fd));
 check("failed parry: YOU DIED after the fade to black", await waitFor(() => game.scene.isActive("DeathScene"), 1500));
 await wait(100);
 const nk = await state(() => game.scene.getScene("DeathScene").children.list.find((c) => c.type === "Sprite").texture.key);
@@ -89,7 +89,7 @@ check("and respawns", await waitFor(() => !game.scene.isActive("DeathScene"), 60
 // Successful parry: the dim fades away and the knight returns to normal depth.
 await newCampaign();
 await wait(800);
-await state(() => { PARRY_DEATH_CONFIG.forcedDelayMs = 300; });
+await state(() => { PARRY_DEATH_CONFIG.forcedSpinFrames = 4; });
 await state(() => game.scene.getScene("GameScene").takeDamage(999));
 await waitFor(() => game.scene.getScene("GameScene").parryDeath.state === "SINGLE_STRIKE", 6000);
 await g.rightClick();

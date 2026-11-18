@@ -19,7 +19,7 @@ const run = async (label, when, x, y, expect) => {
   await wait(300);
 };
 await run("strike window, mouse on the game: parried", "SINGLE_STRIKE", 640, 360, "success");
-await run("press during the scythe raise: too early (fail)", "TELEGRAPH", 640, 360, "fail");
+await run("press on frame 17 (the scythe stands up): too early (fail)", "TELEGRAPH", 640, 360, "fail");
 await page.setViewport({ width: 1600, height: 720 });
 await wait(500);
 const box = await (await page.$("canvas")).boundingBox();
@@ -38,14 +38,14 @@ const look = () => state(() => {
     phase: d.state, anim: p.anims.currentAnim?.key, frame: p.anims.currentFrame?.index, knightDepth: p.depth,
     dim: !!s.deathDim, crack: c && c.active ? { depth: c.depth, w: c.displayWidth, h: c.displayHeight } : null,
     hudTint: s.hudHp.isTinted ? s.hudHp.tintTopLeft : null,
-    reaperPlaying: d.reaper ? d.reaper.anims.isPlaying : null,
+    deathFrame: d.reaper ? d.reaper.frame.name : null,
     flash: s.cameras.main.flashEffect.isRunning,
     image: i && i.active ? { key: i.texture.key, alpha: +i.alpha.toFixed(2), depth: i.depth } : null,
   };
 });
 for (const [rng, want] of [[0.1, "death_defied_1"], [0.5, "death_defied_3"], [0.9, "death_defied_5"]]) {
   await newCampaign(); await wait(500);
-  await state((r) => { PARRY_DEATH_CONFIG.rng = () => r; PARRY_DEATH_CONFIG.forcedDelayMs = 300; }, rng);
+  await state((r) => { PARRY_DEATH_CONFIG.rng = () => r; PARRY_DEATH_CONFIG.forcedSpinFrames = 4; }, rng);
   await state(() => game.scene.getScene("GameScene").takeDamage(999));
   await page.mouse.move(640, 360);
   await waitForStrike(8000);
@@ -56,7 +56,7 @@ for (const [rng, want] of [[0.1, "death_defied_1"], [0.5, "death_defied_3"], [0.
     v.phase === "PARRY_SUCCESS" && !v.dim && v.crack && v.crack.w === 512 && v.crack.h === 288 && v.knightDepth > v.crack.depth && v.hudTint === 0x333333 && !v.image, JSON.stringify(v));
   await wait(500);
   v = await look();
-  check(want + ": frozen on the last parry frame, Death paused, no flash yet", v.anim === "parry" && v.frame === 3 && v.reaperPlaying === false && !v.flash && v.crack && !v.image, JSON.stringify(v));
+  check(want + ": frozen on the last parry frame, Death held on frame 18, no flash yet", v.anim === "parry" && v.frame === 3 && v.deathFrame === 17 && !v.flash && v.crack && !v.image, JSON.stringify(v));
   if (rng < 0.5) await shot("parry-05a-crack-freeze");
   const flashed = await waitFor(() => game.scene.getScene("GameScene").cameras.main.flashEffect.isRunning, 1500);
   v = await look();
@@ -71,18 +71,18 @@ for (const [rng, want] of [[0.1, "death_defied_1"], [0.5, "death_defied_3"], [0.
   await wait(600);
   v = await look();
   check(want + ": gone after the fade, knight back to normal depth", !v.image && v.knightDepth === 10, JSON.stringify(v));
-  await state(() => { PARRY_DEATH_CONFIG.rng = null; PARRY_DEATH_CONFIG.forcedDelayMs = null; });
+  await state(() => { PARRY_DEATH_CONFIG.rng = null; PARRY_DEATH_CONFIG.forcedSpinFrames = null; });
 }
-// TEMPORARY debug key: P kills at once and gives the Death parry back each time.
+// TEMPORARY debug key: O kills at once and gives the Death parry back each time.
 await page.setViewport({ width: 1280, height: 720 });
 await newCampaign(); await wait(500);
 for (let i = 1; i <= 2; i++) {
-  await page.keyboard.press("KeyP");
-  check("P #" + i + ": instant death starts the Death encounter", await waitFor(() => game.scene.getScene("GameScene").parryDeath.state !== "IDLE", 1000));
+  await page.keyboard.press("KeyO");
+  check("O #" + i + ": instant death starts the Death encounter", await waitFor(() => game.scene.getScene("GameScene").parryDeath.state !== "IDLE", 1000));
   await page.mouse.move(640, 360);
   await waitForStrike(8000);
   await rightClickHere(40);
-  check("P #" + i + ": parried", await waitFor(() => game.scene.getScene("GameScene").parryDeath.state === "IDLE", 4000) && (await pd()).outcome === "success");
+  check("O #" + i + ": parried", await waitFor(() => game.scene.getScene("GameScene").parryDeath.state === "IDLE", 4000) && (await pd()).outcome === "success");
   await wait(1700);
 }
 await g.finish("v03-death-parry-mouse");

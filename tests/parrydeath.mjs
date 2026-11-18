@@ -11,7 +11,7 @@ const { page, check, wait, state, waitFor, tap, rightClick, waitForStrike, moveT
 const DEFAULTS = await state(() => ({ ...PARRY_DEATH_CONFIG }));
 const fast = (extra = {}) =>
   state((cfg) => Object.assign(PARRY_DEATH_CONFIG, cfg), {
-    downedMs: 100, approachMs: 300, forcedDelayMs: 100, telegraphMs: 250, windowMs: 400,
+    downedMs: 100, frameMs: 30, spinFrameMs: 30, forcedSpinFrames: 3, windowMs: 400,
     successMs: 200, reviveMs: 200, failMs: 200, rng: null, ...extra,
   });
 const reset = () => state((d) => Object.assign(PARRY_DEATH_CONFIG, d, { rng: null }), DEFAULTS);
@@ -23,7 +23,7 @@ const enc = () =>
       state: pd.state, outcome: pd.outcome, reason: pd.failReason, persisted: pd.persisted, elapsed: pd.elapsedMs,
       hp: s.player.getData("hp"), stamina: s.player.getData("stamina"), dead: s.isDead,
       physicsPaused: s.physics.world.isPaused,
-      reapers: s.children.list.filter((c) => c.texture && c.texture.key.startsWith("reaper") && c.active).length,
+      reapers: s.children.list.filter((c) => c.texture && c.texture.key === "death_scythe" && c.active).length,
       listeners: s.input.listenerCount("pointerdown"),
       storedFlag: (JSON.parse(localStorage.getItem("souls.save.v1") || "{}")).parryDeathUsed,
       memFlag: SaveManager.campaign && SaveManager.campaign.parryDeathUsed,
@@ -63,11 +63,9 @@ check("the knight is no longer hurt by anything", await state(() => game.scene.g
 await inState("DEATH_APPROACH", 3000);
 await wait(700);
 await shot("parry-01-death-approaches");
-check("exactly one Death's Shadow appears", (await enc()).reapers === 1, JSON.stringify(await enc()));
-check("its warning comes after a random wait", await inState("TELEGRAPH", 5000));
-await wait(250);
-await shot("parry-02-telegraph-glint");
+check("exactly one Death appears", (await enc()).reapers === 1, JSON.stringify(await enc()));
 await moveToCanvas();
+check("its warning (frame 17) comes after the random spin", await inState("TELEGRAPH", 5000));
 check("the strike opens the parry window", await waitForStrike(2000));
 await rightClickHere(40);
 await shot("parry-03-parried");
@@ -120,30 +118,50 @@ await inState("DEATH_APPROACH", 2000);
 await wait(100);
 e = await enc();
 check("two fatal hits in one frame start exactly one encounter", dup === "DOWNED" && e.reapers === 1, JSON.stringify(e));
-const bounds = await state(() => {
+const bounds = await state((d) => {
   const pd = game.scene.getScene("GameScene").parryDeath;
   const C = PARRY_DEATH_CONFIG;
-  const keep = [C.forcedDelayMs, C.rng];
-  C.forcedDelayMs = null;
+  const saved = { ...C };
+  Object.assign(C, d, { forcedSpinFrames: null }); // the owner's real timings
   C.rng = () => 0;
-  const lo = pd.rollDelay();
+  const lo = pd.rollSpinFrames();
   C.rng = () => 0.999999;
-  const hi = pd.rollDelay();
-  [C.forcedDelayMs, C.rng] = keep;
-  return { lo, hi, min: C.delayMinMs, max: C.delayMaxMs };
-});
-check("random wait stays within its bounds", Math.abs(bounds.lo - bounds.min) < 1 && Math.abs(bounds.hi - bounds.max) < 1, JSON.stringify(bounds));
+  const hi = pd.rollSpinFrames();
+  C.rng = () => 0.5;
+  const mid = pd.buildTimeline();
+  const out = {
+    lo, hi, min: C.spinMinFrames, max: C.spinMaxFrames,
+    frames: mid.map((t) => t.frame + 1).join(","), ms: mid.map((t) => t.ms).join(","),
+  };
+  Object.assign(C, saved);
+  return out;
+}, DEFAULTS);
+check("random spin length stays within its bounds", bounds.lo === bounds.min && bounds.hi === bounds.max, JSON.stringify(bounds));
+{
+  const frames = bounds.frames.split(",").map(Number);
+  const ms = bounds.ms.split(",");
+  const spin = frames.slice(13, -3);
+  check("timeline: frames 1-13 at 100 ms, the 14-15-16 spin at 80 ms, then 17, 18 (100 ms window), 19",
+    frames.slice(0, 13).join(",") === "1,2,3,4,5,6,7,8,9,10,11,12,13" && ms.slice(0, 13).every((m) => m === "100") &&
+    spin.every((f, i) => f === 14 + (i % 3)) && ms.slice(13, -3).every((m) => m === "80") &&
+    frames.slice(-3).join(",") === "17,18,19" && ms.slice(-3, -1).join(",") === "100,100", JSON.stringify(bounds));
+}
 
 // ---- 3. Early press fails. ----
 await newCampaign();
-await fast({ telegraphMs: 600 });
+await fast({ forcedSpinFrames: 40 });
 await fatal();
-await inState("TELEGRAPH", 3000);
+await inState("DEATH_APPROACH", 3000);
+await wait(500); // in the spin
 await pressC();
 e = await enc();
-check("pressing during the warning (too soon) fails", e.outcome === "fail" && e.reason === "early", JSON.stringify(e));
+check("pressing during the spin (too soon) fails", e.outcome === "fail" && e.reason === "early", JSON.stringify(e));
 await pressC();
 check("a second press after failing changes nothing", (await enc()).outcome === "fail");
+check("after an early press Death goes straight on to frame 19 (no more spin)", await waitFor(() => {
+  const pd = game.scene.getScene("GameScene").parryDeath;
+  return pd.state === "NORMAL_DEATH" && pd.reaper && pd.reaper.frame.name === 18;
+}, 1000));
 check("failure leads to the normal death screen", await waitFor(() => game.scene.isActive("DeathScene"), 4000));
 await throughDeath();
 e = await enc();
@@ -178,7 +196,7 @@ await throughDeath();
 
 // ---- 5. Pause freezes the encounter; C is ignored while paused. ----
 await newCampaign();
-await fast({ approachMs: 1500, forcedDelayMs: 400 });
+await fast({ forcedSpinFrames: 50 });
 await fatal();
 await inState("DEATH_APPROACH", 2000);
 await state(() => game.scene.getScene("GameScene").requestPause());
@@ -200,7 +218,7 @@ await inState("IDLE", 3000);
 
 // ---- 6. Leaving fullscreen mid-encounter opens the pause menu. ----
 await newCampaign();
-await fast({ approachMs: 1500 });
+await fast({ forcedSpinFrames: 50 });
 await fatal();
 await inState("DEATH_APPROACH", 2000);
 await state(() => document.exitFullscreen());
@@ -220,7 +238,7 @@ check("Retry mid-encounter: the next fatal hit is a normal death", (await enc())
 
 // ---- 8. Reload mid-encounter, then Continue; New Game resets. ----
 await newCampaign();
-await fast({ approachMs: 3000 });
+await fast({ forcedSpinFrames: 100 });
 await fatal();
 await inState("DEATH_APPROACH", 2000);
 await page.reload({ waitUntil: "load" });

@@ -5,6 +5,15 @@ const DEBUG_CONFIG = {
   instantDeathKey: true,
 };
 
+// TEMPORARY for the showcase (owner 2026-11-18): the Hollow Archer, the
+// Starved and all sound are switched off until the owner brings them back.
+// Set a value to true to return it. The test suites switch the enemies on.
+const SHOWCASE_CONFIG = {
+  hollowArcher: false,
+  starved: false,
+  audio: false,
+};
+
 class GameScene extends Phaser.Scene {
   constructor() {
     super("GameScene");
@@ -374,9 +383,9 @@ class GameScene extends Phaser.Scene {
       this.spawnRat(600, 300, true);
     }
     HollowArcher.setup(this);
-    this.archerSpawns.forEach((spawn) => HollowArcher.spawn(this, spawn.x, spawn.y));
+    if (SHOWCASE_CONFIG.hollowArcher) this.archerSpawns.forEach((spawn) => HollowArcher.spawn(this, spawn.x, spawn.y));
     Starved.setup(this);
-    this.starvedSpawns.forEach((spawn) => Starved.spawn(this, spawn.x, spawn.y));
+    if (SHOWCASE_CONFIG.starved) this.starvedSpawns.forEach((spawn) => Starved.spawn(this, spawn.x, spawn.y));
     this.parryDeath = new ParryDeathEncounter(this);
     Guard.setup(this);
     this.setHitboxDebug(SoulsSettings.load().showHitboxes);
@@ -1702,13 +1711,14 @@ class GameScene extends Phaser.Scene {
           ) {
             rat.setData("state", "pursue");
           } else {
-            if (rat.body.blocked.left) {
-              rat.setVelocityX(50);
-              rat.setFlipX(false);
-            } else if (rat.body.blocked.right) {
-              rat.setVelocityX(-50);
-              rat.setFlipX(true);
+            // Turn at a wall it is facing, and always keep walking: a rat that
+            // came back to patrol from a stop (attack, recover, stun, a lost
+            // chase) has no speed, so it would never touch the wall and never
+            // move again (owner 2026-11-18: rats stuck facing a wall).
+            if ((rat.flipX && rat.body.blocked.left) || (!rat.flipX && rat.body.blocked.right)) {
+              rat.setFlipX(!rat.flipX);
             }
+            if (rat.body.blocked.down) rat.setVelocityX(rat.flipX ? -50 : 50);
             if (rat.anims.currentAnim?.key !== "rat_walk")
               rat.anims.play("rat_walk", true);
           }
@@ -1739,8 +1749,16 @@ class GameScene extends Phaser.Scene {
                 : this.player.x < rat.x
                   ? -1
                   : 1;
-              rat.setFlipX(dir === -1);
-              rat.setVelocityX(dir * 120);
+              if ((dir === -1 && rat.body.blocked.left) || (dir === 1 && rat.body.blocked.right)) {
+                // A wall between the rat and the knight: give up and walk away
+                // instead of running into the wall forever.
+                rat.setFlipX(dir === 1);
+                rat.setVelocityX(-dir * 50);
+                rat.setData("state", "patrol");
+              } else {
+                rat.setFlipX(dir === -1);
+                rat.setVelocityX(dir * 120);
+              }
             }
             if (rat.anims.currentAnim?.key !== "rat_run")
               rat.anims.play("rat_run", true);

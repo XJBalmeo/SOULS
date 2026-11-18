@@ -22,6 +22,8 @@ page.on("console", (m) => {
   if (m.type() === "warn" || m.type() === "warning") warnings.push(m.text());
 });
 page.on("pageerror", (e) => errors.push("pageerror: " + e.message));
+const requested = [];
+page.on("request", (r) => requested.push(r.url()));
 page.on("response", (r) => {
   if (r.status() >= 400) errors.push(`HTTP ${r.status()} ${r.url()}`);
 });
@@ -102,11 +104,11 @@ try {
   }
   check("title loops frames 1-3 only", [...titleFrames].every((f) => f <= 2) && titleFrames.size >= 2, [...titleFrames].join(","));
   check("menu text is white", await state(() =>
-    game.scene.getScene("MenuScene").children.list.find((c) => c.text === "Settings").style.color === "#ffffff"));
+    game.scene.getScene("MenuScene").children.list.find((c) => c.text === "Settings").color === "#ffffff"));
   await shot("02-main-menu");
 
   const continueColor = await state(() =>
-    game.scene.getScene("MenuScene").children.list.find((c) => c.text && c.text.includes("Continue")).style.color,
+    game.scene.getScene("MenuScene").children.list.find((c) => c.text && c.text.includes("Continue")).color,
   );
   check("Continue shown disabled", continueColor === "#46503f", continueColor);
 
@@ -123,6 +125,11 @@ try {
   await press("Enter");
   check("Settings opens from menu", await waitFor(() => game.scene.isActive("SettingsScene")));
   check("menu sleeps under settings", (await sceneStatus()).MenuScene === "sleeping");
+  // Every Master Volume value (0-100 %) so each label image is shown once.
+  for (let i = 0; i < 10; i++) await press("ArrowLeft");
+  for (let i = 0; i < 10; i++) await press("ArrowRight");
+  await press("ArrowLeft");
+  await press("ArrowLeft"); // back to 0.8
   await press("ArrowRight"); // master 0.8 -> 0.9
   const saved = await state(() => JSON.parse(localStorage.getItem("souls.settings.v1")));
   check("master volume change persisted", saved && saved.masterVolume === 0.9, JSON.stringify(saved));
@@ -165,6 +172,17 @@ try {
   check("menu-to-game time matches the menu beam sequence", elapsed >= delayMs - 100, `${elapsed} ms (config ${delayMs})`);
   await wait(1500); // settle onto the floor
   check("the spawn animation hands over control", await waitFor(() => !game.scene.getScene("GameScene").isSpawning, 4000));
+  const showcase = await state(() => {
+    const s = game.scene.getScene("GameScene");
+    return {
+      archers: s.archers ? s.archers.getLength() : 0,
+      starved: s.starved ? s.starved.getLength() : 0,
+      sound: Sfx.play(s, "enemy_hit"),
+      config: SHOWCASE_CONFIG,
+    };
+  });
+  check("showcase: no Hollow Archer, no Starved, no sound", showcase.archers === 0 && showcase.starved === 0 && showcase.sound === null,
+    JSON.stringify(showcase));
   let p = await player();
   check("hero spawned with full HP/stamina", p.hp === 100 && p.stamina === 100, JSON.stringify(p));
   check("rats spawned", p.ratsAlive > 0, `rats=${p.ratsAlive}`);
@@ -308,6 +326,10 @@ try {
 }
 
 const animWarnings = warnings.filter((w) => w.includes("Animation key exists") || w.includes("Texture key already in use"));
+const textWarnings = warnings.filter((w) => w.includes("UI text image missing"));
+check("every UI text shown has its image (no missing text images)", textWarnings.length === 0, textWarnings.slice(0, 3).join(" | "));
+check("the font file is never loaded (UI text is images)", !requested.some((u) => /\.(otf|ttf|woff2?)(\?|$)/i.test(u)),
+  requested.filter((u) => /font/i.test(u)).join(" | "));
 check("no duplicate animation/texture warnings on re-entry", animWarnings.length === 0, animWarnings.slice(0, 3).join(" | "));
 check("no console errors, page errors or failed requests", errors.length === 0, errors.slice(0, 5).join(" | "));
 

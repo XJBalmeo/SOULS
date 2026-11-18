@@ -40,6 +40,7 @@ const look = () => state(() => {
     hudTint: s.hudHp.isTinted ? s.hudHp.tintTopLeft : null,
     deathFrame: d.reaper ? d.reaper.frame.name : null,
     flash: s.cameras.main.flashEffect.isRunning,
+    shake: s.cameras.main.shakeEffect.isRunning,
     image: i && i.active ? { key: i.texture.key, alpha: +i.alpha.toFixed(2), depth: i.depth } : null,
   };
 });
@@ -56,11 +57,11 @@ for (const [rng, want] of [[0.1, "death_defied_1"], [0.5, "death_defied_3"], [0.
     v.phase === "PARRY_SUCCESS" && !v.dim && v.crack && v.crack.w === 512 && v.crack.h === 288 && v.knightDepth > v.crack.depth && v.hudTint === 0x333333 && !v.image, JSON.stringify(v));
   await wait(500);
   v = await look();
-  check(want + ": frozen on the last parry frame, Death held on frame 18, no flash yet", v.anim === "parry" && v.frame === 3 && v.deathFrame === 17 && !v.flash && v.crack && !v.image, JSON.stringify(v));
+  check(want + ": frozen on the last parry frame, Death held on frame 18, no flash or shake yet", v.anim === "parry" && v.frame === 3 && v.deathFrame === 17 && !v.flash && !v.shake && v.crack && !v.image, JSON.stringify(v));
   if (rng < 0.5) await shot("parry-05a-crack-freeze");
   const flashed = await waitFor(() => game.scene.getScene("GameScene").cameras.main.flashEffect.isRunning, 1500);
   v = await look();
-  check(want + ": then a white flash clears the crack and the HUD dim, and the text image shows", flashed && !v.crack && !v.dim && v.hudTint === null && v.image && v.image.key === want && v.image.alpha === 1, JSON.stringify(v));
+  check(want + ": then a white flash and a screen shake; the crack and the HUD dim are gone, and the text image shows", flashed && v.shake && !v.crack && !v.dim && v.hudTint === null && v.image && v.image.key === want && v.image.alpha === 1, JSON.stringify(v));
   await wait(600);
   if (rng < 0.5) await shot("parry-05b-death-defied-image");
   v = await look();

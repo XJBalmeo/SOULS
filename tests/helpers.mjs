@@ -13,6 +13,11 @@ export async function autoFullscreen(page) {
   page.on("load", () => page.mouse.click(5, 5).catch(() => {}));
 }
 
+// The showcase build hides the Hollow Archer and the Starved
+// (SHOWCASE_CONFIG in js/GameScene.js); suites that test them turn them on.
+export const showcaseEnemiesOn = (page) =>
+  page.evaluate(() => Object.assign(SHOWCASE_CONFIG, { hollowArcher: true, starved: true }));
+
 export async function openGame(outDir) {
   const OUT = path.resolve(outDir);
   const SHOTS = path.join(OUT, "screenshots");
@@ -151,5 +156,6 @@ export async function openGame(outDir) {
 
   await page.goto(url, { waitUntil: "load" });
   await waitFor(() => game.scene.isActive("MenuScene") && !!document.fullscreenElement);
+  await showcaseEnemiesOn(page);
   return { page, url, check, wait, state, waitFor, tap, rightClick, waitForStrike, moveToCanvas, rightClickHere, shot, gameReady, newCampaign, arena, finish, errors, warnings };
 }

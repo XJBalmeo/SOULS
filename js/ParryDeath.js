@@ -5,7 +5,7 @@
 //   frames 14-16   80 ms   the spin, looped a random number of frames,
 //                          stopping on any of the three        DEATH_APPROACH
 //   frame 17      100 ms   the scythe stands up (warning)      TELEGRAPH
-//   frame 18      100 ms   the strike: the only parryable frame SINGLE_STRIKE
+//   frame 18      350 ms   the strike: the only parryable frame SINGLE_STRIKE
 //   frame 19              the kill, drawn above the knight     NORMAL_DEATH
 // Frames 1-18 are drawn below the knight, frame 19 above him. A parry
 // (right click) during frame 18 revives with full HP and stamina in the same
@@ -22,9 +22,12 @@ const PARRY_DEATH_CONFIG = {
   // can stop on any of its three frames. 3-30 frames = 0.24-2.4 s.
   spinMinFrames: 3,
   spinMaxFrames: 30,
-  windowMs: 100,         // frame 18, the strike: the only moment a parry counts
+  windowMs: 350,         // frame 18, the strike: the only moment a parry counts (owner 2026-11-18: was 100)
   successMs: 1000,       // freeze on the last parry frame (crack screen) before the white flash
   successFlashMs: 300,   // the white flash that clears the crack screen
+  // With the flash, right after the freeze, the screen shakes (owner 2026-11-18).
+  successShakeMs: 300,
+  successShakeIntensity: 0.004, // as calm as the spawn shake (SPAWN_CONFIG.spawnShakeIntensity)
   failMs: 600,           // frame 19 stays this long before the fade to black
   reviveMs: 500,
   reviveInvulnerableMs: 1500,
@@ -142,8 +145,6 @@ class ParryDeathEncounter {
 
     scene.input.on("pointerdown", this.onPointer);
     scene.input.on("pointerdownoutside", this.onPointer); // clicks on the black bars count too
-    this.prompt = UI.text(scene, scene.viewport.x + scene.viewport.w / 2, scene.viewport.y + scene.viewport.h - 30,
-      "", 13, UI.COLORS.bone).setScrollFactor(0).setDepth(1004); // above the HUD
     scene.cameras.main.shake(180, 0.004);
     Sfx.play(scene, "player_hurt");
   }
@@ -271,7 +272,6 @@ class ParryDeathEncounter {
       return;
     }
     this.track(Sfx.play(scene, "parry_fail"));
-    if (this.prompt) this.prompt.setText("");
     if (this.state === "NORMAL_DEATH" || this.timeline[this.step].state === "NORMAL_DEATH") {
       this.setPhase("NORMAL_DEATH"); // late: frame 19 is already showing
       return;
@@ -309,6 +309,7 @@ class ParryDeathEncounter {
   endSuccessFreeze() {
     const scene = this.scene;
     scene.cameras.main.flash(PARRY_DEATH_CONFIG.successFlashMs, 255, 255, 255);
+    scene.cameras.main.shake(PARRY_DEATH_CONFIG.successShakeMs, PARRY_DEATH_CONFIG.successShakeIntensity, true);
     scene.clearDeathDimNow();
     if (this.reaper) this.reaper.destroy(); // gone in the flash
     this.reaper = null;
@@ -411,11 +412,6 @@ class ParryDeathEncounter {
       this.reaper = null;
       this.scene.tweens.add({ targets: r, alpha: 0, duration: 300, onComplete: () => r.destroy() });
     }
-    if (this.prompt) {
-      const t = this.prompt;
-      this.prompt = null;
-      this.scene.tweens.add({ targets: t, alpha: 0, duration: 600, delay: 400, onComplete: () => t.destroy() });
-    }
   }
 
   // Scene shutdown (restart, retry, quit) mid-encounter.
@@ -433,9 +429,7 @@ class ParryDeathEncounter {
     });
     this.sounds = [];
     if (this.reaper && this.reaper.active) this.reaper.destroy();
-    if (this.prompt && this.prompt.active) this.prompt.destroy();
     this.reaper = null;
-    this.prompt = null;
     this.state = "IDLE";
   }
 }

@@ -5,7 +5,7 @@ import puppeteer from "puppeteer";
 import fs from "node:fs";
 import path from "node:path";
 import { startServer } from "./serve.mjs";
-import { autoFullscreen } from "./helpers.mjs";
+import { autoFullscreen, showcaseEnemiesOn } from "./helpers.mjs";
 
 const OUT = path.resolve("docs/builds/v0.3-archer-demo");
 const SHOTS = path.join(OUT, "screenshots");
@@ -107,6 +107,7 @@ const faceArcher = () => state(() => game.scene.getScene("GameScene").player.set
 
 await page.goto("http://127.0.0.1:" + server.address().port + "/", { waitUntil: "load" });
 await waitFor(() => game.scene.isActive("MenuScene") && !!document.fullscreenElement);
+await showcaseEnemiesOn(page);
 await state(() => {
   localStorage.clear();
   SaveManager.startNewCampaign();

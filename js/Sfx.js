@@ -23,6 +23,7 @@ const Sfx = {
 
   // Fire-and-forget. Returns the sound (or null) so callers can stop long ones.
   play(scene, key, volume = 1) {
+    if (!SHOWCASE_CONFIG.audio) return null; // TEMPORARY: sound is off for the showcase (js/GameScene.js)
     if (!scene || !scene.cache.audio.exists(key)) return null;
     const sound = scene.sound.add(key, { volume: volume * Sfx.volume() });
     sound.once("complete", () => sound.destroy());

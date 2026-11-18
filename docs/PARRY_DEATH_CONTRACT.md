@@ -31,7 +31,7 @@ From the window there are two outcomes:
 | frameMs | 100 | DEATH.png frames 1-13, 17 and 19 (owner 2026-11-18) |
 | spinFrames / spinFrameMs | 14, 15, 16 / 80 | The spin loop (owner 2026-11-18) |
 | spinMinFrames / spinMaxFrames | 3 / 30 | Random spin length in frames (0.24-2.4 s); it can stop on any of the three, then frame 17 |
-| windowMs | 100 (owner 2026-11-14 and 2026-11-18) | Frame 18, the strike: the only moment a press counts |
+| windowMs | 350 (owner 2026-11-18; was 100) | Frame 18, the strike: the only moment a press counts |
 | earlyPressFails | true | A press on frames 1-17 spends the attempt; Death then ends the spin and goes on to frame 19 |
 | offsetX / offsetY | 0 / 0 | Where the 512x288 frame's centre sits relative to the knight (0, 0 = knight in the middle of the screen) |
 | reviveInvulnerableMs | 1500 | Protection after revival |

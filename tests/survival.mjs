@@ -234,7 +234,7 @@ try {
   await goToMenu();
   const corruptMenu = await state(() => ({
     status: SaveManager.inspect().status,
-    continueColor: game.scene.getScene("MenuScene").children.list.find((c) => c.text === "Continue").style.color,
+    continueColor: game.scene.getScene("MenuScene").children.list.find((c) => c.text === "Continue").color,
   }));
   check("unreadable save: Continue disabled", corruptMenu.status === "corrupt" && corruptMenu.continueColor === "#46503f", JSON.stringify(corruptMenu));
   await press("ArrowDown");

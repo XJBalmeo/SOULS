@@ -70,7 +70,7 @@ check("the strike opens the parry window", await waitForStrike(2000));
 await rightClickHere(40);
 await shot("parry-03-parried");
 e = await enc();
-check("right click during the strike parries (default 100 ms window)", e.outcome === "success", JSON.stringify(e));
+check("right click during the strike parries (default 350 ms window)", e.outcome === "success", JSON.stringify(e));
 check("revival completes", await inState("IDLE", 4000));
 e = await enc();
 check("full HP and stamina after revival", e.hp === 100 && e.stamina === 100, JSON.stringify(e));
@@ -141,10 +141,10 @@ check("random spin length stays within its bounds", bounds.lo === bounds.min && 
   const frames = bounds.frames.split(",").map(Number);
   const ms = bounds.ms.split(",");
   const spin = frames.slice(13, -3);
-  check("timeline: frames 1-13 at 100 ms, the 14-15-16 spin at 80 ms, then 17, 18 (100 ms window), 19",
+  check("timeline: frames 1-13 at 100 ms, the 14-15-16 spin at 80 ms, then 17, 18 (350 ms window), 19",
     frames.slice(0, 13).join(",") === "1,2,3,4,5,6,7,8,9,10,11,12,13" && ms.slice(0, 13).every((m) => m === "100") &&
     spin.every((f, i) => f === 14 + (i % 3)) && ms.slice(13, -3).every((m) => m === "80") &&
-    frames.slice(-3).join(",") === "17,18,19" && ms.slice(-3, -1).join(",") === "100,100", JSON.stringify(bounds));
+    frames.slice(-3).join(",") === "17,18,19" && ms.slice(-3, -1).join(",") === "100,350", JSON.stringify(bounds));
 }
 
 // ---- 3. Early press fails. ----
@@ -203,7 +203,8 @@ await state(() => game.scene.getScene("GameScene").requestPause());
 check("the pause menu opens during the encounter", await waitFor(() => game.scene.isActive("PauseScene"), 2000));
 const before = (await enc()).elapsed;
 await wait(1500);
-await pressC();
+await page.mouse.move(20, 700); // away from the pause menu's items
+await rightClickHere(40);
 e = await enc();
 check("the encounter clock stops while paused", Math.abs(e.elapsed - before) < 1 && e.state === "DEATH_APPROACH", JSON.stringify({ before, e }));
 check("C pressed while paused is ignored", e.outcome === null);

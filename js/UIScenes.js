@@ -38,14 +38,39 @@ const DEATH_CONFIG = {
   backgroundColor: 0x000000, // behind the transparent parts of the sheet
 };
 
-// UI font. Set useCustomFont to false to go back to the Georgia serif.
-// Knight Warrior is a personal-use demo font (Maknastudio); a commercial
-// licence is required before release, and the file is not committed to git.
-const FONT_CONFIG = {
-  useCustomFont: true,
-  custom: { family: "Knight Warrior", url: "sprites/FONTS/KnightWarrior.otf" },
-  fallback: '"Georgia", "Times New Roman", serif',
-};
+// UI text is drawn from images (owner 2026-11-18), not from a font: the
+// Knight Warrior font is personal-use only, so the game no longer loads it.
+// tools/art/ui_text.py renders every UI string into sprites/UI_TEXT/ui_text.png
+// (a Phaser atlas whose frame names are "size|colour|text"). A new or changed
+// string must be added there and the script run again.
+class TextImage extends Phaser.GameObjects.Image {
+  constructor(scene, x, y, content, size, color) {
+    super(scene, x, y, "ui_text");
+    this.size = size;
+    this.color = color;
+    this.text = null;
+    this.set(content, color);
+  }
+  // Text and colour together: each pair is one image.
+  set(content, color = this.color) {
+    if (content === this.text && color === this.color) return this;
+    this.text = content;
+    this.color = color;
+    return this.showFrame();
+  }
+  setText(content) {
+    return this.set(content);
+  }
+  showFrame() {
+    const name = `${this.size}|${this.color}|${this.text}`;
+    if (this.text === "") return this.setVisible(false);
+    if (!this.texture.has(name)) {
+      console.warn("UI text image missing (run python tools/art/ui_text.py):", JSON.stringify(name));
+      return this.setVisible(false);
+    }
+    return this.setFrame(name).setVisible(true);
+  }
+}
 
 // Player settings, persisted independently of any future campaign save.
 // Fullscreen is mandatory, so it is not a setting.
@@ -85,18 +110,6 @@ const SoulsSettings = {
 };
 
 const UI = {
-  get FONT() {
-    const { useCustomFont, custom, fallback } = FONT_CONFIG;
-    return useCustomFont ? `"${custom.family}", ${fallback}` : fallback;
-  },
-
-  // Resolves once the custom font is usable (or has failed, leaving the fallback).
-  fontReady: FONT_CONFIG.useCustomFont
-    ? new FontFace(FONT_CONFIG.custom.family, `url("${FONT_CONFIG.custom.url}")`)
-        .load()
-        .then((face) => document.fonts.add(face))
-        .catch((e) => console.warn("UI font failed to load, using fallback:", e))
-    : Promise.resolve(),
   COLORS: {
     bone: "#ffffff",
     accent: "#a8d672",
@@ -128,17 +141,9 @@ const UI = {
     if (overlay) overlay.style.display = "flex";
   },
 
+  // Centred text image (see TextImage). Line spacing is baked into the image.
   text(scene, x, y, content, size, color = UI.COLORS.bone) {
-    return scene.add
-      .text(x, y, content, {
-        fontFamily: UI.FONT,
-        fontSize: size + "px",
-        color,
-        align: "center",
-        stroke: UI.COLORS.shadow,
-        strokeThickness: Math.max(2, Math.round(size / 8)),
-      })
-      .setOrigin(0.5);
+    return scene.add.existing(new TextImage(scene, x, y, content, size, color));
   },
 
   // Vertical menu driven by keyboard (arrows/WASD, Enter/Space/Z) and mouse.
@@ -162,8 +167,8 @@ const UI = {
       texts.forEach((t, i) => {
         const item = items[i];
         const selected = i === index;
-        t.setText(selected ? `>  ${labelOf(item)}  <` : labelOf(item));
-        t.setColor(item.disabled ? UI.COLORS.disabled : selected ? UI.COLORS.accent : UI.COLORS.bone);
+        t.set(selected ? `>  ${labelOf(item)}  <` : labelOf(item),
+          item.disabled ? UI.COLORS.disabled : selected ? UI.COLORS.accent : UI.COLORS.bone);
       });
       hint.setText(items[index].hint || "");
     }
@@ -232,13 +237,17 @@ const UI = {
   },
 };
 
-// Waits for the UI font so no text is drawn with the fallback first.
+// Loads the UI text images before any menu is drawn.
 class BootScene extends Phaser.Scene {
   constructor() {
     super("BootScene");
   }
+  preload() {
+    const v = "?v=" + Date.now();
+    this.load.atlas("ui_text", "sprites/UI_TEXT/ui_text.png" + v, "sprites/UI_TEXT/ui_text.json" + v);
+  }
   create() {
-    UI.fontReady.then(() => this.scene.start("MenuScene"));
+    this.scene.start("MenuScene");
   }
 }
 
@@ -368,7 +377,7 @@ class ConfirmScene extends Phaser.Scene {
       this.scene.wake(from);
     };
     this.add.rectangle(0, 0, width, height, 0x000000, 0.9).setOrigin(0);
-    UI.text(this, width / 2, 250, message, 32).setLineSpacing(10);
+    UI.text(this, width / 2, 250, message, 32);
     UI.menu(
       this,
       width / 2,
@@ -529,7 +538,7 @@ class CreditsScene extends Phaser.Scene {
         "Levels authored with LDtk\n\n" +
         "Full credits roster to be confirmed by the owner.",
       22,
-    ).setLineSpacing(8);
+    );
     UI.menu(this, width / 2, 520, [{ label: "Back", onSelect: () => this.back() }], {
       onBack: () => this.back(),
     });

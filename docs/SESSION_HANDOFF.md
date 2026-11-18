@@ -34,8 +34,14 @@ Knight art is the owner's (sprites/HERO/NEW_*.png). Config values are in the nam
 - **Failure:** Death finishes its swing (`failMs` 600 ms) and stays visible; then Death, the knight and the world fade to black together, then YOU DIED.
 - **TEMPORARY debug key O** (`DEBUG_CONFIG.instantDeathKey` at the top of js/GameScene.js): instant death with the Death parry made available again (in memory only). Turn it off before release. **P pauses** (Esc too, but in a real browser Esc leaves fullscreen first).
 
+### Showcase changes (2026-11-18)
+- **UI text is images**, not the font: `tools/art/ui_text.py` (needs the local font file) renders every string into `sprites/UI_TEXT/ui_text.png`; `TextImage` in js/UIScenes.js shows them. New or changed UI text must be added to the script and the script rerun; the game warns "UI text image missing" otherwise (smoke test checks this). Licence caveat in docs/ASSET_LICENSES.md.
+- **TEMPORARY `SHOWCASE_CONFIG`** (top of js/GameScene.js): Hollow Archer, Starved and all audio are off until the owner says to bring them back (set to true). The test suites switch the enemies on (`showcaseEnemiesOn` in tests/helpers.mjs).
+- **Rats no longer get stuck:** a rat back on patrol always walks (it used to stand still with no speed after an attack/recover/stun, often facing a wall), and a chase into a wall turns into patrol. Probe: tests/qa-probes/v03-rat-stuck.mjs.
+- **Death parry window is 350 ms** (frame 18), was 100.
+
 ### Death art (2026-11-18, `PARRY_DEATH_CONFIG`)
-- The owner's `sprites/DEATHS/DEATH.png` (19 frames of 512x288, centred on the knight) replaces Death's Shadow. Frames 1-13 at 100 ms; the 14-15-16 spin at 80 ms, looped a random 3-30 frames and able to stop on any of the three; frame 17 (warning) 100 ms; frame 18 is the only parryable frame (100 ms window); frame 19 (the kill) is drawn above the knight, frames 1-18 below. Details in docs/PARRY_DEATH_CONTRACT.md.
+- The owner's `sprites/DEATHS/DEATH.png` (19 frames of 512x288, centred on the knight) replaces Death's Shadow. Frames 1-13 at 100 ms; the 14-15-16 spin at 80 ms, looped a random 3-30 frames and able to stop on any of the three; frame 17 (warning) 100 ms; frame 18 is the only parryable frame (350 ms window since the showcase change); frame 19 (the kill) is drawn above the knight, frames 1-18 below. Details in docs/PARRY_DEATH_CONTRACT.md.
 
 ### Spawn and respawn (js/Spawn.js, new; `SPAWN_CONFIG`)
 - **New Game / Continue from the menu** (js/UIScenes.js `TITLE_CONFIG`): fullscreen → `beamDelayMs` 300 → `sprites/menu_beam.png` (8 full-screen frames at the beam speed, 60 ms) → title frames 4–5 → `lastFrameHoldMs` 300 on frame 5 → the game. The old fade to black is gone.
